@@ -36,7 +36,7 @@ Built and passing: `MOCK_LLM=1 pytest -q` -> 26 tests.
 
 ## Where things are
 
-See README.md for the layout. Key files: `src/llm.py` (client; `get_llm(role)`), `src/config.py` (per-role models), `src/safety.py` (safety block + checks), `src/agents/worker.py` (the call agent and its tools), `src/sim/` (personas, IVR, scenarios, office), `src/swarm/` (blackboard, events, dispatcher), `src/eval/` (judge, batch CLI), `src/api/` (server + dashboard), `prompts/worker_v0.txt` (the only prompt the improvement loop may edit), `DEPLOY.md` (hosting).
+See README.md for the layout. Key files: `src/llm.py` (client; `get_llm(role)`), `src/config.py` (per-role models), `src/safety.py` (safety block + checks), `src/agents/worker.py` (the call agent and its tools), `src/sim/` (personas, IVR, scenarios, office), `src/swarm/` (blackboard, events, dispatcher), `src/eval/` (judge, batch CLI), `src/api/` (server + dashboard), `prompts/worker_v0.txt` (the only prompt the improvement loop may edit), `DEPLOY.md` (hosting), `docs/PLAN.md` (plan and schedule).
 
 ## Invariants: do not break these
 
@@ -68,4 +68,4 @@ Still to build: global swarm deadline, `CallChannel` telephony adapter interface
 - Started from a question about a voice agent calling insurers for benefits; moved to patient-facing appointment finding; chose the 15-way swarm because it is the most demonstrable "frontier" behavior.
 - Eligibility (271) and payer FHIR APIs were explored earlier; a separate Node Blue Button sandbox starter exists outside this repo and is not part of the build.
 - Earlier docs in `docs/` mention Llama, Pipecat and Twilio; they carry a banner saying the stack is now the Meta Model API. Twilio/real telephony only matters for a post-hackathon pilot.
-- A private planning document (team split, detailed schedule) is intentionally not in this public repo.
+- The full plan (Meta tool map, day-by-day schedule, risks, two-person split as Person A / Person B) is in `docs/PLAN.md`. Names are deliberately omitted from this public repo.
