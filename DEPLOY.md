@@ -55,6 +55,7 @@ These go under **Settings → Secrets and variables → Actions → Variables**:
 | `AWS_ROLE_ARN` | (unset) | Use GitHub OIDC with an IAM role instead of access keys. When this is set, the key secrets are not used. |
 
 Until credentials are added, the workflow skips with a notice rather than failing.
+AWS hosting (ECS Fargate next to gltrax.com) is planned but paused; see [docs/aws-hosting.md](docs/aws-hosting.md).
 
 ## Deploy on Render (about 10 minutes)
 
