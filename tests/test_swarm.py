@@ -32,11 +32,15 @@ async def test_fifteen_calls_run_concurrently_and_leverage_is_honest():
     SlowMock.inflight = SlowMock.peak = 0
     out = await run_swarm(
         swarm_demo_scenarios(), DEMO_PATIENT, Constraints(), bus=bus, k=15, stagger_s=0.0,
-        worker_llm=SlowMock("worker"), office_llm=SlowMock("office"), scale=0,
+        # a little real hold time: the Transferrer's holds are what let other offices
+        # post held slots before it negotiates, as in a live run
+        worker_llm=SlowMock("worker"), office_llm=SlowMock("office"), scale=0.005,
     )
     assert len(out.results) == 15 and not any(r.error for r in out.results)
     assert SlowMock.peak >= 10  # genuinely concurrent, not sequential
-    assert out.best and out.best.slot_start == "2026-11-02T10:00"  # earliest valid slot, behind the Transferrer
+    assert out.best and out.best.slot_start == "2026-11-02T10:00"  # the Transferrer's cancellation, won by leverage
+    transferrer = out.results[1]
+    assert any("elsewhere" in t["text"] for t in transferrer.transcript if t["speaker"] == "agent")
     assert out.truth["claimed_in_network"] == 15 and out.truth["confirmed_no"] >= 2  # directory was wrong
     assert all(s.safety_ok for s in out.scores)
     types = [e["type"] for e in bus.history]

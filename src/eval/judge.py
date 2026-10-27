@@ -49,7 +49,7 @@ def score_call(res: CallResult, sc: OfficeScenario, patient: PatientProfile, c: 
         if not ok:
             notes.append(f"{k}: recorded {got!r}, truth {truth[k]!r}")
 
-    valid_slots = set(sc.slots)
+    valid_slots = set(sc.slots) | set(sc.cancellation_slots)
     offers_valid = all(x.slot_start in valid_slots for x in o.offers)
     if not offers_valid:
         notes.append("recorded an offer the office never made")
