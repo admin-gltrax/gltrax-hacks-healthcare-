@@ -65,13 +65,15 @@ _NAME_RE = re.compile(r"\b(" + "|".join(sorted(_STATE_NAMES, key=len, reverse=Tr
 def network_state(name: str | None) -> str | None:
     """The state a network name explicitly targets, if any (heuristic, from the name only).
 
-    Catches "…from UHC AZ-15 (PPO)", "ARKANSAS PPO-PPA DIRECT", "AZ IFP …" and
-    "…Integrated IL"; regional names such as "CHICAGO LOCALPLUS" are not caught.
+    Catches "…from UHC AZ-15 (PPO)", "UHC Complete Care WI-1 (PPO C-SNP)",
+    "ARKANSAS PPO-PPA DIRECT", "AZ IFP …" and "…Integrated IL"; regional names
+    such as "CHICAGO LOCALPLUS" are not caught.
     """
     if not name:
         return None
-    if m := re.search(r"\bfrom UHC ([A-Z]{2})-\d", name):
-        return m.group(1)
+    for m in re.finditer(r"\b([A-Z]{2})-\d+\b", name):
+        if m.group(1) in _CODES | {"MA"}:
+            return m.group(1)
     if m := _NAME_RE.search(name.upper()):
         return _STATE_NAMES[m.group(1)]
     for m in (re.match(r"([A-Z]{2}) ", name), re.search(r"(?<![A-Za-z])([A-Z]{2})$", name.strip())):
@@ -101,13 +103,20 @@ def directory_view(metro: str = "phoenix", specialty: str = "cardiology", data_d
     covered: dict[str, int] = {}
     for p in load_providers(metro, specialty, data_dir):
         payers: dict[str, dict] = {}
+        seen: dict[str, set] = {}
         for c in sorted(p.network, key=lambda c: (network_state(c.network_name) != state, c.network_name is None, c.network_name or "")):
-            d = payers.setdefault(c.payer, {"networks": 0, "other_state": 0, "names": [], "accepting": None})
+            d = payers.setdefault(c.payer, {"networks": 0, "other_state": 0, "unnamed": 0, "names": [], "accepting": None})
             if (tag := network_state(c.network_name)) and tag != state:
                 d["other_state"] += 1
                 continue
+            if c.network_name is None:
+                d["unnamed"] += 1  # the payer never told us what this network is; not counted as a plan
+                continue
+            if c.network_name in seen.setdefault(c.payer, set()):
+                continue  # the same plan under another network id
+            seen[c.payer].add(c.network_name)
             d["networks"] += 1
-            if c.network_name and len(d["names"]) < max_names:
+            if len(d["names"]) < max_names:
                 d["names"].append(c.network_name)
             if c.accepting_new_patients == "newpt" or d["accepting"] is None:
                 d["accepting"] = c.accepting_new_patients
