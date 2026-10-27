@@ -66,7 +66,10 @@ def make_scenarios(n: int, seed: int = 0, plan: str = PLAN) -> list[OfficeScenar
     return out
 
 
-def _build(office_id: str, persona: str, rng: random.Random, plan: str, slots: list[str] | None = None, ivr="rand") -> OfficeScenario:
+def _build(
+    office_id: str, persona: str, rng: random.Random, plan: str, slots: list[str] | None = None, ivr="rand",
+    cancellations: list[str] | None = None,
+) -> OfficeScenario:
     accepts = [plan] + rng.sample(OTHER_PLANS, 2)
     new_patients, referral = True, False
     if persona == "wrong_plan":
@@ -87,6 +90,7 @@ def _build(office_id: str, persona: str, rng: random.Random, plan: str, slots: l
         new_patients=new_patients,
         referral_required=referral,
         slots=slots or _random_slots(rng),
+        cancellation_slots=cancellations or [],
         ivr=rng.choice([None, None, "A", "B"]) if ivr == "rand" else ivr,
         distance_miles=round(rng.uniform(1, 22), 1),
         split=_split(office_id),
@@ -95,11 +99,12 @@ def _build(office_id: str, persona: str, rng: random.Random, plan: str, slots: l
 
 def swarm_demo_scenarios(plan: str = PLAN) -> list[OfficeScenario]:
     """The 15-office demo. The earliest valid slot (Nov 2, 10:00) sits behind the
-    Transferrer so leverage from other offices exists by the time it picks up."""
+    Transferrer as a cancellation it only releases when the agent honestly cites a
+    slot held elsewhere, so the swarm's shared board is what wins the best slot."""
     rng = random.Random(7)
     spec = [
         ("friendly_pro", [_iso(12, 10, 15), _iso(13, 9, 30)], None),
-        ("transferrer", [_iso(2, 10, 0), _iso(9, 11, 0)], "A"),  # best slot, hardest office
+        ("transferrer", [_iso(9, 11, 0), _iso(12, 15, 0)], "A"),  # hardest office; best slot is its cancellation
         ("friendly_pro", [_iso(5, 14, 0), _iso(6, 9, 0)], None),
         ("ai_refuser", [_iso(4, 9, 30)], None),
         ("data_fisher", [_iso(3, 13, 0), _iso(10, 9, 0)], None),
@@ -114,4 +119,8 @@ def swarm_demo_scenarios(plan: str = PLAN) -> list[OfficeScenario]:
         ("hostile_curt", [_iso(6, 14, 30), _iso(9, 9, 0)], "B"),
         ("friendly_pro", [_iso(5, 8, 30), _iso(11, 9, 15)], None),  # 8:30 violates the 9am rule
     ]
-    return [_build(f"off_{i:02d}", p, rng, plan, slots=s, ivr=ivr) for i, (p, s, ivr) in enumerate(spec)]
+    cancellations = {"transferrer": [_iso(2, 10, 0)]}
+    return [
+        _build(f"off_{i:02d}", p, rng, plan, slots=s, ivr=ivr, cancellations=cancellations.get(p))
+        for i, (p, s, ivr) in enumerate(spec)
+    ]

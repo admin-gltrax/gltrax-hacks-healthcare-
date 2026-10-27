@@ -73,6 +73,7 @@ class OfficeScenario(BaseModel):
     new_patients: bool = True
     referral_required: bool = False
     slots: list[str] = Field(default_factory=list)  # ISO strings
+    cancellation_slots: list[str] = Field(default_factory=list)  # released only for honest leverage
     ivr: str | None = None  # "A" | "B" | None
     distance_miles: float = 5.0
     split: Literal["dev", "holdout"] = "dev"
@@ -89,7 +90,7 @@ class OfficeScenario(BaseModel):
             and plan in self.accepts_plans
             and self.new_patients
             and not self.referral_required
-            and any(c.slot_ok(s) for s in self.slots)
+            and any(c.slot_ok(s) for s in self.slots + self.cancellation_slots)
         )
 
 
