@@ -150,3 +150,13 @@ async def test_voice_intake_reports_api_errors(monkeypatch):
         monkeypatch.setattr(voice.httpx, "AsyncClient", lambda **kw: real(transport=httpx.MockTransport(fake), **kw))
         r = await c.post("/api/intake/transcribe", content=_wav(), headers={"x-access-token": "s3cret"})
     assert r.status_code == 502 and "Malformed request" in r.json()["error"]
+
+
+async def test_directory_endpoint_serves_the_local_snapshot():
+    async with client() as c:
+        r = await c.get("/api/directory")
+        assert r.status_code == 200
+        d = r.json()
+        assert d["count"] == len(d["providers"]) > 0 and d["metro"].startswith("Phoenix")
+        assert {"npi", "name", "city", "payers"} <= set(d["providers"][0])
+        assert (await c.get("/api/directory", params={"metro": "../../etc"})).status_code == 404
