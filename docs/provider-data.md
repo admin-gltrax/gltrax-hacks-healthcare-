@@ -36,6 +36,20 @@ From the developer portal's API library (`developerportal.aetna.com/apis`) and i
 
 Paging is by `_page_token`, not `_offset`.
 
+### Open payer directories (no account; tested 2026-10-27)
+
+All three are DaVinci PDex Plan-Net (FHIR R4), anonymous, with the NPI on `Practitioner.identifier` (system `http://hl7.org/fhir/sid/us-npi`) and network membership as `network-reference` extensions on `PractitionerRole` (pointing at network `Organization`s).
+
+| Payer | Base URL | Plans | How to pull one metro's cardiologists |
+|---|---|---|---|
+| UnitedHealthcare / Optum | `https://flex.optum.com/fhirpublic/R4` | 1,395 `InsurancePlan` | Chained search works: `PractitionerRole?specialty=207RC0000X&location.address-city=Phoenix` (1,592 roles). `Practitioner?identifier=<NPI>` also works. |
+| Cigna | `https://fhir.cigna.com/ProviderDirectory/v1` | yes | No chained search, no `Practitioner?identifier`. `Location?address-city=…&address-state=AZ`, then `PractitionerRole?location=<one id>&specialty=…` (one location per request; comma lists return nothing). |
+| Humana | `https://fhir.humana.com/api` | 6,581 `InsurancePlan` | Chained search times out. `Location?address-city=…&address-state=AZ` (Scottsdale: 1,969), then `PractitionerRole?location=<id>,<id>,…&specialty=…` (comma lists work). Network names are readable (e.g. "Humana Dual Fully Integrated IL"). References are absolute URLs. |
+
+Not usable without an account: Aetna (`apif1.aetna.com` returns 401 for every search; only `/metadata` is open), Centene `iopc-pd.api.centene.com` (403). `flex.optum.com/fhirpublic2025` returned 502. BCBS Arizona and Molina not yet checked beyond their portals.
+
+Aetna's Transparency in Coverage site `health1.aetna.com` serves an incomplete TLS chain (missing DigiCert Global G2 TLS RSA SHA256 2020 CA1); fetching it needs that intermediate added to the trust bundle, not verification turned off.
+
 ## NPPES connector
 
 ```bash
@@ -55,5 +69,5 @@ python -m src.directory.nppes --metro phoenix --specialty cardiology   # ~1 minu
 
 ## Blockers
 
-- Aetna app registration and client credentials (owner's action on the portal).
+- Aetna's directory needs app registration and client credentials, which won't arrive before the hackathon. Use UnitedHealthcare, Cigna and Humana instead.
 - The cloud environment's network policy blocks `apif1.aetna.com`; add it under Allowed domains. `npiregistry.cms.hhs.gov`, `developerportal.aetna.com` and `vteapif1.aetna.com` are already reachable.
