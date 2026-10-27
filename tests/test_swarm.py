@@ -72,3 +72,13 @@ def test_dashboard_and_api_smoke():
     assert client.get("/api/state").json()["running"] is False
     # approving before any swarm has finished must be refused
     assert client.post("/api/approve", json={"office_id": "off_01", "slot_start": "2026-11-02T10:00"}).status_code == 409
+
+
+async def test_every_payer_plan_works_the_same_offline():
+    from src.sim.scenarios import PAYER_PLANS, patient_for
+
+    for payer in PAYER_PLANS:
+        pt = patient_for(payer)
+        out = await run_swarm(swarm_demo_scenarios(plan=pt.plan), pt, Constraints(), k=15, stagger_s=0.0, scale=0)
+        assert sum(s.success for s in out.scores) >= 13, payer  # the plan name must not change how calls go
+        assert out.truth["confirmed_no"] >= 2  # the wrong-plan offices still say no

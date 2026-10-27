@@ -9,8 +9,17 @@ from datetime import datetime, timedelta
 from ..schemas import OfficeScenario, PatientProfile
 from .personas import weighted_personas
 
-PLAN = "Aetna Medicare Advantage PPO"
-OTHER_PLANS = ["Humana Gold Plus", "UnitedHealthcare AARP Medicare Advantage", "Blue Shield Trio HMO", "Cigna Preferred"]
+# The patient's plan per payer. The payer is what the real directory search keys on
+# (src/swarm/candidates.py); the plan name is what the simulated calls talk about.
+PAYER_PLANS: dict[str, tuple[str, str]] = {
+    "uhc": ("UnitedHealthcare", "AARP Medicare Advantage from UHC AZ-1 (HMO-POS)"),
+    "cigna": ("Cigna", "Cigna Open Access Plus"),
+    "humana": ("Humana", "Humana Gold Plus HMO"),
+}
+DEFAULT_PAYER = "uhc"  # Aetna's directory needs credentials, so the demo defaults to UHC
+PLAN = PAYER_PLANS[DEFAULT_PAYER][1]
+# Plans the simulated "wrong plan" offices take instead; none shares a payer with PAYER_PLANS.
+OTHER_PLANS = ["Blue Shield Trio HMO", "Aetna Medicare Advantage PPO", "Molina Medicare Complete Care", "Banner Medicare Advantage Prime"]
 
 STEMS = [
     "Alder", "Brightwater", "Cedar Point", "Driftwood", "Elmstead", "Fairhaven", "Granite Ridge",
@@ -24,10 +33,16 @@ DEMO_PATIENT = PatientProfile(
     name="Jordan Rivera",
     dob="1957-03-14",
     member_id="MBR-884-2201",
-    payer="Aetna",
+    payer=PAYER_PLANS[DEFAULT_PAYER][0],
     plan=PLAN,
     reason_category="new patient cardiology consultation",
 )
+
+
+def patient_for(payer: str) -> PatientProfile:
+    """The fictional demo patient, insured by `payer`."""
+    name, plan = PAYER_PLANS[payer]
+    return DEMO_PATIENT.model_copy(update={"payer": name, "plan": plan})
 
 
 def _iso(day: int, hh: int, mm: int = 0) -> str:

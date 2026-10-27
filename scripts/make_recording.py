@@ -21,7 +21,8 @@ sys.path.insert(0, str(ROOT))
 
 from src.config import mock_enabled, role_cfg  # noqa: E402
 from src.schemas import Constraints  # noqa: E402
-from src.sim.scenarios import DEMO_PATIENT, swarm_demo_scenarios  # noqa: E402
+from src.sim.scenarios import DEFAULT_PAYER, patient_for, swarm_demo_scenarios  # noqa: E402
+from src.swarm.candidates import directory_search  # noqa: E402
 from src.swarm.dispatcher import run_swarm  # noqa: E402
 from src.swarm.events import EventBus  # noqa: E402
 
@@ -31,8 +32,10 @@ REQUEST = "I need a cardiologist in network, as soon as possible, but nothing be
 async def main(out: Path) -> None:
     bus = EventBus()
     c = Constraints()
-    bus.publish("patient_request", utterance=REQUEST, constraints=c.model_dump())
-    res = await run_swarm(swarm_demo_scenarios(), DEMO_PATIENT, c, bus=bus, k=15, shared_blackboard=True)
+    patient = patient_for(DEFAULT_PAYER)
+    bus.publish("patient_request", utterance=REQUEST, constraints=c.model_dump(), payer=patient.payer, plan=patient.plan)
+    res = await run_swarm(swarm_demo_scenarios(plan=patient.plan), patient, c, bus=bus, k=15, shared_blackboard=True,
+                          directory=directory_search(DEFAULT_PAYER))
 
     meta = {
         "type": "recording_meta",
