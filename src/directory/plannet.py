@@ -217,31 +217,36 @@ async def fetch_payer(payer: Payer, providers: list[Provider], specialty: str, c
         await asyncio.gather(*(batch(todo[i:i + ID_BATCH]) for i in range(0, len(todo), ID_BATCH)))
     await asyncio.gather(*(one_name(nid) for nid in todo if nid not in res.networks))
     for cs in res.claims.values():
-        for c in cs:
-            c["network_name"] = res.networks.get(c["network_id"])
-            del c["network_ref"]
+        for c in cs:  # names live once per payer in the snapshot, not on every claim
+            del c["network_ref"], c["network_name"]
     res.requests, res.seconds = fhir.requests, round(time.monotonic() - t0, 1)
     return res
 
 
-def snapshot(metro: str, specialty: str, checked: int, results: list[PayerResult]) -> dict:
+def snapshot(metro: str, specialty: str, checked: int, results: list[PayerResult], previous: dict | None = None) -> dict:
+    """The networks snapshot. With `previous`, payers not in `results` are carried over unchanged."""
+    now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    payers = {k: v for k, v in (previous or {}).get("payers", {}).items()}
+    claims: dict[str, dict] = {}
+    for npi, by_payer in (previous or {}).get("claims", {}).items():
+        claims[npi] = {k: v for k, v in by_payer.items() if k not in {r.payer.key for r in results}}
+    for r in results:
+        payers[r.payer.key] = {
+            "name": r.payer.name, "base_url": r.payer.base_url, "fetched_at": now, "checked": checked, "listed": r.listed,
+            "with_networks": len(r.claims), "errors": len(r.errors), "failed": dict(sorted(r.errors.items())),
+            "requests": r.requests, "seconds": r.seconds,
+            "networks": dict(sorted(r.networks.items(), key=lambda kv: (kv[1] or "", kv[0]))),
+        }
+        for npi, cs in r.claims.items():
+            claims.setdefault(npi, {})[r.payer.key] = cs
     return {
         "metro": metro,
         "specialty": specialty,
-        "fetched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "note": "Directory claims only: what each payer's public directory says, not verified by calls.",
-        "payers": {
-            r.payer.key: {
-                "name": r.payer.name, "base_url": r.payer.base_url, "checked": checked, "listed": r.listed,
-                "with_networks": len(r.claims), "errors": len(r.errors), "requests": r.requests, "seconds": r.seconds,
-                "networks": dict(sorted(r.networks.items(), key=lambda kv: (kv[1] or "", kv[0]))),
-            }
-            for r in results
-        },
-        "claims": {
-            npi: {r.payer.key: r.claims[npi] for r in results if npi in r.claims}
-            for npi in sorted({n for r in results for n in r.claims})
-        },
+        "fetched_at": now,
+        "note": "Directory claims only: what each payer's public directory says, not verified by calls. "
+                "Network names are in payers.<payer>.networks, keyed by the claims' network_id.",
+        "payers": dict(sorted(payers.items())),
+        "claims": {npi: dict(sorted(c.items())) for npi, c in sorted(claims.items()) if c},
     }
 
 
@@ -262,7 +267,9 @@ async def amain(args) -> None:
     async with httpx.AsyncClient(timeout=90) as client:
         results = await asyncio.gather(*(fetch_payer(p, providers, args.specialty, client, args.concurrency, progress, METROS[args.metro].state) for p in payers))
     out = Path(args.out or base.with_name(f"{base.stem}-networks.json"))
-    out.write_text(json.dumps(snapshot(meta["metro"], args.specialty, len(providers), list(results)), indent=1) + "\n")
+    previous = json.loads(out.read_text()) if args.merge and out.exists() else None
+    snap = snapshot(meta["metro"], args.specialty, len(providers), list(results), previous)
+    out.write_text(json.dumps(snap, separators=(",", ":")) + "\n")
     print(f"wrote {out}")
     for r in results:
         print(f"  {r.payer.name:16} listed {r.listed}/{len(providers)}, with {args.specialty} networks {len(r.claims)}, "
@@ -277,6 +284,7 @@ def main() -> None:
     ap.add_argument("--concurrency", type=int, default=6, help="requests in flight per payer")
     ap.add_argument("--nppes", help="NPPES snapshot to start from")
     ap.add_argument("--out")
+    ap.add_argument("--merge", action="store_true", help="keep other payers already in the output file")
     asyncio.run(amain(ap.parse_args()))
 
 
