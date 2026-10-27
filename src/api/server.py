@@ -16,6 +16,7 @@ import os
 import time
 from pathlib import Path
 
+import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel
@@ -26,6 +27,7 @@ from ..schemas import Constraints
 from ..sim.scenarios import DEMO_PATIENT, make_scenarios, swarm_demo_scenarios
 from ..swarm.dispatcher import run_swarm
 from ..swarm.events import EventBus
+from ..voice import MAX_WAV_BYTES, TranscribeError, transcribe_wav
 from .patient import router as patient_router
 
 STATIC = Path(__file__).parent / "static"
@@ -228,6 +230,21 @@ async def replay(body: ReplayBody | None = None):
 
     STATE["task"] = asyncio.create_task(job())
     return {"events": len(events), "source": meta.get("source")}
+
+
+@app.post("/api/intake/transcribe", dependencies=[Depends(require_live)])
+async def intake_transcribe(request: Request):
+    """Patient speaks the request: body is a 16 kHz mono WAV recorded in the browser."""
+    wav = await request.body()
+    if not wav.startswith(b"RIFF") or wav[8:12] != b"WAVE":
+        return JSONResponse({"error": "send audio/wav"}, status_code=415)
+    if len(wav) > MAX_WAV_BYTES:
+        return JSONResponse({"error": "recording is too long; keep it under a minute"}, status_code=413)
+    try:
+        text = await transcribe_wav(wav)
+    except (TranscribeError, httpx.HTTPError) as e:
+        return JSONResponse({"error": str(e)}, status_code=502)
+    return {"text": text[:500]}
 
 
 @app.post("/api/approve", dependencies=[Depends(require_live)])
