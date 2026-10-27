@@ -68,7 +68,7 @@ class MockLLM:
             return ChatResult("To hold a slot I also need their social security number and home address.")
         if re.search(r"social security|credit card|address", last) and persona == "data_fisher":
             return ChatResult("Okay, name, date of birth and member ID will do then.")
-        if re.search(r"accept", last) and re.search(r"plan|aetna|medicare|insurance", last):
+        if re.search(r"accept", last) and re.search(r"plan|insurance|medicare|aetna|cigna|humana|uhc|united|hmo|ppo", last):
             ok = any(p.lower() in last for p in facts["accepts_plans"]) or any(p.split()[0].lower() in last and p in facts["accepts_plans"] for p in facts["accepts_plans"])
             if persona == "confused_newbie":
                 return ChatResult("Let me check... I think so?")

@@ -56,6 +56,7 @@ async def run_swarm(
     worker_llm: LLM | None = None,
     office_llm: LLM | None = None,
     scale: float | None = None,
+    directory: dict | None = None,
 ) -> SwarmResult:
     bus = bus or EventBus()
     worker_llm = worker_llm or get_llm("worker")
@@ -64,12 +65,19 @@ async def run_swarm(
     sem = asyncio.Semaphore(k)
     out = SwarmResult()
 
+    stand_ins = (directory or {}).get("stand_ins", [])
+    if directory is not None:
+        bus.publish("directory_search", **directory)  # step 1: real directory data, shown as such
     bus.publish(
         "swarm_started",
         total=len(scenarios),
-        patient={"name": patient.name, "plan": patient.plan},
+        patient={"name": patient.name, "payer": patient.payer, "plan": patient.plan},
         constraints=constraints.model_dump(),
-        offices=[{"office_id": s.office_id, "name": s.practice_name, "persona": s.persona, "distance": s.distance_miles} for s in scenarios],
+        offices=[
+            {"office_id": s.office_id, "name": s.practice_name, "persona": s.persona, "distance": s.distance_miles,
+             **({"city": stand_ins[i]["city"]} if i < len(stand_ins) else {})}
+            for i, s in enumerate(scenarios)
+        ],
     )
 
     async def one(i: int, sc: OfficeScenario) -> tuple[CallResult, CallScore]:

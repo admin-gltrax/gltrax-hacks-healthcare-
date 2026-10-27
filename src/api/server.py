@@ -22,9 +22,10 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
 from ..config import mock_enabled
-from ..intake import parse_request
+from ..intake import detect_payer, parse_request
 from ..schemas import Constraints
-from ..sim.scenarios import DEMO_PATIENT, make_scenarios, swarm_demo_scenarios
+from ..sim.scenarios import DEFAULT_PAYER, PAYER_PLANS, make_scenarios, patient_for, swarm_demo_scenarios
+from ..swarm.candidates import directory_search
 from ..swarm.dispatcher import run_swarm
 from ..swarm.events import EventBus
 from ..directory.nppes import METROS, TAXONOMIES
@@ -181,16 +182,23 @@ async def start(body: StartBody | None = None):
     constraints = Constraints()
     if body.utterance:
         constraints = await parse_request(body.utterance[:500])
-    scenarios = swarm_demo_scenarios() if body.demo else make_scenarios(min(body.n, 40), seed=body.seed)
+    # The insurer the patient names picks whose real directory is searched; others fall back to the default.
+    named = detect_payer(body.utterance)
+    payer = named if named in PAYER_PLANS else DEFAULT_PAYER
+    patient = patient_for(payer)
+    directory = directory_search(payer, specialty=constraints.specialty)
+    if named and named != payer:  # e.g. Aetna: say why, then run on the default payer's directory
+        directory["requested"] = directory_search(named, specialty=constraints.specialty)
+    scenarios = swarm_demo_scenarios(plan=patient.plan) if body.demo else make_scenarios(min(body.n, 40), seed=body.seed, plan=patient.plan)
     bus = EventBus()
     STATE.update(bus=bus, constraints=constraints, result=None, mode="live")
-    bus.publish("patient_request", utterance=body.utterance, constraints=constraints.model_dump())
+    bus.publish("patient_request", utterance=body.utterance, constraints=constraints.model_dump(), payer=patient.payer, plan=patient.plan)
     run_dir = _run_dir()
 
     async def job():
         try:
             STATE["result"] = await run_swarm(
-                scenarios, DEMO_PATIENT, constraints, bus=bus, k=min(body.k, 20), shared_blackboard=True
+                scenarios, patient, constraints, bus=bus, k=min(body.k, 20), shared_blackboard=True, directory=directory
             )
         except Exception as e:  # surface to the dashboard instead of dying silently
             bus.publish("swarm_error", error=f"{type(e).__name__}: {e}")

@@ -40,3 +40,17 @@ async def parse_request(utterance: str, today: str = "2026-11-01", llm: LLM | No
         response_format=CONSTRAINTS_SCHEMA,
     )
     return Constraints.model_validate(json.loads(res.content))
+
+
+_PAYER_WORDS = {
+    "uhc": ("unitedhealthcare", "united healthcare", "united health", "uhc", "aarp", "optum"),
+    "cigna": ("cigna", "evernorth"),
+    "humana": ("humana",),
+    "aetna": ("aetna",),
+}
+
+
+def detect_payer(utterance: str | None) -> str | None:
+    """The insurer the patient names, if any ("I have UnitedHealthcare", "my AARP plan")."""
+    text = (utterance or "").lower()
+    return next((k for k, words in _PAYER_WORDS.items() if any(w in text for w in words)), None)

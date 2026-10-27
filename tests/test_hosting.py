@@ -21,6 +21,7 @@ def reset(monkeypatch, tmp_path):
     t = server.STATE["task"]
     if t and not t.done():
         t.cancel()
+    server.STATE.update(bus=EventBus(), task=None, result=None, mode="idle", live_starts=[])  # don't leak into other modules
 
 
 def client():
@@ -160,3 +161,27 @@ async def test_directory_endpoint_serves_the_local_snapshot():
         assert d["count"] == len(d["providers"]) > 0 and d["metro"].startswith("Phoenix")
         assert {"npi", "name", "city", "payers"} <= set(d["providers"][0])
         assert (await c.get("/api/directory", params={"metro": "../../etc"})).status_code == 404
+
+
+async def test_swarm_starts_with_a_real_directory_search_for_the_named_payer():
+    async with client() as c:
+        r = await c.post("/api/swarm/start", json={"utterance": "I have Cigna and need a cardiologist, nothing before 9"})
+        assert r.status_code == 200
+        await wait_done(c)
+    hist = server.STATE["bus"].history
+    req = next(e for e in hist if e["type"] == "patient_request")
+    d = next(e for e in hist if e["type"] == "directory_search")
+    started = next(e for e in hist if e["type"] == "swarm_started")
+    assert req["payer"] == "Cigna" and started["patient"]["payer"] == "Cigna"
+    assert d["available"] and d["payer"] == "cigna" and 0 < d["accepting_new_patients"] <= d["in_network"] <= d["providers_total"]
+    assert [o.get("city") for o in started["offices"]] == [s["city"] for s in d["stand_ins"]]
+    assert types().index("directory_search") < types().index("swarm_started")
+
+
+async def test_unavailable_payer_says_why_and_falls_back():
+    async with client() as c:
+        assert (await c.post("/api/swarm/start", json={"utterance": "cardiologist, I'm on Aetna"})).status_code == 200
+        await wait_done(c)
+    d = next(e for e in server.STATE["bus"].history if e["type"] == "directory_search")
+    assert d["payer"] == "uhc" and d["available"]
+    assert d["requested"]["payer"] == "aetna" and not d["requested"]["available"] and "credentials" in d["requested"]["reason"]

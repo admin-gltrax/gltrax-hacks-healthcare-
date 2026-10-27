@@ -1,6 +1,6 @@
 # Live provider network data
 
-> **Status.** The NPPES connector is built (`src/directory/nppes.py`); `data/directory/phoenix-cardiology.json` holds 677 Phoenix-metro cardiologists (fetched 2026-10-27). No payer connector yet. The swarm still calls the fixed, fictional 15-office demo. Real directory data is meant for the "directory says" side; simulated receptionists must never act under real practice names.
+> **Status.** Built: NPPES connector (`src/directory/nppes.py`), payer connector for UnitedHealthcare, Cigna and Humana (`src/directory/plannet.py`), local graph (`src/directory/store.py`), dashboard tab, and the swarm's directory step. Data: 677 Phoenix-metro cardiologists with payer network claims (fetched 2026-10-27). The swarm calls simulated stand-ins only. Real directory data is meant for the "directory says" side; simulated receptionists must never act under real practice names.
 
 ## Scope
 
@@ -72,6 +72,14 @@ python -m src.directory.plannet --metro phoenix --specialty cardiology   # UHC +
 - Writes `data/directory/<metro>-<specialty>-networks.json` with per-payer counts (checked, listed, with networks, errors, requests, seconds).
 
 **Runtime model.** The app never calls payers while serving a request. `src/directory/store.py` joins the two committed snapshots into `Provider.network` (directory claims, confidence 0.5), so demos work offline and a payer outage changes nothing until the next refresh. Refreshing is a batch job: rerun both commands (nightly is plenty; directories update on the order of days). Calls made by the swarm are a separate, higher-confidence source that can later raise or lower a claim.
+
+## How the swarm uses it
+
+1. The patient names an insurer ("I have Cigna"); `src/intake.py:detect_payer` maps it to `uhc`, `cigna` or `humana`. Unnamed or unavailable (Aetna) falls back to UnitedHealthcare, and the dashboard says why.
+2. `src/swarm/candidates.py:directory_search` reads the local graph: how many of the metro's providers that payer's public directory lists in an Arizona network, and how many say they take new patients. This is published as a `directory_search` event and shown as "Step 1 · Real directory search", labeled real data.
+3. The 15 calls still go to simulated offices. Each stands in for one real listing and borrows only its city (round-robin across cities, accepting-new-patients first). No real name, NPI or phone reaches a simulated office, so no simulated behavior is ever attributed to a real practice.
+
+The fictional demo patient's plan follows the payer (`src/sim/scenarios.py:PAYER_PLANS`); the default is now UnitedHealthcare because Aetna's directory needs credentials. The committed public replay predates this and still shows the Aetna plan with no directory step; re-record it with `scripts/make_recording.py` (live API, spends credits).
 
 ## Original payer join plan (Aetna, needs credentials)
 
