@@ -48,6 +48,7 @@ Results land in `data/runs/` with the prompt hash and the safety-block hash. Kee
 | `src/swarm/` | Blackboard, event bus, 15-way dispatcher |
 | `src/eval/` | Deterministic judge, optional LLM quality judge, batch CLI |
 | `src/api/` | FastAPI server, SSE stream, dashboard |
+| `src/directory/` | Real provider data: NPPES connector (`data/directory/` holds the Phoenix cardiology snapshot); see `docs/provider-data.md` |
 | `src/intake.py`, `src/voice.py` | Patient request: speech to text (Muse Voice Transcribe), text to constraints |
 | `prompts/worker_v0.txt` | The tunable worker prompt (the self-improvement loop edits this, never the safety block) |
 | `src/mock.py` | Offline scripted models for development |
