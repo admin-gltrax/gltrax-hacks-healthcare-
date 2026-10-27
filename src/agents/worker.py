@@ -74,7 +74,7 @@ class CallRunner:
         board: Blackboard,
         bus: EventBus | None = None,
         prompt_text: str | None = None,
-        max_turns: int = 16,
+        max_turns: int = 24,
         scale: float | None = None,
     ):
         self.sc, self.patient, self.c = scenario, patient, constraints
@@ -153,6 +153,10 @@ class CallRunner:
         silences = 0
         for _ in range(self.max_turns):
             res: ChatResult = await self.worker.chat(self.msgs, tools=TOOLS)
+            if res.tool_calls and res.content:
+                # Tool turns are silent. Models narrate them ("I'll record that"), which
+                # would be spoken to the office; drop the text from the call and the history.
+                res = ChatResult(content="", tool_calls=res.tool_calls)
             self.msgs.append(res.assistant_message())
             said = (res.content or "").strip()
 
