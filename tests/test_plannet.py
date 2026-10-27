@@ -65,6 +65,8 @@ def test_network_state_reads_explicit_markers_only():
     assert network_state("AARP Medicare Advantage Access from UHC NC-23 (PPO)") == "NC"
     assert network_state("ARKANSAS PPO-PPA DIRECT") == "AR"
     assert network_state("AZ IFP DIGNITY CIGNA") == "AZ"
+    assert network_state("UHC Complete Care Support IL-7 (HMO-POS C-SNP)") == "IL"
+    assert network_state("Charter HMO/Charter Balanced HMO") is None
     assert network_state("Group Medicare PPO+") is None
     assert network_state("Medicare MA") is None  # MA as Medicare Advantage, not Massachusetts
     assert network_state(None) is None
@@ -164,5 +166,5 @@ def test_directory_view_summarizes_payers(tmp_path):
     v = directory_view(data_dir=tmp_path, max_names=2)
     row = v["providers"][0]["payers"]["uhc"]
     # the Arizona plan is listed first, the North Carolina plan is set aside, names are looked up once per payer
-    assert row == {"networks": 4, "other_state": 1, "names": ["AARP Medicare Advantage from UHC AZ-1 (PPO)", "Plan 0"], "accepting": "newpt"}
+    assert row == {"networks": 4, "other_state": 1, "unnamed": 0, "names": ["AARP Medicare Advantage from UHC AZ-1 (PPO)", "Plan 0"], "accepting": "newpt"}
     assert v["payers"]["uhc"]["with_networks"] == 1
