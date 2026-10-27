@@ -116,3 +116,37 @@ async def test_replay_is_public_and_replays_in_order(monkeypatch, tmp_path):
 async def test_replay_404_when_no_recording():
     async with client() as c:
         assert (await c.post("/api/replay", json={})).status_code == 404
+
+
+def _wav(n_samples: int = 1600) -> bytes:
+    import struct
+    data = b"\x00\x00" * n_samples
+    return b"RIFF" + struct.pack("<I", 36 + len(data)) + b"WAVEfmt " + struct.pack("<IHHIIHH", 16, 1, 1, 16000, 32000, 2, 16) + b"data" + struct.pack("<I", len(data)) + data
+
+
+async def test_voice_intake_is_token_gated_and_validates_audio(monkeypatch):
+    monkeypatch.setenv("APP_ACCESS_TOKEN", "s3cret")
+    async with client() as c:
+        assert (await c.post("/api/intake/transcribe", content=_wav())).status_code == 401  # spends credits: token required
+        h = {"x-access-token": "s3cret", "content-type": "audio/wav"}
+        assert (await c.post("/api/intake/transcribe", content=b"not audio", headers=h)).status_code == 415
+        assert (await c.post("/api/intake/transcribe", content=_wav(1_100_000), headers=h)).status_code == 413
+        r = await c.post("/api/intake/transcribe", content=_wav(), headers=h)
+        assert r.status_code == 200 and "cardiologist" in r.json()["text"]  # mock transcript
+
+
+async def test_voice_intake_reports_api_errors(monkeypatch):
+    from src import voice
+
+    monkeypatch.setenv("MOCK_LLM", "0")
+    monkeypatch.setenv("APP_ACCESS_TOKEN", "s3cret")
+
+    def fake(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/v1/asr/transcribe" and b'"audioEncoding": "WAV"' in request.content
+        return httpx.Response(400, json={"error": {"message": "Malformed request"}})
+
+    real = httpx.AsyncClient
+    async with client() as c:  # created before the patch below, which is module-wide
+        monkeypatch.setattr(voice.httpx, "AsyncClient", lambda **kw: real(transport=httpx.MockTransport(fake), **kw))
+        r = await c.post("/api/intake/transcribe", content=_wav(), headers={"x-access-token": "s3cret"})
+    assert r.status_code == 502 and "Malformed request" in r.json()["error"]

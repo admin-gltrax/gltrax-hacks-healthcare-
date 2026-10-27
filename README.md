@@ -22,6 +22,8 @@ uvicorn src.api.server:app --port 8000
 
 Add `?debug=1` to the dashboard URL to show each office's hidden persona.
 
+**Voice intake:** click **🎙 Speak**, say the request, click **Stop**. The browser converts the recording to 16 kHz WAV and the server transcribes it with Muse Voice Transcribe (`POST /v1/asr/transcribe`, see `src/voice.py`); the text lands in the request box for review before you start. Browsers only allow the mic on `localhost` or HTTPS, and it uses the same access token as live runs.
+
 ## Hosting
 
 Runs as one Docker container (`Dockerfile`, `render.yaml`). Visitors can watch a free recorded replay; live runs need an access token so nobody can spend your model credits. See [DEPLOY.md](DEPLOY.md).
@@ -46,6 +48,7 @@ Results land in `data/runs/` with the prompt hash and the safety-block hash. Kee
 | `src/swarm/` | Blackboard, event bus, 15-way dispatcher |
 | `src/eval/` | Deterministic judge, optional LLM quality judge, batch CLI |
 | `src/api/` | FastAPI server, SSE stream, dashboard |
+| `src/intake.py`, `src/voice.py` | Patient request: speech to text (Muse Voice Transcribe), text to constraints |
 | `prompts/worker_v0.txt` | The tunable worker prompt (the self-improvement loop edits this, never the safety block) |
 | `src/mock.py` | Offline scripted models for development |
 

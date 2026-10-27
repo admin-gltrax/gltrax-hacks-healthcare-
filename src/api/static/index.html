@@ -21,6 +21,8 @@
   button { background:var(--blue); color:#fff; border:0; padding:8px 14px; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px; }
   button:disabled { opacity:.5; cursor:default; }
   button.ghost { background:transparent; border:1px solid var(--line); color:var(--text); }
+  #mic.rec { background:var(--bad); color:#fff; border-color:var(--bad); animation:pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity:.6; } }
   input[type=text], input[type=password] { background:var(--panel); border:1px solid var(--line); color:var(--text); padding:8px 10px; border-radius:6px; min-width:300px; font-size:13px; }
   .strip { padding:8px 20px; color:var(--mute); font-size:12px; border-bottom:1px solid var(--line); }
   main { display:grid; grid-template-columns:1fr 340px; gap:16px; padding:16px 20px; }
@@ -66,6 +68,7 @@
   <span class="sim">SIMULATED OFFICES — no real clinics are called</span>
   <span class="grow"></span>
   <input id="ask" type="text" value="I need a cardiologist in network, as soon as possible, but nothing before 9 in the morning." aria-label="Patient request">
+  <button id="mic" class="ghost" style="display:none" title="Say the request instead of typing it">🎙 Speak</button>
   <input id="token" type="password" placeholder="Access token (live runs)" aria-label="Access token" style="display:none;min-width:190px">
   <button id="go" disabled>Start live swarm</button>
   <button id="replay" class="ghost" style="display:none">Replay recorded run</button>
@@ -171,6 +174,7 @@ async function loadConfig() {
   $('go').disabled = !cfg.live_enabled;
   $('go').title = cfg.live_enabled ? '' : 'Live runs are disabled on this server; use the replay.';
   $('replay').style.display = cfg.replay_available ? '' : 'none';
+  $('mic').style.display = cfg.live_enabled && navigator.mediaDevices && window.MediaRecorder ? '' : 'none';
 }
 $('token').oninput = () => store.set('swarm_token', $('token').value.trim());
 
@@ -203,6 +207,51 @@ $('approve').onclick = async () => {
   const r = await fetch('/api/approve', {method:'POST', headers:{'content-type':'application/json', ...authHeaders()}, body:JSON.stringify({office_id:best.office_id, slot_start:best.slot_start})});
   if (!r.ok) log('approval failed: ' + r.status);
 };
+
+// ---- voice intake: record, convert to 16 kHz mono WAV in the browser, transcribe on the server ----
+let rec = null, recTimer = null;
+const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+async function toWav16k(blob) {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const decoded = await ctx.decodeAudioData(await blob.arrayBuffer());
+  ctx.close();
+  const off = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
+  const src = off.createBufferSource(); src.buffer = decoded; src.connect(off.destination); src.start();
+  const pcm = (await off.startRendering()).getChannelData(0);
+  const v = new DataView(new ArrayBuffer(44 + pcm.length * 2));
+  const str = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  str(0, 'RIFF'); v.setUint32(4, 36 + pcm.length * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);  // PCM, mono
+  v.setUint32(24, 16000, true); v.setUint32(28, 32000, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  str(36, 'data'); v.setUint32(40, pcm.length * 2, true);
+  pcm.forEach((x, i) => v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, x)) * 0x7fff, true));
+  return new Blob([v], {type: 'audio/wav'});
+}
+async function micStart() {
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({audio: true}); }
+  catch (e) { log('microphone unavailable: ' + esc(e.message)); return; }
+  const chunks = [];
+  rec = new MediaRecorder(stream);
+  rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  rec.onstop = () => { stream.getTracks().forEach(t => t.stop()); clearTimeout(recTimer); micSend(new Blob(chunks, {type: rec.mimeType})); };
+  rec.start();
+  $('mic').classList.add('rec'); $('mic').textContent = '■ Stop';
+  recTimer = setTimeout(micStop, 30000);  // keep recordings short
+}
+function micStop() { if (rec && rec.state === 'recording') rec.stop(); }
+async function micSend(blob) {
+  $('mic').classList.remove('rec'); $('mic').textContent = 'Transcribing…'; $('mic').disabled = true;
+  try {
+    const r = await fetch('/api/intake/transcribe', {method: 'POST', headers: {'content-type': 'audio/wav', ...authHeaders()}, body: await toWav16k(blob)});
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) log('transcription failed: ' + esc(String(j.error || j.detail || r.status)));
+    else if (j.text) { $('ask').value = j.text; log('heard: “' + esc(j.text) + '”'); }
+    else log('no speech detected; try again');
+  } catch (e) { log('could not process the recording: ' + esc(e.message)); }
+  finally { rec = null; $('mic').textContent = '🎙 Speak'; $('mic').disabled = false; }
+}
+$('mic').onclick = () => rec ? micStop() : micStart();
 
 function openDrawer(id) { $('drawer').dataset.id = id; $('drawer').classList.add('open'); drawBody(id); }
 function closeDrawer() { $('drawer').classList.remove('open'); }
