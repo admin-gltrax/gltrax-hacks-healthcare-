@@ -79,6 +79,10 @@ class MockLLM:
             return ChatResult("Yes, a referral from a primary care doctor is required." if facts["referral_required"] else "No referral is required.")
         if re.search(r"pencil|hold (?:that|the)|tentative", last):
             return ChatResult("I can pencil that in for 24 hours. The patient will need to confirm.")
+        if re.search(r"elsewhere|another office|other office", last) and "earlier" in last:
+            if facts.get("cancellation_slots"):
+                return ChatResult("Actually, we just had a cancellation: " + facts["cancellation_slots"][0]["spoken"] + ".")
+            return ChatResult("Sorry, nothing earlier than what I mentioned.")
         if re.search(r"opening|available|earliest|slot|appointment", last):
             if facts["referral_required"]:
                 return ChatResult("I can't discuss availability without a referral.")
@@ -171,6 +175,10 @@ class MockLLM:
         ]
         if "check_blackboard" not in names and stage == 5:
             return ChatResult(tool_calls=[tc("check_blackboard")])
+        if last["role"] == "tool" and "held_slots_at_other_offices" in last["content"]:
+            held_elsewhere = json.loads(last["content"])["held_slots_at_other_offices"]
+            if held_elsewhere:
+                return ChatResult(content=f"I have an opening held elsewhere at {held_elsewhere[0]}. Do you have anything earlier?")
         return ChatResult(content=ladder[min(stage, len(ladder) - 1)])
 
     @staticmethod

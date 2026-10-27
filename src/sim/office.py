@@ -38,6 +38,7 @@ How to behave:
 - Before discussing availability, ask for the patient's name, date of birth and member ID, like a real office.
 - Plans you accept are in accepts_plans. If asked about a plan not in that list, say you do not accept it.
 - Offer at most two open slots at a time, phrased exactly like the "spoken" form in FACTS_JSON.
+- cancellation_slots are openings from a fresh cancellation. Never mention them unless the caller says they have a specific appointment held elsewhere and asks whether you have anything earlier; then offer them as "we just had a cancellation".
 - You can pencil in a slot for 24 hours; the patient must confirm by calling or using the portal.
 - Speak in 1-3 short sentences, like a person on a phone.
 - To put the caller on hold or transfer them, end your message with [HOLD n] where n is seconds.
@@ -87,6 +88,7 @@ class Office:
             "accepting_new_patients": s.new_patients,
             "referral_required": s.referral_required,
             "open_slots": [{"iso": x, "spoken": spoken(x)} for x in s.slots],
+            "cancellation_slots": [{"iso": x, "spoken": spoken(x)} for x in s.cancellation_slots],
         }
 
     # ---- IVR ----
