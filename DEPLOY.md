@@ -9,7 +9,7 @@ The app is one container running one process. Anyone with the URL can watch a **
 3. When prompted, paste your `MODEL_API_KEY` (Meta Model API key). It is stored by Render and never committed.
 4. Apply. The first build takes a few minutes. The health check is `/healthz`.
 5. Open the service URL. Click **Replay recorded run** to confirm it works.
-6. For live runs, copy `APP_ACCESS_TOKEN` from the service's **Environment** tab (Render generated it), paste it into the token box on the dashboard, and click **Start live swarm**. Share the token with Scott only.
+6. For live runs, copy `APP_ACCESS_TOKEN` from the service's **Environment** tab (Render generated it), paste it into the token box on the dashboard, and click **Start live swarm**. Share the token only with your teammates.
 
 `plan: starter` is a paid instance: free instances sleep when idle, so the first visitor (or a judge) would wait through a cold start. Check Render's current pricing before applying.
 
