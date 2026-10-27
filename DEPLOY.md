@@ -67,17 +67,17 @@ Until credentials are added, the workflow skips with a notice rather than failin
 
 `plan: starter` is a paid instance: free instances sleep when idle, so the first visitor (or a judge) would wait through a cold start. Check Render's current pricing before applying.
 
-## Replace the placeholder recording with a real one
+## The public replay
 
-`recordings/demo.jsonl` currently comes from the **scripted mock models**, and the replay banner says so. Once the worker prompt is calibrated on the real models:
+`recordings/demo.jsonl` is a live run on the Meta Model API (`muse-spark-1.3` for the agent and the simulated offices, recorded 2026-10-27): 15/15 calls succeeded, 15/15 passed safety, and the best slot (Nov 2, 10:00) was won by honest leverage. To record a new one after changing prompts or scenarios:
 
 ```bash
 python scripts/make_recording.py        # real models; writes recordings/demo.jsonl
 # review it on the dashboard, then
-git add recordings/demo.jsonl && git commit -m "Record real-model demo run" && git push
+git add recordings/demo.jsonl && git commit -m "Re-record demo run" && git push
 ```
 
-Render redeploys automatically and the banner switches to "Meta Model API".
+Render redeploys automatically.
 
 ## Settings (environment variables)
 
