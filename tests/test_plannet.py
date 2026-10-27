@@ -13,9 +13,10 @@ def prov(npi, name="Ana Diaz"):
     return Provider(npi=npi, name=name, specialty="Cardiovascular Disease", address=ADDR, locations=[ADDR])
 
 
-def role(rid, nets, codes=("207RC0000X",), accepting="newpt", active=True, display=True):
+def role(rid, nets, codes=("207RC0000X",), accepting="newpt", active=True, display=True, loc=None):
     return {
         "resourceType": "PractitionerRole", "id": rid, "active": active, "meta": {"lastUpdated": "2026-10-20T00:00:00Z"},
+        "location": [{"reference": f"https://payer.test/fhir/Location/{loc}"}] if loc else [],
         "specialty": [{"coding": [{"code": c}]} for c in codes],
         "extension": [{"url": NEWPATIENTS_EXT, "extension": [{"url": "acceptingPatients", "valueCodeableConcept": {"coding": [{"code": accepting}]}}]}]
         + [{"url": NETWORK_EXT, "valueReference": {"reference": f"Organization/{n}", **({"display": f"Net {n}"} if display else {})}} for n in nets],
@@ -49,6 +50,13 @@ def fake_payer(practitioners: dict[str, dict], roles: dict[str, list[dict]], org
 
 def prac(pid, npi, family="Diaz"):
     return {"resourceType": "Practitioner", "id": pid, "identifier": [{"system": NPI_SYSTEM, "value": npi}], "name": [{"family": family, "given": ["Ana"]}]}
+
+
+def test_roles_in_other_states_are_dropped():
+    locs = {"az": {"resourceType": "Location", "id": "az", "address": {"state": "AZ"}}, "nc": {"resourceType": "Location", "id": "nc", "address": {"state": "NC"}}}
+    roles = [role("r1", ["AZNET"], loc="az"), role("r2", ["NCNET"], loc="nc"), role("r3", ["UNKNOWN"], loc="gone")]
+    ids = sorted(c["network_id"] for c in claims_from_roles(roles, {"207RC0000X"}, locs, "AZ"))
+    assert ids == ["AZNET", "UNKNOWN"]  # an unresolvable location is kept, a known out-of-state one is not
 
 
 def test_claims_keep_this_specialty_and_merge_per_network():
