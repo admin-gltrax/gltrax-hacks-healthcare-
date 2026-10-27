@@ -125,3 +125,19 @@ def test_store_joins_snapshots(tmp_path):
     c = p111.network[0]
     assert (c.plan_id, c.payer, c.network_name, c.status, c.source) == ("uhc:N1", "uhc", "AARP MA AZ-1", "in", "directory")
     assert 0 < c.confidence < 1  # a directory listing is a claim, not a verified fact
+
+
+def test_directory_view_summarizes_payers(tmp_path):
+    from src.directory.store import directory_view
+
+    (tmp_path / "phoenix-cardiology.json").write_text(json.dumps({"metro": "Phoenix", "fetched_at": "2026-10-27", "providers": [prov("111").model_dump()]}))
+    nets = snapshot("Phoenix", "cardiology", 1, [])
+    nets["payers"] = {"uhc": {"name": "UnitedHealthcare", "checked": 1, "listed": 1, "with_networks": 1}}
+    nets["claims"] = {"111": {"uhc": [
+        {"network_id": f"N{i}", "network_name": f"Plan {i}", "accepting_new_patients": "existptonly" if i else "newpt", "last_updated": None} for i in range(3)
+    ]}}
+    (tmp_path / "phoenix-cardiology-networks.json").write_text(json.dumps(nets))
+    v = directory_view(data_dir=tmp_path, max_names=2)
+    row = v["providers"][0]["payers"]["uhc"]
+    assert row == {"networks": 3, "names": ["Plan 0", "Plan 1"], "accepting": "newpt"}
+    assert v["payers"]["uhc"]["with_networks"] == 1

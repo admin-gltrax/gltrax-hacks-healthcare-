@@ -43,3 +43,41 @@ def load_providers(metro: str = "phoenix", specialty: str = "cardiology", data_d
                 for c in cs
             ]
     return providers
+
+
+_VIEW_CACHE: dict[tuple, dict] = {}
+
+
+def directory_view(metro: str = "phoenix", specialty: str = "cardiology", data_dir: Path = DATA, max_names: int = 12) -> dict:
+    """Compact, dashboard-ready view of the local graph (cached until the snapshots change)."""
+    base, nets = data_dir / f"{metro}-{specialty}.json", data_dir / f"{metro}-{specialty}-networks.json"
+    key = (str(base), base.stat().st_mtime, nets.stat().st_mtime if nets.exists() else None, max_names)
+    if key in _VIEW_CACHE:
+        return _VIEW_CACHE[key]
+    meta, _ = load_nppes(base)
+    net_meta = json.loads(nets.read_text()) if nets.exists() else {"payers": {}, "fetched_at": None}
+    payer_names = {k: v["name"] for k, v in net_meta["payers"].items()}
+    rows = []
+    for p in load_providers(metro, specialty, data_dir):
+        payers: dict[str, dict] = {}
+        for c in p.network:
+            d = payers.setdefault(c.payer, {"networks": 0, "names": [], "accepting": None})
+            d["networks"] += 1
+            if c.network_name and len(d["names"]) < max_names:
+                d["names"].append(c.network_name)
+            if c.accepting_new_patients == "newpt" or d["accepting"] is None:
+                d["accepting"] = c.accepting_new_patients
+        rows.append({
+            "npi": p.npi, "name": p.name, "credential": p.credential, "specialty": p.specialty,
+            "line": p.address.line, "city": p.address.city, "zip": p.address.zip, "phone": p.phone,
+            "locations": len(p.locations), "payers": payers,
+        })
+    view = {
+        "metro": meta.get("metro"), "specialty": specialty, "count": len(rows),
+        "nppes_fetched_at": meta.get("fetched_at"), "networks_fetched_at": net_meta.get("fetched_at"),
+        "payers": {k: {"name": payer_names[k], **{f: v[f] for f in ("checked", "listed", "with_networks")}} for k, v in net_meta["payers"].items()},
+        "providers": rows,
+    }
+    _VIEW_CACHE.clear()
+    _VIEW_CACHE[key] = view
+    return view
