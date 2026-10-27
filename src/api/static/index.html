@@ -355,7 +355,7 @@ $('dir-list').onclick = e => {
   const next = row.nextElementSibling;
   if (next && next.classList.contains('nets')) { next.remove(); return; }
   const p = dir.providers.find(x => x.npi === row.dataset.npi);
-  const body = Object.entries(p.payers).map(([k, x]) => `<div><b>${esc(dir.payers[k]?.name || k)}</b> (${x.networks}): ${esc(x.names.join(' · '))}${x.networks > x.names.length ? ' …' : ''}${x.other_state ? ` <i>+${x.other_state} plans for other states, not shown</i>` : ''}</div>`).join('') || 'No payer directory lists this provider in an Arizona network.';
+  const body = Object.entries(p.payers).map(([k, x]) => `<div><b>${esc(dir.payers[k]?.name || k)}</b> (${x.networks}): ${esc(x.names.join(' · '))}${x.networks > x.names.length ? ' …' : ''}${x.other_state ? ` <i>+${x.other_state} plans for other states, not shown</i>` : ''}${x.unnamed ? ` <i>+${x.unnamed} unnamed</i>` : ''}</div>`).join('') || 'No payer directory lists this provider in an Arizona network.';
   row.insertAdjacentHTML('afterend', `<div class="nets">${esc(p.line)}, ${esc(p.city)} ${p.zip}${body ? '<div style="margin-top:4px">' + body + '</div>' : ''}</div>`);
 };
 ['dir-q', 'dir-payer', 'dir-city', 'dir-new'].forEach(id => $(id).addEventListener('input', () => { dirShown = 100; renderDirectory(); }));
