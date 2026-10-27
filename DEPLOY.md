@@ -2,6 +2,8 @@
 
 The app is one container running one process. Anyone with the URL can watch a **recorded replay** (free, no credentials). **Live runs** spend Meta Model API credits, so they require an access token.
 
+**Live on AWS Lightsail:** https://swarm-scheduler.72q91gp7bkhmc.us-west-2.cs.amazonlightsail.com/ (redeploy with `python scripts/deploy_lightsail.py`; setup, secrets and teardown in [docs/aws-hosting.md](docs/aws-hosting.md)).
+
 ## Deploy on AWS Lightsail (automatic on every merge to main)
 
 The live demo runs on a Lightsail container service named `swarm-scheduler` in `us-west-2`. `.github/workflows/deploy.yml` redeploys it every time CI passes on `main`.
@@ -55,7 +57,8 @@ These go under **Settings → Secrets and variables → Actions → Variables**:
 | `AWS_ROLE_ARN` | (unset) | Use GitHub OIDC with an IAM role instead of access keys. When this is set, the key secrets are not used. |
 
 Until credentials are added, the workflow skips with a notice rather than failing.
-AWS hosting (ECS Fargate next to gltrax.com) is planned but paused; see [docs/aws-hosting.md](docs/aws-hosting.md).
+
+**Manual redeploy (no GitHub involved):** `python scripts/deploy_lightsail.py` builds `HEAD` with CodeBuild into ECR and redeploys the same service, also keeping its environment. See [docs/aws-hosting.md](docs/aws-hosting.md). Both paths deploy to the same service; whichever ran last is live.
 
 ## Deploy on Render (about 10 minutes)
 
