@@ -57,11 +57,14 @@ class Address(BaseModel):
 class NetworkClaim(BaseModel):
     """One source's claim that a provider is (or is not) in a plan's network."""
 
-    plan_id: str
+    plan_id: str  # "<payer>:<network id>" for directory claims
     status: Literal["in", "out", "unknown"] = "unknown"
     confidence: float = 0.0
     last_verified: str | None = None  # ISO date
     source: Literal["directory", "call", "portal"] = "directory"
+    payer: str | None = None
+    network_name: str | None = None
+    accepting_new_patients: str | None = None  # the directory's own flag, e.g. "newpt", "existptonly"
 
 
 class Provider(BaseModel):
