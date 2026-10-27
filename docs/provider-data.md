@@ -60,7 +60,20 @@ python -m src.directory.nppes --metro phoenix --specialty cardiology   # ~1 minu
 - Keeps active individual providers with at least one practice location in the metro. Metro = Maricopa + Pinal counties, approximated as ZIP3 850-853 minus the Yuma, La Paz, Pima, Yavapai, Mohave and Gila ZIPs under those prefixes. A few Pinal towns under 856/857 are not covered.
 - Writes `Provider` records (`src/schemas.py`) with every in-metro practice location; `network` stays empty until a payer source fills it.
 
-## Planned payer join (one metro)
+## Payer connector and local graph
+
+```bash
+python -m src.directory.plannet --metro phoenix --specialty cardiology   # UHC + Cigna + Humana
+```
+
+- Starts from the NPPES snapshot and asks each payer about those NPIs only: `Practitioner?identifier=<NPI>` (UHC, Humana) or `Practitioner?family=…&given=…` matched on NPI (Cigna), then `PractitionerRole?practitioner=<id>&_include=PractitionerRole:location`.
+- Keeps active roles in the specialty whose location is in the metro's state (a Phoenix cardiologist's North Carolina role is dropped), and records one claim per `network-reference` with the role's accepting-new-patients flag and last-updated date.
+- Names networks from reference displays (Humana), a batched `Organization?_id=` search (UHC; single reads take ~8 s there) or one read each (Cigna; `_id` lists return only one).
+- Writes `data/directory/<metro>-<specialty>-networks.json` with per-payer counts (checked, listed, with networks, errors, requests, seconds).
+
+**Runtime model.** The app never calls payers while serving a request. `src/directory/store.py` joins the two committed snapshots into `Provider.network` (directory claims, confidence 0.5), so demos work offline and a payer outage changes nothing until the next refresh. Refreshing is a batch job: rerun both commands (nightly is plenty; directories update on the order of days). Calls made by the swarm are a separate, higher-confidence source that can later raise or lower a claim.
+
+## Original payer join plan (Aetna, needs credentials)
 
 1. NPPES: all cardiology NPIs in the metro → `Provider` rows (schema in `docs/swarm-architecture.md`).
 2. Aetna: `Location?address-city=…&address-state=…` → `PractitionerRole?location=…&specialty=<NUCC code>&_include=PractitionerRole:practitioner` → network references; `InsurancePlan?coverage-area=…` → plan ↔ network.
