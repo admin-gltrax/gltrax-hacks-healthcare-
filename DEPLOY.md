@@ -2,6 +2,60 @@
 
 The app is one container running one process. Anyone with the URL can watch a **recorded replay** (free, no credentials). **Live runs** spend Meta Model API credits, so they require an access token.
 
+## Deploy on AWS Lightsail (automatic on every merge to main)
+
+The live demo runs on a Lightsail container service named `swarm-scheduler` in `us-west-2`. `.github/workflows/deploy.yml` redeploys it every time CI passes on `main`.
+
+The workflow does four things:
+
+1. Builds the Docker image.
+2. Pushes the image to the service.
+3. Creates a new deployment that keeps the service's current environment variables, port and health check, changing only the image.
+4. Waits until `/healthz` answers.
+
+App secrets such as `MODEL_API_KEY` stay in Lightsail and never pass through GitHub. To change a setting, edit it in the Lightsail console (**Deployments → Modify your deployment**); the next automatic deploy keeps it.
+
+**One-time setup**
+
+1. **Make sure the service has been deployed once** in the Lightsail console, with one container, its environment variables, and a public endpoint on port 8000 with health check path `/healthz`.
+
+2. **In AWS IAM, create a user for GitHub**, for example `github-lightsail-deploy`, with only this policy:
+
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [{
+       "Effect": "Allow",
+       "Action": [
+         "lightsail:GetContainerServices",
+         "lightsail:GetContainerImages",
+         "lightsail:RegisterContainerImage",
+         "lightsail:CreateContainerServiceRegistryLogin",
+         "lightsail:CreateContainerServiceDeployment"
+       ],
+       "Resource": "*"
+     }]
+   }
+   ```
+
+   Then create an access key for that user.
+
+3. **Add the key to GitHub.** In this repo, go to **Settings → Secrets and variables → Actions → New repository secret** and add `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. Never paste keys into chat, issues or code.
+
+4. **Run the first deploy.** Go to **Actions → deploy → Run workflow**, or merge anything to `main`.
+
+**Optional repository variables**
+
+These go under **Settings → Secrets and variables → Actions → Variables**:
+
+| Variable | Default | Use |
+|---|---|---|
+| `LIGHTSAIL_SERVICE` | `swarm-scheduler` | Container service name |
+| `LIGHTSAIL_REGION` | `us-west-2` | Region |
+| `AWS_ROLE_ARN` | (unset) | Use GitHub OIDC with an IAM role instead of access keys. When this is set, the key secrets are not used. |
+
+Until credentials are added, the workflow skips with a notice rather than failing.
+
 ## Deploy on Render (about 10 minutes)
 
 1. Sign in at render.com and connect your GitHub account.
