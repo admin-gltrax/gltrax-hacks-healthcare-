@@ -2,7 +2,7 @@
 
 The app is one container running one process. Anyone with the URL can watch a **recorded replay** (free, no credentials). **Live runs** spend Meta Model API credits, so they require an access token.
 
-AWS hosting (ECS Fargate next to gltrax.com) is planned but paused; see [docs/aws-hosting.md](docs/aws-hosting.md).
+**Live on AWS Lightsail:** https://swarm-scheduler.72q91gp7bkhmc.us-west-2.cs.amazonlightsail.com/ (redeploy with `python scripts/deploy_lightsail.py`; setup, secrets and teardown in [docs/aws-hosting.md](docs/aws-hosting.md)).
 
 ## Deploy on Render (about 10 minutes)
 

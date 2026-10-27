@@ -1,6 +1,47 @@
-# AWS hosting (paused)
+# AWS hosting
 
-> **Status.** Planned, not started. Nothing has been created in AWS for this app. Render (`render.yaml`, [DEPLOY.md](../DEPLOY.md)) remains the documented way to host it.
+## Live: Lightsail container service (2026-10-27)
+
+**URL:** https://swarm-scheduler.72q91gp7bkhmc.us-west-2.cs.amazonlightsail.com/
+
+Separate from gltrax.com: nothing in `gltrax-cluster`, `gltrax-alb` or the website's build was touched.
+
+| Resource | Name | Notes |
+|---|---|---|
+| Lightsail container service | `swarm-scheduler` | `micro` (0.25 vCPU, 1 GB), 1 node, $10/month. Health check `/healthz`. Pulls from ECR through its private-registry role. |
+| ECR repository | `swarm-scheduler` | Scan on push; keeps the last 10 images. Images are tagged with the short commit. |
+| CodeBuild project | `swarm-scheduler-build` | Builds the `Dockerfile` from an S3 source zip (there is no Docker in the cloud dev environment). |
+| S3 bucket | `swarm-scheduler-build-<account>` | Source zips only; private; objects expire after 30 days. |
+| IAM role | `swarm-scheduler-codebuild-role` | Logs for this project, read the bucket, push to this ECR repo only. |
+
+All are tagged `project=swarm-scheduler`. Expected cost: about $10/month for Lightsail plus cents for builds, storage and logs. Meta Model API usage for live runs is billed separately and capped by `MAX_LIVE_RUNS_PER_DAY`.
+
+### Turning on live runs
+
+The service starts with public replay and the provider directory only. To enable live swarms and voice intake, add two environment variables in the Lightsail console (Container services → `swarm-scheduler` → Deployments → Modify your deployment → container `app`):
+
+- `MODEL_API_KEY`: the Meta Model API key.
+- `APP_ACCESS_TOKEN`: a long random string; people type it into the dashboard to start live runs.
+
+Saving creates a new deployment (about 3 minutes). Lightsail environment variables are visible to anyone with console access to the account.
+
+### Redeploying
+
+```bash
+python scripts/deploy_lightsail.py   # builds HEAD in CodeBuild, deploys it, waits until live
+```
+
+Only committed code is deployed. Environment variables already on the service, including the two above, are carried over. A failed deployment leaves the previous version serving.
+
+### Tearing down
+
+Delete the Lightsail service (stops the $10/month), then the ECR repo, CodeBuild project, S3 bucket and IAM role listed above.
+
+---
+
+## Alternative considered: ECS next to gltrax.com (not built)
+
+> Not built; the Lightsail service above was chosen instead (cheaper, no DNS work, no change to the shared ALB). Kept for reference.
 
 ## What exists in the GLTrax AWS account (us-west-2, checked 2026-10-27, read-only)
 
@@ -26,13 +67,3 @@
 SSE works through the ALB: the server sends a keepalive every 15 s, under the 60 s idle timeout.
 
 Estimated cost: about $18/month for the Fargate task; the ALB and NAT gateway already exist.
-
-## Alternative: Lightsail Containers
-
-HTTPS URL on an AWS domain with no DNS work, about $10/month (micro, 1 GB), fully separate from the website. Same image from ECR, one node, same env and secrets. Use this if a `gltrax.com` subdomain or the shared ALB change isn't wanted.
-
-## Open decisions before resuming
-
-1. Sign-off to add a rule and certificate to the shared `gltrax-alb`.
-2. Subdomain (`swarm.gltrax.com` proposed) and who adds the two CNAMEs.
-3. The owner puts the Meta API key into Secrets Manager.
