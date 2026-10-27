@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PJ Health: healthcare built for you</title>
+<meta name="description" content="Your healthcare, owned by you. PJ handles the insurance, the records and the phone calls, and explains everything in plain words. Demo with fictional data.">
+<style>
+:root{
+  --bg:#F3F6F4;--card:#FFFFFF;--ink:#0F1A16;--ink-2:#4A5A53;--ink-3:#7C8B84;--line:#DCE5E0;
+  --green:#0FA968;--green-d:#0B7C4E;--green-s:#E3F6EC;--amber:#B7791F;--amber-s:#FFF5E1;--red:#C53030;--red-s:#FDECEC;--blue:#2F6BFF;--blue-s:#E8EEFF;
+  --r:18px;--font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+button,input{font:inherit}
+button{cursor:pointer}
+a{color:var(--green-d)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left)) 40px max(16px,env(safe-area-inset-right))}
+header{display:flex;align-items:center;gap:12px;padding:14px 0}
+header .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.02em}
+header .brand img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--green)}
+header .sp{flex:1}
+.link{background:none;border:0;color:var(--ink-2);font-weight:600;padding:6px 8px;border-radius:10px}
+.link:hover{background:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+h1,h2,h3{margin:0;letter-spacing:-.02em;line-height:1.2}
+h2{font-size:19px}
+h3{font-size:16px}
+.muted{color:var(--ink-3)}
+.small{font-size:14px}
+.tiny{font-size:12.5px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border:0;border-radius:12px;padding:11px 16px;font-weight:700;background:var(--green);color:#fff}
+.btn:hover{background:var(--green-d)}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.small{padding:7px 12px;font-size:14px}
+input[type=text]{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:11px 12px;background:#fff}
+input[type=text]:focus{outline:2px solid var(--green);border-color:transparent}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700;background:var(--green-s);color:var(--green-d)}
+.chip.watch{background:var(--amber-s);color:var(--amber)}
+.chip.act{background:var(--red-s);color:var(--red)}
+.chip.blue{background:var(--blue-s);color:var(--blue)}
+.chip.gray{background:#EEF1EF;color:var(--ink-2)}
+.hero{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;margin:28px 0}
+.hero img{width:180px;height:180px;border-radius:50%;object-fit:cover;border:4px solid var(--green);box-shadow:0 20px 50px -20px rgba(15,169,104,.6)}
+.hero h1{font-size:clamp(30px,5vw,46px)}
+.hero h1 em{font-style:normal;color:var(--green)}
+.hero p{color:var(--ink-2);font-size:18px;max-width:52ch}
+.demo-note{margin-top:14px;padding:10px 12px;border-radius:12px;background:var(--amber-s);color:#6b4a12;font-size:14px}
+.pj{display:flex;gap:14px;align-items:flex-start;position:sticky;top:0;z-index:5;padding:14px;margin:0 -2px 18px;background:rgba(243,246,244,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.pj img{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--green);flex:none}
+.pj .bubble{flex:1;min-width:0}
+.pj .say{background:#fff;border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:10px 14px;margin-bottom:8px}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:start}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.buckets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.bucket h3{display:flex;justify-content:space-between;gap:8px}
+.bucket .tag{font-size:13.5px;color:var(--ink-3);margin:2px 0 10px}
+.item{padding:9px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0}
+.item .t{display:flex;justify-content:space-between;gap:8px;font-weight:600;font-size:14.5px}
+.item .m{font-size:13.5px;color:var(--ink-2)}
+.item .s{font-size:12px;color:var(--ink-3)}
+.empty{font-size:14px;color:var(--ink-3);padding:6px 0}
+.task{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.task:first-of-type{border-top:0}
+.task .dot{width:10px;height:10px;border-radius:50%;margin-top:7px;flex:none;background:var(--ink-3)}
+.task .dot.working{background:var(--blue)}
+.task .dot.waiting_on_you{background:var(--amber)}
+.task .dot.waiting_on_them{background:#8b5cf6}
+.task .dot.done{background:var(--green)}
+.task .dot.blocked{background:var(--red)}
+.ben{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:14px;padding:7px 0;border-top:1px solid var(--line)}
+.ben b{font-weight:600}
+.ben .tiny{grid-column:1/-1}
+.path{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+.path.best{border-color:var(--green);box-shadow:0 0 0 3px var(--green-s)}
+.path.crisis{border-color:var(--red);background:var(--red-s)}
+.path ul{margin:6px 0 0;padding-left:18px;font-size:14px;color:var(--ink-2)}
+.letter{white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:#FAFBFA;border:1px solid var(--line);border-radius:12px;padding:12px;max-height:260px;overflow:auto}
+.results button{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px}
+.results button:hover{border-color:var(--green)}
+footer{margin-top:26px;font-size:13.5px;color:var(--ink-3)}
+[hidden]{display:none!important}
+@media (max-width:860px){.grid{grid-template-columns:1fr}.hero{grid-template-columns:1fr;text-align:center;justify-items:center}.hero img{width:140px;height:140px}}
+@media (max-width:560px){.buckets{grid-template-columns:1fr}.pj img{width:42px;height:42px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><img src="/pj.webp" alt="">PJ Health</div>
+    <div class="sp"></div>
+    <button class="link" id="exportBtn" hidden>Download my data</button>
+    <button class="link" id="outBtn" hidden>Sign out</button>
+  </header>
+
+  <section id="welcome" hidden>
+    <div class="hero">
+      <img src="/pj.webp" alt="PJ the Gila monster">
+      <div>
+        <h1>Healthcare built for <em>you</em>,<br>not for your doctor's office.</h1>
+        <p>Hi, I'm PJ. I handle the insurance, the records requests and the phone calls, and I explain everything in plain words. Your health, owned by you.</p>
+        <form id="startForm" class="row" style="margin-top:14px;max-width:520px">
+          <input type="text" id="name" placeholder="Your first and last name" autocomplete="name" aria-label="Your name" required>
+          <button class="btn" type="submit">Start</button>
+        </form>
+        <div class="row" style="margin-top:12px"><button class="btn ghost small" id="demoBtn">Or explore a demo patient</button></div>
+        <div class="demo-note"><b>Demo only.</b> Every insurer, doctor and record here is fictional. Don't enter real health information.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="app" hidden>
+    <div class="pj">
+      <img src="/pj.webp" alt="PJ">
+      <div class="bubble">
+        <div class="say" id="pjSay" aria-live="polite"></div>
+        <form id="askForm" class="row">
+          <input type="text" id="ask" placeholder="Ask PJ, e.g. &quot;I think I need to see a therapist&quot;" aria-label="Ask PJ">
+          <button class="btn small" type="submit">Ask</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="stepCoverage" class="card" hidden style="margin-bottom:18px">
+      <h2>1. Your insurance</h2>
+      <p class="small muted">Type the member ID from your card (later: snap a photo). PJ figures out what's actually covered.</p>
+      <form id="covForm">
+        <div class="row"><input type="text" id="card" placeholder="Member ID, e.g. EVG-55120943" aria-label="Member ID"></div>
+        <div class="row" style="margin-top:8px"><input type="text" id="employer" placeholder="Where you work (optional, to find free benefits)" aria-label="Employer"><button class="btn" type="submit">Check my coverage</button></div>
+      </form>
+      <p class="tiny muted" style="margin:10px 0 0">Demo cards: <span id="demoCards"></span>. Demo employers: Northwind Logistics, Acme Schools.</p>
+    </div>
+
+    <div id="stepPcp" class="card" hidden style="margin-bottom:18px">
+      <h2>2. Your regular doctor</h2>
+      <p class="small muted">Name or practice. PJ finds them, then double-checks the phone, fax and insurance by calling the office.</p>
+      <form id="pcpForm" class="row"><input type="text" id="pcpQ" placeholder="e.g. Lee, Harbor, Juniper" aria-label="Doctor name"><button class="btn" type="submit">Find</button></form>
+      <div class="results" id="pcpResults"></div>
+    </div>
+
+    <div id="stepRecords" class="card" hidden style="margin-bottom:18px">
+      <h2>3. Get your records</h2>
+      <p class="small muted">It's your legal right to a copy of your records. PJ writes the request; you sign; PJ faxes it and follows up.</p>
+      <button class="btn" id="draftBtn">Draft my request</button>
+      <div id="signBox" hidden style="margin-top:12px">
+        <div class="letter" id="letter"></div>
+        <form id="signForm" class="row" style="margin-top:10px"><input type="text" id="sig" placeholder="Type your full name to sign" aria-label="Type your name to sign"><button class="btn" type="submit">Sign and send</button></form>
+      </div>
+    </div>
+
+    <div id="answer" class="card" hidden style="margin-bottom:18px"></div>
+
+    <div class="grid">
+      <div class="col">
+        <div class="buckets" id="buckets"></div>
+      </div>
+      <div class="col">
+        <div class="card"><h2>What PJ is doing for you</h2><p class="tiny muted" style="margin:2px 0 8px">The calls, forms and follow-ups. You only see what needs you.</p><div id="tasks"></div></div>
+        <div class="card"><h2>My Coverage</h2><div id="coverage"></div></div>
+        <div class="card"><h2>My Care Team</h2><div id="team"></div></div>
+        <div class="card"><h2>Records requests</h2><div id="reqs"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>PJ explains and organizes; PJ doesn't diagnose or give medical advice. In a crisis call or text 988, or call 911.
+    <a href="/swarm">Watch PJ's crew call 15 offices at once</a>.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var currentReq = null;
+  function el(tag, attrs, kids) {
+    var e = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === 'text') e.textContent = attrs[k]; else if (k === 'class') e.className = attrs[k]; else e.setAttribute(k, attrs[k]);
+    });
+    (kids || []).forEach(function (c) { if (c) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+    return e;
+  }
+  function api(method, path, body) {
+    return fetch(path, { method: method, headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined, credentials: 'same-origin' })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.detail || 'Something went wrong'); return j; }); });
+  }
+  function say(t) { $('#pjSay').textContent = t; }
+  function oops(e) { say(e.message); }
+  var FLAG = { ok: ['ok', ''], watch: ['worth a look', 'watch'], act: ['next step', 'act'] };
+  var STATUS = { todo: 'to do', working: 'PJ is on it', waiting_on_you: 'needs you', waiting_on_them: 'waiting on them', done: 'done', blocked: 'stuck' };
+  var SOURCE = { you: 'you told PJ', insurance_card: 'your card', insurer: 'your insurer', directory: 'provider directory', call: 'confirmed by a call', records: "your doctor's records", demo: 'demo' };
+
+  function render(d) {
+    $('#welcome').hidden = true; $('#app').hidden = false; $('#outBtn').hidden = false; $('#exportBtn').hidden = false;
+    say(d.pj.say);
+    $('#stepCoverage').hidden = d.pj.step !== 'coverage';
+    $('#stepPcp').hidden = d.pj.step !== 'pcp';
+    $('#stepRecords').hidden = d.pj.step !== 'records';
+    $('#demoCards').textContent = d.demo_cards.join(', ');
+
+    var b = $('#buckets'); b.textContent = '';
+    d.buckets.forEach(function (bk) {
+      var c = el('div', { class: 'card bucket' }, [
+        el('h3', {}, [bk.name, el('span', { class: 'chip gray', text: String(bk.items.length) })]),
+        el('div', { class: 'tag', text: bk.tagline })
+      ]);
+      if (!bk.items.length) c.appendChild(el('div', { class: 'empty', text: bk.pj }));
+      bk.items.forEach(function (it) {
+        var f = FLAG[it.flag] || FLAG.ok;
+        c.appendChild(el('div', { class: 'item' }, [
+          el('div', { class: 't' }, [el('span', { text: it.title + (it.value ? ': ' + it.value : '') }), it.flag !== 'ok' ? el('span', { class: 'chip ' + f[1], text: f[0] }) : null]),
+          it.plain_meaning ? el('div', { class: 'm', text: it.plain_meaning }) : null,
+          el('div', { class: 's', text: 'From ' + (SOURCE[it.source] || it.source) + (it.when ? ' · ' + it.when : '') })
+        ]));
+      });
+      b.appendChild(c);
+    });
+
+    var t = $('#tasks'); t.textContent = '';
+    if (!d.tasks.length) t.appendChild(el('div', { class: 'empty', text: 'Nothing yet. Start with your insurance card.' }));
+    d.tasks.forEach(function (tk) {
+      t.appendChild(el('div', { class: 'task' }, [el('span', { class: 'dot ' + tk.status }), el('div', {}, [
+        el('div', {}, [el('b', { text: tk.title }), ' ', el('span', { class: 'chip ' + (tk.status === 'waiting_on_you' ? 'watch' : tk.status === 'done' ? '' : 'blue'), text: STATUS[tk.status] || tk.status })]),
+        tk.needs_you ? el('div', { class: 'small', text: tk.needs_you }) : null,
+        tk.detail ? el('div', { class: 'small muted', text: tk.detail }) : null
+      ])]));
+    });
+
+    var cv = $('#coverage'); cv.textContent = '';
+    if (!d.coverage) cv.appendChild(el('div', { class: 'empty', text: 'Not set up yet.' }));
+    else {
+      var c2 = d.coverage;
+      cv.appendChild(el('p', { class: 'small', text: c2.plain_summary }));
+      cv.appendChild(el('div', { class: 'row small' }, [
+        el('span', { class: 'chip gray', text: 'Deductible ' + (c2.deductible_met || '$0') + ' of ' + (c2.deductible || 'n/a') }),
+        el('span', { class: 'chip gray', text: 'Out-of-pocket ' + (c2.out_of_pocket_met || '$0') + ' of ' + (c2.out_of_pocket_max || 'n/a') }),
+        c2.eap_available ? el('span', { class: 'chip', text: 'Work EAP: ' + c2.eap_sessions }) : null
+      ]));
+      c2.benefits.slice(0, 8).forEach(function (bn) {
+        var note = [bn.needs_referral ? 'Needs a referral.' : '', bn.needs_prior_auth ? 'Needs approval first.' : '', bn.notes || ''].join(' ').trim();
+        cv.appendChild(el('div', { class: 'ben' }, [el('b', { text: bn.label }), el('span', { text: bn.covered === 'no' ? 'Not covered' : (bn.you_pay || bn.covered) }),
+          note ? el('span', { class: 'tiny muted', text: note }) : null]));
+      });
+    }
+
+    var tm = $('#team'); tm.textContent = '';
+    if (!d.care_team.length) tm.appendChild(el('div', { class: 'empty', text: 'Add your regular doctor.' }));
+    d.care_team.forEach(function (m) {
+      tm.appendChild(el('div', { class: 'item' }, [
+        el('div', { class: 't' }, [el('span', { text: m.name + ' · ' + (m.practice || '') }), el('span', { class: 'chip ' + (m.confidence === 'confirmed' ? '' : 'watch'), text: m.confidence === 'confirmed' ? 'checked by a call' : 'not checked yet' })]),
+        el('div', { class: 'm', text: 'Phone ' + m.phone + ' · Fax ' + m.fax + ' · Takes your plan: ' + m.in_network })
+      ]));
+    });
+
+    var rq = $('#reqs'); rq.textContent = '';
+    if (!d.records_requests.length) rq.appendChild(el('div', { class: 'empty', text: 'None yet.' }));
+    d.records_requests.forEach(function (r) {
+      var row = el('div', { class: 'item' }, [
+        el('div', { class: 't' }, [el('span', { text: r.to.practice || r.to.name }), el('span', { class: 'chip ' + (r.status === 'received' ? '' : r.status === 'failed' ? 'act' : 'blue'), text: r.status.replace(/_/g, ' ') })]),
+        r.due_by ? el('div', { class: 's', text: 'They have until ' + r.due_by + ' to respond' }) : null
+      ]);
+      if (r.status === 'sent') {
+        var sim = el('button', { class: 'btn ghost small', text: 'Demo: the office answers' });
+        sim.style.marginTop = '6px';
+        sim.addEventListener('click', function () { api('POST', '/api/p/records/' + r.id + '/simulate-response').then(function (d2) { render(d2); say('Your records arrived. I filed them into your buckets and flagged what is worth asking about.'); }).catch(oops); });
+        row.appendChild(sim);
+      }
+      rq.appendChild(row);
+    });
+  }
+
+  function renderAnswer(a) {
+    var box = $('#answer'); box.textContent = ''; box.hidden = false;
+    box.appendChild(el('h2', { text: a.type === 'care_request' ? 'Your options' : 'PJ' }));
+    box.appendChild(el('p', { class: 'small', text: a.say }));
+    if (a.type === 'care_request') {
+      var cr = a.care_request;
+      cr.pathways.forEach(function (p) {
+        var card = el('div', { class: 'path' + (p.kind === cr.recommended ? ' best' : '') + (p.kind === 'crisis' ? ' crisis' : '') }, [
+          el('div', { class: 'row' }, [el('b', { text: p.title }), p.kind === cr.recommended && p.kind !== 'crisis' ? el('span', { class: 'chip', text: 'best fit' }) : null, p.cost ? el('span', { class: 'chip gray', text: p.cost }) : null]),
+          el('div', { class: 'small', text: p.why }),
+          p.steps.length ? el('ul', {}, p.steps.map(function (s) { return el('li', { text: s }); })) : null
+        ]);
+        if (p.agent_can_do.length) {
+          var go = el('button', { class: 'btn small', text: 'Do it, PJ' });
+          go.style.marginTop = '8px';
+          go.addEventListener('click', function () { api('POST', '/api/p/care/' + cr.id + '/go?kind=' + encodeURIComponent(p.kind)).then(function (d) { render(d); say('On it. Follow along in "What PJ is doing for you".'); }).catch(oops); });
+          card.appendChild(go);
+        }
+        box.appendChild(card);
+      });
+    }
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  $('#startForm').addEventListener('submit', function (e) { e.preventDefault(); api('POST', '/api/p/start', { name: $('#name').value }).then(render).catch(function (err) { $('#name').setCustomValidity(err.message); $('#name').reportValidity(); }); });
+  $('#name').addEventListener('input', function () { this.setCustomValidity(''); });
+  $('#demoBtn').addEventListener('click', function () { api('POST', '/api/p/demo').then(render).catch(oops); });
+  $('#outBtn').addEventListener('click', function () { api('POST', '/api/p/signout').then(function () { location.reload(); }); });
+  $('#exportBtn').addEventListener('click', function () { window.open('/api/p/me/export', '_blank'); });
+  $('#covForm').addEventListener('submit', function (e) { e.preventDefault(); say('Checking your plan...'); api('POST', '/api/p/coverage', { card: $('#card').value, employer: $('#employer').value || null }).then(render).catch(oops); });
+  $('#pcpForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    api('GET', '/api/p/providers?q=' + encodeURIComponent($('#pcpQ').value)).then(function (list) {
+      var box = $('#pcpResults'); box.textContent = '';
+      if (!list.length) box.appendChild(el('div', { class: 'empty', text: 'No match. Try a last name or the practice name.' }));
+      list.forEach(function (p) {
+        var b = el('button', {}, [el('b', { text: p.name }), ' · ' + p.practice, el('div', { class: 'tiny muted', text: p.address + ' · ' + p.phone })]);
+        b.addEventListener('click', function () {
+          say('Calling ' + p.practice + ' to double-check their details...');
+          api('POST', '/api/p/pcp', { sim_id: p.sim_id }).then(function (d) {
+            render(d);
+            if (d.corrections && d.corrections.length) say('Good thing I called: ' + d.corrections.join('; ') + '. ' + d.pj.say);
+          }).catch(oops);
+        });
+        box.appendChild(b);
+      });
+    }).catch(oops);
+  });
+  $('#draftBtn').addEventListener('click', function () {
+    api('POST', '/api/p/records').then(function (d) {
+      render(d); currentReq = d.request_id;
+      $('#letter').textContent = d.records_requests[0].letter; $('#signBox').hidden = false; $('#stepRecords').hidden = false;
+    }).catch(oops);
+  });
+  $('#signForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    api('POST', '/api/p/records/' + currentReq + '/sign', { typed_name: $('#sig').value }).then(function (d) {
+      render(d); $('#signBox').hidden = true;
+      var r = d.records_requests[0];
+      say(r.status === 'sent' ? 'Sent! They have until ' + r.due_by + ' to answer. I\'ll follow up if they don\'t.' : 'The fax didn\'t go through. I\'m checking the number with the office.');
+    }).catch(oops);
+  });
+  $('#askForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var q = $('#ask').value.trim(); if (!q) return;
+    api('POST', '/api/p/ask', { text: q }).then(function (d) { render(d); renderAnswer(d.answer); $('#ask').value = ''; }).catch(oops);
+  });
+
+  api('GET', '/api/p/me').then(render).catch(function () { $('#welcome').hidden = false; });
+})();
+</script>
+</body>
+</html>

@@ -1,5 +1,7 @@
 # Swarm Scheduler: Locked Plan for the Meta Global AI Developer Hackathon
 
+> **Direction changed Oct 27, 2026.** The product is now **PJ Health**, a patient-first dashboard ("healthcare built for the patient, not the doctor"). The swarm described here is now one capability PJ uses to schedule. The current framework, status and priorities are in the [README](../README.md) and [CLAUDE.md](../CLAUDE.md). This plan is still valid for the swarm itself.
+
 Written Tue Oct 27, 2026. Sources are listed at the bottom. Where a fact came from a third-party summary rather than Meta, it is marked (3rd-party).
 
 ## 1. The pitch
