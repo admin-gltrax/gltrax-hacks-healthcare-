@@ -21,7 +21,7 @@
   button { background:var(--blue); color:#fff; border:0; padding:8px 14px; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px; }
   button:disabled { opacity:.5; cursor:default; }
   button.ghost { background:transparent; border:1px solid var(--line); color:var(--text); }
-  input[type=text] { background:var(--panel); border:1px solid var(--line); color:var(--text); padding:8px 10px; border-radius:6px; min-width:300px; font-size:13px; }
+  input[type=text], input[type=password] { background:var(--panel); border:1px solid var(--line); color:var(--text); padding:8px 10px; border-radius:6px; min-width:300px; font-size:13px; }
   .strip { padding:8px 20px; color:var(--mute); font-size:12px; border-bottom:1px solid var(--line); }
   main { display:grid; grid-template-columns:1fr 340px; gap:16px; padding:16px 20px; }
   @media (max-width:980px) { main { grid-template-columns:1fr; } }
@@ -66,8 +66,11 @@
   <span class="sim">SIMULATED OFFICES — no real clinics are called</span>
   <span class="grow"></span>
   <input id="ask" type="text" value="I need a cardiologist in network, as soon as possible, but nothing before 9 in the morning." aria-label="Patient request">
-  <button id="go">Start swarm</button>
+  <input id="token" type="password" placeholder="Access token (live runs)" aria-label="Access token" style="display:none;min-width:190px">
+  <button id="go" disabled>Start live swarm</button>
+  <button id="replay" class="ghost" style="display:none">Replay recorded run</button>
 </header>
+<div class="strip" id="mode" style="display:none"></div>
 <div class="strip" id="strip">Waiting to start. The agent discloses it is an AI on every call and can only hold a slot; you confirm.</div>
 <main>
   <section class="grid" id="grid"></section>
@@ -109,9 +112,14 @@ function addBadge(o, text, cls) { if (!o.badges.some(b => b[0] === text)) o.badg
 function handle(ev) {
   const o = offices[ev.office_id];
   switch (ev.type) {
+    case 'replay_started': {
+      const mock = ev.source === 'mock';
+      $('mode').style.display = '';
+      $('mode').textContent = 'Replay of a recorded run · ' + (mock ? 'scripted mock models (not the Meta API)' : 'Meta Model API' + (ev.models ? ' · ' + Object.values(ev.models).join(', ') : '')) + (ev.recorded_at ? ' · recorded ' + ev.recorded_at : '') + ' · no credits used';
+      break; }
     case 'patient_request': $('strip').textContent = 'Request: “' + (ev.utterance || 'demo') + '” → ' + `${ev.constraints.specialty}, not before ${ev.constraints.earliest_time}, ${ev.constraints.earliest_date} to ${ev.constraints.latest_date}`; log('patient request parsed'); break;
     case 'swarm_started':
-      offices = {}; order = []; $('grid').innerHTML = ''; finished = false; best = null; $('bestv').textContent = '—'; $('bestn').textContent = ''; $('approve').disabled = true;
+      offices = {}; order = []; $('grid').innerHTML = ''; finished = false; best = null; scored = safeOk = succ = 0; updateScore(); $('bestv').textContent = '—'; $('bestn').textContent = ''; $('approve').disabled = true; $('approve').textContent = 'Approve this slot';
       ev.offices.forEach(x => { offices[x.office_id] = {id:x.office_id, name:x.name, persona:x.persona, distance:x.distance, status:'dialing', last:'', badges:[], transcript:[], tools:[]}; order.push(x.office_id); });
       $('grid').innerHTML = order.map(id => tile(offices[id])).join(''); log(`swarm started: ${ev.total} calls at once`); break;
     case 'status': if (o) { o.status = ev.status; render(o.id); } break;
@@ -121,11 +129,11 @@ function handle(ev) {
     case 'offer_received': if (o) { addBadge(o, (ev.held ? 'held ' : 'offered ') + fmtSlot(ev.slot_start), ev.fits ? 'good' : 'bad'); render(o.id); } break;
     case 'best_offer_changed': best = ev; $('bestv').textContent = fmtSlot(ev.slot_start); $('bestn').textContent = offices[ev.best_office_id]?.name || ''; log('best offer → ' + fmtSlot(ev.slot_start)); break;
     case 'escalated': if (o) { addBadge(o, 'escalated to patient', 'bad'); render(o.id); log(`${o.name}: escalated — ${ev.reason}`); } break;
-    case 'scored': if (o) { addBadge(o, ev.safety_ok ? 'safety ✓' : 'safety ✗', ev.safety_ok ? 'good' : 'bad'); if (!ev.success) addBadge(o, 'missed', 'bad'); render(o.id); } updateScore(); break;
+    case 'scored': scored++; if (ev.safety_ok) safeOk++; if (ev.success) succ++; if (o) { addBadge(o, ev.safety_ok ? 'safety ✓' : 'safety ✗', ev.safety_ok ? 'good' : 'bad'); if (!ev.success) addBadge(o, 'missed', 'bad'); render(o.id); } updateScore(); break;
     case 'truth_update': $('t-claimed').textContent = ev.claimed_in_network; $('t-yes').textContent = ev.confirmed_yes; $('t-no').textContent = ev.confirmed_no; $('t-unk').textContent = ev.unverified;
       $('b-yes').style.width = (100 * ev.confirmed_yes / Math.max(1, ev.claimed_in_network)) + '%'; $('b-no').style.width = (100 * ev.confirmed_no / Math.max(1, ev.claimed_in_network)) + '%'; break;
     case 'swarm_finished':
-      finished = true; best = ev.best; $('s-succ').textContent = Math.round(ev.success_rate * 100) + '%'; $('s-ok').textContent = Math.round(ev.safety_pass_rate * 100) + '%';
+      finished = true; best = ev.best;
       $('lb').innerHTML = ev.leaderboard.map((x, i) => `<div class="row"><span>${i + 1}. ${x.name}</span><b>${fmtSlot(x.slot_start)}</b></div>`).join('') || 'No held offers.';
       if (ev.best) { $('bestv').textContent = fmtSlot(ev.best.slot_start); $('bestn').textContent = ev.best.name; $('approve').disabled = false; }
       log('swarm finished'); break;
@@ -134,24 +142,66 @@ function handle(ev) {
   }
 }
 let scored = 0, safeOk = 0, succ = 0;
-function updateScore() { /* final numbers come from swarm_finished; keep a running count too */ }
+function updateScore() {
+  $('s-n').textContent = scored;
+  $('s-ok').textContent = scored ? `${safeOk}/${scored}` : '0';
+  $('s-succ').textContent = scored ? `${succ}/${scored}` : '0';
+}
 
 function connect() {
   if (es) es.close();
   es = new EventSource('/api/events');
   es.onmessage = m => handle(JSON.parse(m.data));
 }
-$('go').onclick = async () => {
-  $('go').disabled = true;
-  $('log').innerHTML = '';
-  const r = await fetch('/api/swarm/start', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({demo:true, k:15, utterance:$('ask').value})});
-  if (!r.ok) log('could not start: ' + (await r.text()));
-  connect();
-  const poll = setInterval(async () => { const s = await (await fetch('/api/state')).json(); if (!s.running) { clearInterval(poll); $('go').disabled = false; } }, 1500);
+let runMode = 'idle', cfg = {live_enabled:false, token_required:false, replay_available:false};
+const store = {
+  get: k => { try { return sessionStorage.getItem(k) || ''; } catch (e) { return ''; } },
+  set: (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) {} },
 };
+const authHeaders = () => { const t = $('token').value.trim(); return t ? {'x-access-token': t} : {}; };
+
+async function loadConfig() {
+  try {
+    cfg = await (await fetch('/api/config')).json();
+    runMode = (await (await fetch('/api/state')).json()).mode;
+  } catch (e) { log('could not reach the server'); }
+  $('token').style.display = cfg.token_required ? '' : 'none';
+  $('token').value = store.get('swarm_token');
+  $('ask').style.display = cfg.live_enabled ? '' : 'none';
+  $('go').disabled = !cfg.live_enabled;
+  $('go').title = cfg.live_enabled ? '' : 'Live runs are disabled on this server; use the replay.';
+  $('replay').style.display = cfg.replay_available ? '' : 'none';
+}
+$('token').oninput = () => store.set('swarm_token', $('token').value.trim());
+
+function lockUntilDone() {
+  $('go').disabled = true; $('replay').disabled = true;
+  const poll = setInterval(async () => {
+    try {
+      const s = await (await fetch('/api/state')).json();
+      if (s.running) return;
+    } catch (e) { return; }
+    clearInterval(poll); $('go').disabled = !cfg.live_enabled; $('replay').disabled = false;
+  }, 1500);
+}
+async function begin(path, body, mode) {
+  const r = await fetch(path, {method:'POST', headers:{'content-type':'application/json', ...authHeaders()}, body:JSON.stringify(body)});
+  if (!r.ok) {
+    const j = await r.json().catch(() => ({}));
+    log('could not start: ' + (j.error || j.detail || r.status));
+    return;
+  }
+  $('log').innerHTML = ''; runMode = mode;
+  if (mode === 'live') $('mode').style.display = 'none';  // a live run is not a recording
+  connect(); lockUntilDone();
+}
+$('go').onclick = () => begin('/api/swarm/start', {demo:true, k:15, utterance:$('ask').value}, 'live');
+$('replay').onclick = () => begin('/api/replay', {speed:1}, 'replay');
 $('approve').onclick = async () => {
   if (!best) return;
-  await fetch('/api/approve', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({office_id:best.office_id, slot_start:best.slot_start})});
+  if (runMode === 'replay') { handle({type:'patient_approved'}); return; }  // recordings are approved locally
+  const r = await fetch('/api/approve', {method:'POST', headers:{'content-type':'application/json', ...authHeaders()}, body:JSON.stringify({office_id:best.office_id, slot_start:best.slot_start})});
+  if (!r.ok) log('approval failed: ' + r.status);
 };
 
 function openDrawer(id) { $('drawer').dataset.id = id; $('drawer').classList.add('open'); drawBody(id); }
@@ -163,6 +213,7 @@ function drawBody(id) {
     : `<div class="tool">⚙ ${t.text.replace(/</g, '&lt;')}</div>`).join('');
   $('dbody').scrollTop = $('dbody').scrollHeight;
 }
+loadConfig();
 connect();
 </script>
 </body>

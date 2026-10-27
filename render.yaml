@@ -1,0 +1,22 @@
+# Render Blueprint: New > Blueprint > pick this repo. Render prompts for MODEL_API_KEY.
+# Keep this at ONE instance: run state is held in memory.
+services:
+  - type: web
+    name: swarm-scheduler
+    runtime: docker
+    plan: starter            # free instances sleep when idle, which breaks live demos
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: MODEL_API_KEY   # Meta Model API key; entered in the Render dashboard, never committed
+        sync: false
+      - key: APP_ACCESS_TOKEN  # gates live runs; Render generates it, read it in the dashboard
+        generateValue: true
+      - key: MOCK_LLM
+        value: "0"
+      - key: HOLD_SCALE
+        value: "0.02"
+      - key: MAX_LIVE_RUNS_PER_DAY
+        value: "30"
+      - key: MIN_SECONDS_BETWEEN_RUNS
+        value: "10"

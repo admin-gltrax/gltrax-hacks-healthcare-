@@ -8,11 +8,11 @@ All offices, patients and data are fictional. No real clinic is ever called.
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
 # Offline, no key needed (scripted models: exercises the plumbing, not model quality)
 MOCK_LLM=1 pytest -q
-MOCK_LLM=1 uvicorn src.api.server:app --port 8000      # open http://localhost:8000 and click Start
+MOCK_LLM=1 uvicorn src.api.server:app --port 8000      # open http://localhost:8000 and click Start live swarm
 
 # With the real Meta Model API
 cp .env.example .env        # add MODEL_API_KEY
@@ -21,6 +21,10 @@ uvicorn src.api.server:app --port 8000
 ```
 
 Add `?debug=1` to the dashboard URL to show each office's hidden persona.
+
+## Hosting
+
+Runs as one Docker container (`Dockerfile`, `render.yaml`). Visitors can watch a free recorded replay; live runs need an access token so nobody can spend your model credits. See [DEPLOY.md](DEPLOY.md).
 
 ## Evals
 
