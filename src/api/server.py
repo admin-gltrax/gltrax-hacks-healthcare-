@@ -26,11 +26,13 @@ from ..schemas import Constraints
 from ..sim.scenarios import DEMO_PATIENT, make_scenarios, swarm_demo_scenarios
 from ..swarm.dispatcher import run_swarm
 from ..swarm.events import EventBus
+from .patient import router as patient_router
 
 STATIC = Path(__file__).parent / "static"
 ROOT = Path(__file__).resolve().parents[2]
 
-app = FastAPI(title="Swarm Scheduler")
+app = FastAPI(title="PJ Health: healthcare built for the patient")
+app.include_router(patient_router)
 
 
 @app.middleware("http")
@@ -110,8 +112,20 @@ class ReplayBody(BaseModel):
 
 
 @app.get("/")
-def index():
+def home():
+    """The patient dashboard (PJ). The scheduling swarm's live view is /swarm."""
+    return FileResponse(STATIC / "home.html")
+
+
+@app.get("/swarm")
+def swarm_view():
     return FileResponse(STATIC / "index.html")
+
+
+@app.get("/pj.webp")
+@app.get("/favicon.ico", include_in_schema=False)
+def pj_image():
+    return FileResponse(STATIC / "pj.webp", media_type="image/webp")
 
 
 @app.get("/healthz")

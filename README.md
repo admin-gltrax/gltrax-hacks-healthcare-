@@ -1,59 +1,420 @@
-# swarm-scheduler
+# PJ Health: healthcare built for the patient, not the doctor
 
-An agent that calls many (simulated) medical offices at once to find an in-network appointment, built on the Meta Model API for the Meta Global AI Developer Hackathon.
+> **Your healthcare, owned by you.** You tell PJ who you are, show it your insurance card, and name your doctor. PJ is a friendly Gila monster. It works out what your plan really covers, double-checks your doctor's office, and requests your medical records for you. Then it turns everything into four plain-language sections you can actually read.
+>
+> When you need care, you say it in one sentence, such as "I think I need to see a therapist." PJ's agents handle the confusing parts: coverage, referrals, the employee assistance program, Medicare or Medicaid routes, community options and the phone calls.
 
-All offices, patients and data are fictional. No real clinic is ever called.
+Built for the Meta Global AI Developer Hackathon (startup track) on the Meta Model API. **"PJ Health" is a working name** (see [Open questions](#16-open-questions)).
 
-## Quick start
+**Demo only.** Every patient, insurer, provider, phone number, fax number and record in this repo is fictional. No real clinic, insurer or fax machine is ever contacted. There is no password because no real health information may ever enter this build.
+
+---
+
+## Contents
+
+1. [The pitch](#1-the-pitch)
+2. [Quick start](#2-quick-start)
+3. [What the patient sees](#3-what-the-patient-sees)
+4. [The four buckets](#4-the-four-buckets)
+5. [Onboarding: name, insurance, doctor, records](#5-onboarding-name-insurance-doctor-records)
+6. [The agent crew](#6-the-agent-crew)
+7. [Worked example: "I think I need to see a therapist"](#7-worked-example-i-think-i-need-to-see-a-therapist)
+8. [Architecture](#8-architecture)
+9. [Data model](#9-data-model)
+10. [API](#10-api)
+11. [Which Meta model does what](#11-which-meta-model-does-what)
+12. [Demo build vs. the real product](#12-demo-build-vs-the-real-product)
+13. [Safety and privacy rules](#13-safety-and-privacy-rules)
+14. [Repo layout](#14-repo-layout)
+15. [Build status and next steps](#15-build-status-and-next-steps)
+16. [Open questions](#16-open-questions)
+
+---
+
+## 1. The pitch
+
+Every patient portal today puts the provider first and the patient second. It shows what one health system has about you, in that system's words, and stops at that system's walls. Patients have no real way to run their own care:
+
+- Insurance documents are unreadable.
+- Provider directories are wrong.
+- Records are scattered across offices that only answer by fax.
+- Questions like "Should I see a specialist, and will it be covered?" take hours of phone calls.
+
+PJ Health flips that: **the patient comes first and the provider second.**
+
+- **One place that belongs to you.** Coverage, care team, results, habits and family history, gathered from every source. Everything is explained in plain language and can be exported at any time.
+- **You ask, and the agents do the work.** The patient's only job is to say what they want. PJ handles the rest:
+  - Checking benefits.
+  - Finding out who is really in network.
+  - Calling to confirm a fax number.
+  - Sending a records request and chasing it when it's late.
+  - Finding the EAP or a sliding-scale clinic.
+- **The swarm is one of PJ's tools, not the product.** The original build in this repo places 15 parallel calls to simulated offices to find and hold an in-network appointment. It is now the Scheduling Swarm agent, which PJ sends out when a patient picks "find me an appointment".
+
+Messaging: **"Healthcare built for the patient, not built for the doctor."** / **"Your healthcare, owned by you."**
+
+## 2. Quick start
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 
-# Offline, no key needed (scripted models: exercises the plumbing, not model quality)
-MOCK_LLM=1 pytest -q
-MOCK_LLM=1 uvicorn src.api.server:app --port 8000      # open http://localhost:8000 and click Start live swarm
-
-# With the real Meta Model API
-cp .env.example .env        # add MODEL_API_KEY
-python scripts/smoke_meta.py                            # every line should say PASS
-uvicorn src.api.server:app --port 8000
+MOCK_LLM=1 pytest -q                                   # 42 tests, offline, no key
+MOCK_LLM=1 uvicorn src.api.server:app --port 8000      # http://localhost:8000
 ```
 
-Add `?debug=1` to the dashboard URL to show each office's hidden persona.
+**Pages**
 
-## Hosting
+- `http://localhost:8000/` is the **patient dashboard**. Type a first name to start, or click **Explore a demo patient** to see everything filled in.
+- `http://localhost:8000/swarm` is the original **Scheduling Swarm** dashboard (15 simulated calls). Add `?debug=1` to show each office's hidden persona.
 
-Runs as one Docker container (`Dockerfile`, `render.yaml`). Visitors can watch a free recorded replay; live runs need an access token so nobody can spend your model credits. See [DEPLOY.md](DEPLOY.md).
+**Demo insurance cards (all fictional)**
 
-## Evals
-
-```bash
-python -m src.eval.run_batch --n 40 --split dev --k 8   # isolated calls, scored against ground truth
-python -m src.eval.run_batch --swarm                    # the fixed 15-office demo, shared blackboard
-```
-
-Results land in `data/runs/` with the prompt hash and the safety-block hash. Keep the `holdout` split out of prompt tuning.
-
-## Layout
-
-| Path | Purpose |
+| Card | Plan |
 |---|---|
-| `src/llm.py`, `src/config.py` | Meta Model API client (OpenAI-compatible) and per-role models |
-| `src/safety.py` | Immutable safety block, data-minimization and honesty checks |
-| `src/agents/worker.py` | The call agent and its tools (no tool can confirm a booking) |
-| `src/sim/` | Personas, IVR trees, scenario generator, simulated office |
-| `src/swarm/` | Blackboard, event bus, 15-way dispatcher |
-| `src/eval/` | Deterministic judge, optional LLM quality judge, batch CLI |
-| `src/api/` | FastAPI server, SSE stream, dashboard |
-| `prompts/worker_v0.txt` | The tunable worker prompt (the self-improvement loop edits this, never the safety block) |
-| `src/mock.py` | Offline scripted models for development |
-| `docs/DATA-SOURCES.md`, `examples/blue-button-node/` | Research on FHIR sandboxes, synthetic data, directories; Node Blue Button starter (not part of the build) |
+| `EVG-55120943` | Employer PPO. Includes an EAP if the employer is "Northwind Logistics". |
+| `BWM-77031882` | Medicare Advantage HMO. Referrals required. |
+| `PSM-30018467` | Medicaid managed care. |
 
-## Per-role models
+**Try this:** search for the PCP **"Harbor"**. The directory has a stale fax number and a stale network status for that office, and PJ's verification call catches both.
 
-Set in `.env`. Defaults: Spark 1.3 for the worker, judge and receptionists; Wonder for planner and critic. To run receptionists on open-weight Muse Spark via a partner host, see the commented block in `.env.example`.
+**With the real Meta Model API:**
 
-## Status
+1. Run `cp .env.example .env`.
+2. Add `MODEL_API_KEY` to `.env`.
+3. Run `python scripts/smoke_meta.py`. Every line should say PASS.
 
-Built offline and not yet run against the live API. First job: `scripts/smoke_meta.py`.
+Hosting is covered in [DEPLOY.md](DEPLOY.md). For swarm evals, see [docs/swarm-architecture.md](docs/swarm-architecture.md) and run `python -m src.eval.run_batch`.
+
+## 3. What the patient sees
+
+Everything is on one page (`src/api/static/home.html`). From top to bottom:
+
+| Part | What it does |
+|---|---|
+| **Welcome** | Says "Healthcare built for you, not for your doctor's office." The patient enters a name (email optional, no password) or clicks "Explore a demo patient". |
+| **PJ bar** (sticky) | Shows PJ's face, what PJ says to do next, and an **Ask PJ** box. Anything the patient needs can start here. |
+| **Setup cards** | Shown only during onboarding: insurance card → your doctor → records request (letter preview, then type your name to sign). |
+| **PJ's answer** | When the patient asks for care, shows ranked options in plain words. Each option gives the cost, why it fits and the steps, with a **"Do it, PJ"** button. |
+| **Four buckets** | Life & Connection, Clinicals, Routines, Family & Genes ([section 4](#4-the-four-buckets)). Each item says what it means, where it came from, and carries a flag: ok, keep an eye on it, or do something. |
+| **What PJ is doing for you** | Every agent task and its status: in progress, waiting on you, waiting on the office, done, or blocked. If PJ needs something from the patient, it says exactly what. |
+| **My Coverage** | The plan in one paragraph, then a service-by-service list: covered or not, what you pay, whether you need a referral or prior authorization, visit limits, and the EAP. |
+| **My Care Team** | The PCP and others, with phone, fax and in-network status. Each entry shows whether PJ **confirmed** it or it is still **from the directory**. |
+| **Records requests** | Status, due date, and the letter PJ sent. |
+| **Footer** | Crisis notice (988 / 911), demo disclaimer, and a link to the swarm. |
+
+Design rules:
+
+- Plain language, at about a 6th-grade reading level.
+- Every number comes with "what this means".
+- Every fact shows its source and how sure PJ is.
+- Mobile first. Tested at iPhone width with no horizontal scrolling.
+
+## 4. The four buckets
+
+The buckets are defined in `src/patient/buckets.py`. The screen uses plain names. The clinical term is kept for clinicians and for mapping to standards.
+
+| Bucket (on screen) | What goes in it | Clinical term | Where the data comes from |
+|---|---|---|---|
+| **Life & Connection** | Who you live with, who helps you, caregiving, transport, food, housing, money stress, loneliness | Social determinants of health (SDOH) | The patient (short check-ins), screening answers in records, plan benefits such as rides |
+| **Clinicals** | Lab results, vitals, conditions, medicines, allergies, shots, visits | Clinical data (problems, meds, allergies, labs, immunizations, encounters) | Records requests, the payer Patient Access API, and later lab and pharmacy feeds |
+| **Routines** | Food, sleep, movement, stress, alcohol and tobacco, screen time | Lifestyle and behavioral factors | The patient, and later wearables |
+| **Family & Genes** | Family history, genetic tests, things to watch for because of them | Family history, genetic risk | The patient, records, genetic test reports |
+
+Every item is a `HealthItem`. Each one has:
+
+- A flag: **ok**, **watch** ("keep an eye on it") or **act** ("worth doing something about").
+- A `plain_meaning`.
+- A `source` and a `confidence`.
+
+Flags are informational ("ask your doctor about..."). They are never diagnoses.
+
+Coverage, care team and PJ's task list appear as panels rather than buckets. They are the logistics around your health, not your health itself.
+
+## 5. Onboarding: name, insurance, doctor, records
+
+The patient does four small things, and each one sets off agent work.
+
+| Patient does | PJ and the crew do | Result on the dashboard |
+|---|---|---|
+| 1. Types a name | Create a record and a session cookie. | "Hi Sam, I'm PJ..." |
+| 2. Enters the insurance card (and employer) | **Coverage agent:** read the card, log into the insurer portal, collect benefits, the deductible and referral and authorization rules, write a plain summary, and check for an employer EAP. | My Coverage is filled in, in plain words, including any EAP found through the employer. |
+| 3. Names their doctor | **Care Team agent:** search the directory, then **call** the office to confirm the fax number and network status (directories are often wrong), and correct the record. | The PCP appears with a **confirmed** fax and network status, for example: "Good thing I called: the fax in the directory was stale." |
+| 4. Types their name to sign | **Records agent:** write the right-of-access letter, fax it to the confirmed number, track the 30-day clock, follow up, and file what comes back into the buckets. | The records request shows "sent, due by <date>". When the office answers, results fill the buckets. |
+
+`Patient.onboarding_step` moves through `welcome → coverage → pcp → records → done`. `guide.next_step()` turns the current step into what PJ says.
+
+**Why the call in step 3 matters:** in the real world, a records request sent to a stale directory fax fails silently. In the simulation, `SimulatedFax` delivers only to an office's true fax number. The test `test_stale_fax_fails_until_verified` proves that the verification step does real work.
+
+## 6. The agent crew
+
+PJ is the only voice the patient hears. PJ hands work to specialist agents. Each agent writes back `AgentTask` updates, so the dashboard always shows what's happening.
+
+| Agent | File | Job |
+|---|---|---|
+| **PJ (guide)** | `src/agents/guide.py` | Says what's next, explains things, routes requests. Never diagnoses. |
+| **Coverage** | `src/agents/coverage.py` | Reads the card, gets benefits, writes the plain summary, finds the EAP. |
+| **Care Team** | `src/agents/care_team.py` | Finds the PCP and others. Confirms phone, fax, network status and whether they're accepting new patients. |
+| **Records** | `src/agents/records.py` | Writes the right-of-access letter, collects the signature, faxes it, tracks the 30-day clock, follows up and files the results. |
+| **Care Navigator** | `src/agents/navigator.py` | Turns "I need X" into ranked pathways with costs. |
+| **Scheduling Swarm** | `src/swarm/`, `src/agents/worker.py` | Calls many offices at once to find and hold a real in-network slot. |
+
+How each agent works today, and what it becomes:
+
+| Agent | Hackathon build | Real product |
+|---|---|---|
+| **PJ (guide)** | Deterministic routing and copy. | Muse Spark grounded on the patient's own record, with an immutable safety block like the one in `src/safety.py`. |
+| **Coverage** | Simulated insurer portal (`src/sim/payers.py`). | The payer Patient Access API (FHIR) through an aggregator, plus X12 270/271 eligibility checks. Computer-use on the insurer portal only as a fallback. |
+| **Care Team** | Simulated directory with planted errors (`src/sim/providers.py`). | The NPPES NPI registry and payer FHIR provider directories, followed by a verification call. |
+| **Records** | `SimulatedFax` and a simulated records office. | A HIPAA-eligible fax API covered by a business associate agreement (BAA), e-signature, and OCR plus Muse Spark extraction of returned records into `HealthItem`s. |
+| **Care Navigator** | Rules over the patient's coverage and the true directory data. | Muse Wonder plans, Muse Spark explains, using real benefit and directory data. |
+| **Scheduling Swarm** | Built: 15 parallel simulated calls, honest leverage, holds only. | Real telephony in a post-hackathon pilot. The patient confirms every booking. |
+
+Planned agents (not built yet):
+
+- **Referrals:** asks the PCP for a referral or prior authorization.
+- **Bills:** reads explanations of benefits (EOBs) and bills, and flags errors.
+- **Meds:** tracks refill timing and finds cheaper options on the plan's formulary.
+- **Check-ins:** asks short Life & Connection and Routines questions over time.
+
+## 7. Worked example: "I think I need to see a therapist"
+
+The patient types only that sentence. `navigator.navigate()` does the rest:
+
+1. **Check for a crisis first.** If the text contains crisis words, the top option is always 988 / 911 (`test_crisis_always_first`).
+2. **Classify the need** (`navigator.classify`): therapy, psychiatry, dermatology, physical therapy, primary care, and so on. "Physical therapy" is never confused with talk therapy.
+3. **Check every route the patient might have**, using their actual coverage:
+   - **EAP:** free sessions through the employer, if there is one (`EMPLOYER_EAP`).
+   - **In network:** therapists who are *truly* in network and accepting new patients. PJ also names directory listings to skip, such as a practice the directory lists that isn't taking new patients.
+   - **PCP first:** when the plan requires a referral (HMO, Medicare Advantage HMO).
+   - **Video visit** through the plan.
+   - **Medicare** or **Medicaid** routes when the plan is one of these. For Medicaid this includes the plan's behavioral health line and rides to appointments.
+   - **Community:** 211, sliding-scale clinics, community mental health centers.
+   - **Self-pay**, if the patient is uninsured.
+4. **Rank the options** by cost, speed and fit, and recommend one. Each option says in plain words what it costs, why it fits, the steps, and what PJ can do for you.
+5. **The patient picks one, and PJ does it** (`POST /api/p/care/{id}/go`).
+   - **Today:** this records a working task. The agent is `swarm` for the in-network option.
+   - **Next:** run the swarm for in-network, request the referral for PCP-first, and start the EAP intake call.
+
+The same machinery handles other requests:
+
+- "I need a dermatologist for a mole" (HMO, so a PCP referral comes first).
+- "I need physical therapy for my knee."
+- "I need a new primary care doctor."
+
+## 8. Architecture
+
+```
+┌────────────────────────── Browser (home.html, vanilla JS) ──────────────────────────┐
+│ Welcome · PJ bar + Ask · setup cards · 4 buckets · tasks · coverage · care team     │
+└──────────────────────────────────────────┬───────────────────────────────────────────┘
+                                           │ fetch, cookie pj_session
+┌──────────────────────────────────────────▼───────────────────────────────────────────┐
+│ FastAPI  src/api/server.py   /   /swarm   /api/p/* (src/api/patient.py)   /api/swarm │
+└──────┬─────────────┬──────────────┬───────────────┬──────────────┬───────────────────┘
+       │             │              │               │              │
+┌──────▼─────┐ ┌─────▼────┐ ┌───────▼────┐ ┌────────▼───┐ ┌────────▼───────┐
+│ PJ guide   │ │ Coverage │ │ Care Team  │ │ Records    │ │ Care Navigator │
+└──────┬─────┘ └─────┬────┘ └───────┬────┘ └────────┬───┘ └────────┬───────┘
+       │             │              │               │              │ "Do it, PJ"
+       │             │              │               │     ┌────────▼─────────┐
+       │             │              │               │     │ Scheduling Swarm │
+       │             │              │               │     └────────┬─────────┘
+┌──────▼─────────────▼──────────────▼───────────────▼──────────────▼───────────────────┐
+│ Adapters (today: simulated)                                                           │
+│ sim/payers.py (insurer portal) · sim/providers.py (directory vs truth)                │
+│ channels/fax.py (SimulatedFax) · sim/records_office.py · sim/ offices (swarm calls)   │
+└───────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────────┐
+│ Store: src/patient/store.py (in memory; optional JSON files via PATIENT_STORE_DIR)    │
+└───────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+Principles:
+
+- **Everything goes through an adapter.** Each agent talks to a payer, directory, fax or phone interface. The hackathon build wires in simulated ones, and production swaps in real ones without touching the agents. `FaxChannel` in `src/channels/fax.py` is the pattern to copy.
+- **Every fact carries a `source` and a `confidence`.** Confidence goes from `unverified` (the directory said so) to `likely` to `confirmed` (PJ called, or the insurer or the records say so).
+- **The patient approves anything that leaves the building.**
+  - A records request needs a typed signature (`NotSigned`).
+  - A booking needs the patient's yes. The swarm only holds slots.
+- **Each patient has one record (`HealthRecord`)**, which can be exported as JSON at any time (`GET /api/p/me/export`).
+
+## 9. Data model
+
+The models are in `src/patient/models.py` (pydantic v2).
+
+| Model | Key fields |
+|---|---|
+| `Patient` | display_name, email?, dob?, zip_code?, employer?, onboarding_step |
+| `Coverage` | payer, plan_name, plan_type, member_id, `program` (employer / marketplace / medicare / medicare_advantage / medicaid / dual / none / unknown), deductible and out-of-pocket maximum (and how much of each is met), pcp_required, EAP, phone lines, `benefits: [BenefitLine]`, plain_summary |
+| `BenefitLine` | service, label, covered, you_pay, needs_referral, needs_prior_auth, visit_limit, notes |
+| `CareTeamMember` | role, name, practice, specialty, npi, phone, fax, address, in_network (yes / no / unknown), source, confidence |
+| `RecordsRequest` | to, what, date_range, delivery, letter, signed_at, sent_at, due_by, fax_id, history, status (draft → awaiting_signature → sent → acknowledged → received, or overdue / failed) |
+| `HealthItem` | bucket, kind, title, value, when, plain_meaning, flag (ok / watch / act), source, confidence |
+| `AgentTask` | title, agent (coverage / care_team / records / navigator / swarm / guide), status (todo / working / waiting_on_you / waiting_on_them / done / blocked), detail, needs_you |
+| `CareRequest` | need_text, need, urgent, `pathways: [Pathway]`, recommended |
+| `Pathway` | kind (crisis / eap / in_network / pcp_first / telehealth / medicare / medicaid / community / self_pay), title, why, cost, steps, agent_can_do, rank |
+| `HealthRecord` | patient, coverage, care_team, items, records_requests, tasks, care_requests |
+
+How these map to standards in the real product:
+
+| Our model | Standard |
+|---|---|
+| `HealthItem` | FHIR Observation, Condition, MedicationStatement, AllergyIntolerance, Immunization, FamilyMemberHistory |
+| `Coverage` | FHIR Coverage, plus the X12 271 eligibility response |
+| `CareTeamMember` | FHIR Practitioner and PractitionerRole (Plan-Net) |
+| Life & Connection items | Gravity Project SDOH codes |
+
+## 10. API
+
+All patient routes are under `/api/p`. The session is the `pj_session` cookie (HTTP-only, SameSite=Lax). Every response returns the full dashboard: patient, PJ's line, buckets, panels, coverage, care team, records requests, tasks and recent care requests.
+
+| Method and path | Body | What it does |
+|---|---|---|
+| `POST /start` | `{name, email?}` | Create a record (name only, demo). |
+| `POST /demo` | | Load a fully set-up fictional patient. |
+| `POST /signout` | | Clear the cookie. |
+| `GET /me` | | Return the dashboard. |
+| `GET /me/export` | | Return everything as JSON. |
+| `POST /coverage` | `{card, employer?}` | Run the Coverage agent. Returns 404 if the plan isn't found. |
+| `GET /providers?q=` | | Search the directory. |
+| `POST /pcp` | `{sim_id}` | Add the PCP and verify it by "calling". Returns `corrections`. |
+| `POST /records` | | Draft the records request. Returns `request_id`. |
+| `POST /records/{id}/sign` | `{typed_name}` | Sign (the name must match the patient's) and fax. |
+| `POST /records/{id}/simulate-response` | | Demo control: the office answers. |
+| `POST /ask` | `{text}` | Ask PJ. Returns `answer` of type `care_request`, `coverage` or `chat`. |
+| `POST /care/{care_id}/go?kind=` | | The patient picks a pathway, and PJ starts it. |
+
+The swarm keeps its existing routes: `POST /api/swarm/start`, `POST /api/approve`, `POST /api/replay`, `GET /api/events` (SSE), `GET /api/state` and `GET /api/config`. See [docs/swarm-architecture.md](docs/swarm-architecture.md).
+
+## 11. Which Meta model does what
+
+| Job | Model | Notes |
+|---|---|---|
+| PJ's voice: explanations and answers grounded on the patient's record | `muse-spark-1.3` | Uses an immutable safety block and retrieval over `HealthItem`s and `Coverage`. |
+| Reading an insurance card photo, a lab report or a returned records PDF | `muse-spark-1.3` (vision) | Produces structured output into `Coverage` and `HealthItem`. |
+| Planning care pathways, multi-step coordination, chasing late records | `muse-wonder-1.0` | Agentic and long horizon. Use sparingly because of cost. |
+| Logging into a simulated insurer portal to read benefits | Meta computer-use | **Simulated portal only** in the hackathon. Real portals use APIs, and passwords are never stored. |
+| Scheduling Swarm calls | `muse-spark-1.3` workers, with Wonder as planner and critic | The existing build. |
+| Patient talks instead of typing | `muse-voice-transcribe-1.0` (realtime speech-to-text) | Meta has no text-to-speech, so PJ replies on screen. |
+| PJ illustrations and plain-language visuals | `muse-image-1.0` | Fixed character art for PJ. No patient data goes into prompts. |
+
+Hard rule: **no real PHI goes to any model in this build, and nothing ever goes to `-contributor` models** (Meta trains on those prompts). All demo data is fictional.
+
+## 12. Demo build vs. the real product
+
+| Piece | Hackathon (now) | Real product (later) |
+|---|---|---|
+| Sign-in | Name only, a random session cookie, an in-memory store. | Real authentication (passkeys, or an email magic link plus MFA), identity proofing before pulling records, and encrypted per-patient storage. |
+| Insurance | Fictional insurers, keyed by member-ID prefix. | The payer **Patient Access API** (FHIR; CMS rules require it for many public-program payers) through an aggregator, plus **X12 270/271** eligibility checks through a clearinghouse. The patient authorizes with the insurer's own login (OAuth). **PJ never stores portal passwords.** |
+| Finding the doctor | A fictional directory with planted errors. | The **NPPES** NPI registry and payer **Plan-Net** FHIR directories, followed by a verification call. Keep a "directory vs reality" dataset. |
+| Records | A signed letter, `SimulatedFax`, and an instant demo response. | HIPAA right of access (45 CFR 164.524: 30 days, with one 30-day extension) [from memory: verify]. A fax API that signs a **BAA**, patient e-signature, TEFCA and health information exchange queries where available, and OCR plus extraction. |
+| Calls | Simulated offices (the swarm). | Real telephony for a pilot. PJ discloses that it is an AI assistant, and calls are recorded only with consent. |
+| Hosting | One Docker container, a single instance. | A HIPAA-eligible cloud under a BAA, with audit logs, PHI-safe logging and backups. |
+
+Do not claim HIPAA compliance. The honest claim is "designed to be compatible with HIPAA requirements; the demo uses fictional data only".
+
+## 13. Safety and privacy rules
+
+These rules apply to code, prompts and copy. Tests enforce the ones marked ✓.
+
+1. **Crisis comes first.** Crisis words get 988 (call or text) and 911 before anything else. ✓
+2. **PJ never diagnoses, gives doses, or tells anyone to start or stop a medicine.** Medical questions go to the patient's doctor or the plan's nurse line. ✓
+3. **The patient decides.** PJ lays out the options and the patient chooses. Nothing leaves without consent:
+   - Records requests need a typed signature. ✓
+   - Bookings need the patient's yes; the swarm worker has no booking tool. ✓
+4. **PJ says where every fact came from and how sure it is** (`source`, `confidence`).
+5. **No passwords.** PJ never asks for or stores insurer or portal passwords.
+6. **Data minimization.** Each agent gets only what its job needs. For example, the swarm worker gets name, DOB, member ID, plan, reason and constraints, and nothing more.
+7. **Only fictional data goes in this repo.** No real names, employers, insurers, providers, or phone or fax numbers. Anything simulated is labeled as simulated.
+8. **No real PHI goes to any model** in this build, and nothing ever goes to contributor models.
+9. **The patient owns the record.** They can export it at any time, and deleting must really delete it (planned).
+10. **The swarm's existing invariants still hold:** immutable `SAFETY_BLOCK` / `SAFETY_SHA`, honest leverage only, and never tuning on the holdout split. See [CLAUDE.md](CLAUDE.md).
+
+## 14. Repo layout
+
+| Path | What it is |
+|---|---|
+| `src/patient/` | **The patient record**: `models.py` (data model), `buckets.py` (the four buckets and the panels), `store.py` (in-memory store and export), `demo.py` (demo patient) |
+| `src/agents/guide.py` | PJ: next step, ask routing, safety rules |
+| `src/agents/coverage.py` | Coverage agent |
+| `src/agents/care_team.py` | Care Team agent (directory and verification call) |
+| `src/agents/records.py` | Records agent (letter, signature, fax, clock, filing) |
+| `src/agents/navigator.py` | Care Navigator (crisis check, need classification, pathways) |
+| `src/agents/worker.py` | Swarm call worker (no booking tool) |
+| `src/swarm/` | Swarm blackboard, events, 15-way dispatcher |
+| `src/channels/fax.py` | The `FaxChannel` interface and `SimulatedFax` |
+| `src/sim/payers.py` | Fictional insurers, benefits, employer EAPs, demo cards |
+| `src/sim/providers.py` | Fictional directory: what it says vs. what's true |
+| `src/sim/records_office.py` | What a fictional office sends back |
+| `src/sim/` (other files) | Swarm personas, IVR trees, scenarios, the simulated office |
+| `src/api/server.py` | FastAPI app: `/` is the patient dashboard, plus `/swarm` and the swarm API |
+| `src/api/patient.py` | Patient API (`/api/p/*`) |
+| `src/api/static/` | `home.html` (patient dashboard), `index.html` (swarm dashboard), `pj.webp` (PJ) |
+| `src/llm.py`, `src/config.py`, `src/mock.py` | Meta Model API client, per-role models, offline mocks |
+| `src/safety.py` | Swarm safety block and checks |
+| `src/eval/` | Swarm judge and batch evals |
+| `tests/` | `test_patient.py` (patient flow, navigator, safety) and the swarm tests |
+| `docs/` | `PLAN.md` (original swarm plan), `swarm-architecture.md`, `DATA-SOURCES.md`, `demo-script.md` |
+
+Planned additions:
+
+- `src/channels/payer.py`, `directory.py` and `phone.py`: adapter interfaces modeled on `FaxChannel`.
+- `src/agents/referrals.py` and `bills.py`.
+- `src/patient/db.py` (SQLite).
+- `docs/COMPLIANCE.md`.
+
+## 15. Build status and next steps
+
+### Done (works offline, 42 tests pass)
+
+| Area | Status | Proof |
+|---|---|---|
+| Name-only start, session cookie, demo patient | ✅ | `test_name_only_start_no_password`, `test_demo_patient_fills_every_bucket` |
+| Coverage: card → plain summary, benefits, EAP | ✅ simulated | `test_full_onboarding_flow` |
+| PCP search, plus a verification call that corrects a stale fax and network status | ✅ simulated | `test_full_onboarding_flow` (2 corrections) |
+| Records request: letter, signature check, fax, due date, response filed into buckets | ✅ simulated | `test_full_onboarding_flow`, `test_records_never_sent_unsigned`, `test_stale_fax_fails_until_verified` |
+| Care Navigator: therapist on PPO with EAP, Medicaid, HMO specialist, physical therapy vs. talk therapy, crisis | ✅ rules | navigator tests, `test_crisis_always_first` |
+| PJ won't answer medical questions | ✅ | `test_pj_never_answers_medical_questions` |
+| Patient dashboard (mobile and desktop) | ✅ | Checked in a headless browser at iPhone and desktop widths |
+| Scheduling Swarm (original build) at `/swarm` | ✅ simulated | Swarm tests |
+| Any Meta model call in the patient layer | ❌ | Everything above is deterministic |
+
+### Next, in priority order
+
+Submission is due Nov 4, 9:00 PM ET. Aim to submit on Nov 3.
+
+| # | Task | Acceptance criteria |
+|---|---|---|
+| 1 | **Run the live API smoke test** (`scripts/smoke_meta.py`). | Every line says PASS. |
+| 2 | **Hook "Do it, PJ" (in-network) up to the swarm.** `POST /care/{id}/go?kind=in_network` starts a swarm run with the patient's plan and need. The task shows progress and the held slot. The patient confirms. | A held slot appears on the patient dashboard. Nothing is booked without the patient's yes. |
+| 3 | **Give PJ its voice on Muse Spark** (`guide.ask` for chat answers), grounded on the record, with the safety block hashed like `SAFETY_SHA`. | Safety tests still pass with the live model. A 30-question red-team set (dosing, diagnosis, crisis) passes 100%. |
+| 4 | **Read an insurance card photo into `Coverage`** with Muse Spark vision (fictional card images). | Upload a fake card photo, and the member ID and payer are read correctly. |
+| 5 | **Build a simulated insurer portal and use computer-use on it.** The portal is a small fake page served by the app. | The Coverage agent logs into the fake portal with a fake demo login and reads benefits off the screen. |
+| 6 | **Have Wonder plan the navigator's explanations.** Keep the rules for the facts; Wonder writes the plan and chases the steps. | Same ranked pathways as the rules, with plainer copy. |
+| 7 | **Extract records:** a fictional PDF or fax image → `HealthItem`s via Spark vision. | A sample PDF fills Clinicals and Family & Genes with the correct flags. |
+| 8 | **Build the Referrals agent** for `pcp_first`: draft the referral request to the PCP and track it. | The HMO dermatology flow ends with a referral task. |
+| 9 | **Add a SQLite store** (`PATIENT_STORE_DIR` → a real database) and delete-my-data. | Data survives a restart, and delete removes everything. |
+| 10 | **Add voice input** via Muse Voice Transcribe. | The patient can speak the Ask PJ question. |
+| 11 | **Record the demo video and rewrite `docs/demo-script.md`** around the patient story (the therapist example), with the swarm as the climax. | A 3-minute video is recorded. |
+| 12 | **Write `docs/COMPLIANCE.md` and the pilot path.** | An honest posture, with no compliance claims. |
+
+If behind schedule, cut in this order: 10, 9, 7, 5. Protect 1, 2, 3 and 11.
+
+### Suggested demo story (3 minutes)
+
+1. "Healthcare is built for the doctor's office. This is built for you." Type a name.
+2. Enter the PPO card. Coverage is explained in one paragraph, and PJ finds the EAP.
+3. Search "Harbor". PJ calls and catches the stale fax and network status ("directory vs reality").
+4. Type your name to sign. The records request is faxed. Click "the office answers", and the buckets fill with plain-language results: an LDL to keep an eye on, and a father who had colon cancer at 52, so screening comes up early.
+5. Type "I think I need to see a therapist." PJ offers the EAP first (free), then in-network therapists who are really taking patients, then a video visit and community options.
+6. Click "Do it, PJ". The Scheduling Swarm calls 15 offices at once and holds a slot. The patient says yes.
+
+## 16. Open questions
+
+- **Product name.** "PJ Health" is a placeholder. PJ is the GLTrax mascot, a Gila monster (they/them).
+- **Hackathon Official Rules.** Which non-Meta tools are allowed (text-to-speech, fax), the submission format, and any healthcare-data rules. Still unverified.
+- **Pilot vendors.** Which aggregator to use for payer Patient Access APIs, and which clearinghouse for 270/271.
+- **Real calls.** Whether PJ should ever place real calls to offices during a pilot, and under what consent and disclosure script.
+- **Caregiver access.** How family members and caregivers get access (proxy access) without sharing a login.
+- **Check-in questions.** Where the Life & Connection and Routines questions come from (validated screeners or conversational check-ins), and how often PJ asks them.

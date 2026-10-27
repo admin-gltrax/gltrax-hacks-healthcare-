@@ -64,7 +64,7 @@ async def test_intake_parses_constraints():
 
 def test_dashboard_and_api_smoke():
     client = TestClient(app)
-    assert client.get("/").status_code == 200 and "Swarm Scheduler" in client.get("/").text
+    assert client.get("/swarm").status_code == 200 and "Swarm Scheduler" in client.get("/swarm").text
     assert client.get("/api/state").json()["running"] is False
     # approving before any swarm has finished must be refused
     assert client.post("/api/approve", json={"office_id": "off_01", "slot_start": "2026-11-02T10:00"}).status_code == 409
