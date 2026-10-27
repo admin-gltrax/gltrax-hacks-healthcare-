@@ -60,6 +60,7 @@
   .u small { display:block; color:var(--mute); font-size:10px; margin-bottom:2px; text-transform:uppercase; letter-spacing:.5px; }
   .tool { font:11px ui-monospace,Menlo,monospace; color:var(--violet); margin:0 0 8px; word-break:break-all; }
   .win { border-color:var(--ok); }
+  a { color:var(--blue); }
   .tabs { display:flex; gap:4px; padding:0 20px; border-bottom:1px solid var(--line); }
   .tabs button { background:none; color:var(--mute); border-radius:0; border-bottom:2px solid transparent; padding:10px 12px; }
   .tabs button[aria-selected=true] { color:var(--text); border-bottom-color:var(--blue); }
@@ -102,6 +103,7 @@
 <main>
   <section class="grid" id="grid"></section>
   <aside>
+    <div class="panel" id="dirpanel" hidden><h2>Step 1 · Real directory search</h2><div id="dirsearch"></div></div>
     <div class="panel" id="best"><h2>Best held offer</h2><div class="big" id="bestv">—</div><div id="bestn" style="color:var(--mute)"></div><div style="margin-top:10px"><button id="approve" disabled>Approve this slot</button></div></div>
     <div class="panel"><h2>Directory vs reality</h2>
       <div class="row"><span>Directory says in network</span><b id="t-claimed">0</b></div>
@@ -143,7 +145,7 @@ function tile(o) {
   const b = o.badges.map(x => `<span class="badge ${x[1]}">${x[0]}</span>`).join('');
   return `<div class="tile s-${o.status}" onclick="openDrawer('${o.id}')" id="t-${o.id}">
     <div class="name">${o.name}</div>
-    <div class="meta">${o.distance} mi${debug ? ' · ' + o.persona : ''}</div>
+    <div class="meta">${o.city ? 'stand-in · ' + esc(o.city) + ' · ' : ''}${o.distance} mi${debug ? ' · ' + o.persona : ''}</div>
     <span class="chip">${o.status}</span>
     <div class="last">${o.last || ''}</div><div class="badges">${b}</div></div>`;
 }
@@ -159,10 +161,19 @@ function handle(ev) {
       $('mode').style.display = '';
       $('mode').textContent = 'Replay of a recorded run · ' + (mock ? 'scripted mock models (not the Meta API)' : 'Meta Model API' + (ev.models ? ' · ' + Object.values(ev.models).join(', ') : '')) + (ev.recorded_at ? ' · recorded ' + ev.recorded_at : '') + ' · no credits used';
       break; }
-    case 'patient_request': $('strip').textContent = 'Request: “' + (ev.utterance || 'demo') + '” → ' + `${ev.constraints.specialty}, not before ${ev.constraints.earliest_time}, ${ev.constraints.earliest_date} to ${ev.constraints.latest_date}`; log('patient request parsed'); break;
+    case 'patient_request': $('strip').textContent = 'Request: “' + (ev.utterance || 'demo') + '” → ' + `${ev.constraints.specialty}, not before ${ev.constraints.earliest_time}, ${ev.constraints.earliest_date} to ${ev.constraints.latest_date}` + (ev.plan ? ` · plan: ${ev.plan}` : ''); $('dirpanel').hidden = true; log('patient request parsed'); break;
+    case 'directory_search': {
+      const req = ev.requested && !ev.requested.available ? `<div style="color:var(--warn);font-size:12px;margin-bottom:6px">${esc(ev.requested.reason)} Using ${esc(ev.payer_name || ev.payer)} instead.</div>` : '';
+      $('dirsearch').innerHTML = req + (ev.available
+        ? `<div class="big">${ev.in_network} <span style="font-size:13px;color:var(--mute)">of ${ev.providers_total}</span></div>
+           <div style="font-size:12px;color:var(--mute)">${esc(ev.metro)} ${esc(ev.specialty)} providers ${esc(ev.payer_name)}'s public directory lists in an Arizona network · ${ev.accepting_new_patients} say they take new patients · <span class="real">REAL DATA</span> ${(ev.fetched_at || '').slice(0, 10)}</div>
+           <div style="font-size:12px;margin-top:6px">The swarm calls ${ev.stand_ins.length} <b>simulated stand-ins</b> for these listings (city only; no real practice is called). <a href="#directory" onclick="openDirectoryFor('${ev.payer}');return false">See the listings</a></div>`
+        : `<div style="color:var(--mute);font-size:12px">${esc(ev.reason)}</div>`);
+      $('dirpanel').hidden = false;
+      log(ev.available ? `directory: ${ev.payer_name} lists ${ev.in_network} in network` : 'directory: ' + esc(ev.reason)); break; }
     case 'swarm_started':
       offices = {}; order = []; $('grid').innerHTML = ''; finished = false; best = null; scored = safeOk = succ = 0; updateScore(); $('bestv').textContent = '—'; $('bestn').textContent = ''; $('approve').disabled = true; $('approve').textContent = 'Approve this slot';
-      ev.offices.forEach(x => { offices[x.office_id] = {id:x.office_id, name:x.name, persona:x.persona, distance:x.distance, status:'dialing', last:'', badges:[], transcript:[], tools:[]}; order.push(x.office_id); });
+      ev.offices.forEach(x => { offices[x.office_id] = {id:x.office_id, name:x.name, persona:x.persona, distance:x.distance, city:x.city, status:'dialing', last:'', badges:[], transcript:[], tools:[]}; order.push(x.office_id); });
       $('grid').innerHTML = order.map(id => tile(offices[id])).join(''); log(`swarm started: ${ev.total} calls at once`); break;
     case 'status': if (o) { o.status = ev.status; render(o.id); } break;
     case 'call_started': log(`dialing ${ev.name}`); break;
@@ -302,7 +313,9 @@ function drawBody(id) {
   $('dbody').scrollTop = $('dbody').scrollHeight;
 }
 // ---- provider directory tab: real public data from the local snapshots ----
-let dir = null, dirShown = 100;
+let dir = null, dirShown = 100, pendingPayer = '';
+function openDirectoryFor(payer) { pendingPayer = payer; showTab('dir'); if (dir) applyPending(); }
+function applyPending() { if (pendingPayer) { $('dir-payer').value = pendingPayer; pendingPayer = ''; dirShown = 100; renderDirectory(); } }
 const PAYER_SHORT = {uhc: 'UHC', cigna: 'Cigna', humana: 'Humana'};
 function showTab(t) {
   $('tab-swarm').setAttribute('aria-selected', t === 'swarm'); $('tab-dir').setAttribute('aria-selected', t === 'dir');
@@ -328,6 +341,7 @@ async function loadDirectory() {
   const cities = {}; dir.providers.forEach(p => cities[p.city] = (cities[p.city] || 0) + 1);
   $('dir-city').innerHTML = '<option value="">All cities</option>' + Object.entries(cities).sort((a, b) => b[1] - a[1]).map(([c, n]) => `<option>${esc(c)}</option>`).join('');
   renderDirectory();
+  applyPending();
 }
 function dirMatches() {
   const q = $('dir-q').value.trim().toLowerCase(), payer = $('dir-payer').value, city = $('dir-city').value, onlyNew = $('dir-new').checked;

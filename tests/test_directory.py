@@ -79,3 +79,24 @@ async def test_api_errors_are_raised():
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as c:
         with pytest.raises(NppesError):
             await search(c, taxonomy_description="x", state="AZ")
+
+
+def test_detect_payer():
+    from src.intake import detect_payer
+
+    assert detect_payer("I have an AARP plan through United") == "uhc"
+    assert detect_payer("Cigna open access") == "cigna"
+    assert detect_payer("my Humana card") == "humana"
+    assert detect_payer("I need a cardiologist") is None and detect_payer(None) is None
+
+
+def test_directory_search_gives_counts_and_anonymous_stand_ins():
+    from src.swarm.candidates import directory_search
+
+    d = directory_search("uhc")
+    assert d["available"] and d["in_network"] > 0 and len(d["stand_ins"]) == 15
+    for s in d["stand_ins"]:
+        assert set(s) == {"city", "accepting"}  # never a real name, NPI or phone
+    assert len({s["city"] for s in d["stand_ins"]}) > 5  # spread across the metro
+    assert not directory_search("aetna")["available"]
+    assert not directory_search("uhc", specialty="../../etc")["available"]  # parsed text never reaches a path
