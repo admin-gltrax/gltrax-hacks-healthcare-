@@ -48,6 +48,7 @@ Results land in `data/runs/` with the prompt hash and the safety-block hash. Kee
 | `src/api/` | FastAPI server, SSE stream, dashboard |
 | `prompts/worker_v0.txt` | The tunable worker prompt (the self-improvement loop edits this, never the safety block) |
 | `src/mock.py` | Offline scripted models for development |
+| `docs/DATA-SOURCES.md`, `examples/blue-button-node/` | Research on FHIR sandboxes, synthetic data, directories; Node Blue Button starter (not part of the build) |
 
 ## Per-role models
 
