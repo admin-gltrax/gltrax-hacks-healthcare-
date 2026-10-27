@@ -323,7 +323,7 @@ async function loadDirectory() {
   $('dir-sum').innerHTML = `<div class="panel"><h2>Providers</h2><div class="big">${dir.count}</div><div style="color:var(--mute);font-size:12px">active NPIs, ${dir.metro}</div></div>` +
     Object.entries(dir.payers).map(([k, p]) => { const pct = Math.round(100 * p.with_networks / Math.max(1, p.checked));
       return `<div class="panel"><h2>${esc(p.name)}</h2><div class="big">${p.with_networks} <span style="font-size:13px;color:var(--mute)">· ${pct}%</span></div>
-      <div class="bar"><span style="width:${pct}%;background:var(--ok)"></span></div><div style="color:var(--mute);font-size:12px">in an Arizona ${esc(dir.specialty)} network · ${p.listed} listed</div></div>`; }).join('');
+      <div class="bar"><span style="width:${pct}%;background:var(--ok)"></span></div><div style="color:var(--mute);font-size:12px">with Arizona ${esc(dir.specialty)} networks · ${p.listed} listed</div></div>`; }).join('');
   $('dir-payer').innerHTML = '<option value="">Any payer</option>' + Object.entries(dir.payers).map(([k, p]) => `<option value="${k}">${esc(p.name)}</option>`).join('') + (Object.keys(dir.payers).length ? '<option value="-">No payer network found</option>' : '');
   const cities = {}; dir.providers.forEach(p => cities[p.city] = (cities[p.city] || 0) + 1);
   $('dir-city').innerHTML = '<option value="">All cities</option>' + Object.entries(cities).sort((a, b) => b[1] - a[1]).map(([c, n]) => `<option>${esc(c)}</option>`).join('');
@@ -355,7 +355,7 @@ $('dir-list').onclick = e => {
   const next = row.nextElementSibling;
   if (next && next.classList.contains('nets')) { next.remove(); return; }
   const p = dir.providers.find(x => x.npi === row.dataset.npi);
-  const body = Object.entries(p.payers).map(([k, x]) => `<div><b>${esc(dir.payers[k]?.name || k)}</b> (${x.networks}): ${esc(x.names.join(' · '))}${x.networks > x.names.length ? ' …' : ''}</div>`).join('') || 'No payer directory lists this provider in an Arizona network.';
+  const body = Object.entries(p.payers).map(([k, x]) => `<div><b>${esc(dir.payers[k]?.name || k)}</b> (${x.networks}): ${esc(x.names.join(' · '))}${x.networks > x.names.length ? ' …' : ''}${x.other_state ? ` <i>+${x.other_state} plans for other states, not shown</i>` : ''}</div>`).join('') || 'No payer directory lists this provider in an Arizona network.';
   row.insertAdjacentHTML('afterend', `<div class="nets">${esc(p.line)}, ${esc(p.city)} ${p.zip}${body ? '<div style="margin-top:4px">' + body + '</div>' : ''}</div>`);
 };
 ['dir-q', 'dir-payer', 'dir-city', 'dir-new'].forEach(id => $(id).addEventListener('input', () => { dirShown = 100; renderDirectory(); }));

@@ -59,6 +59,28 @@ def test_roles_in_other_states_are_dropped():
     assert ids == ["AZNET", "UNKNOWN"]  # an unresolvable location is kept, a known out-of-state one is not
 
 
+def test_network_state_reads_explicit_markers_only():
+    from src.directory.store import network_state
+
+    assert network_state("AARP Medicare Advantage Access from UHC NC-23 (PPO)") == "NC"
+    assert network_state("ARKANSAS PPO-PPA DIRECT") == "AR"
+    assert network_state("AZ IFP DIGNITY CIGNA") == "AZ"
+    assert network_state("Group Medicare PPO+") is None
+    assert network_state("Medicare MA") is None  # MA as Medicare Advantage, not Massachusetts
+    assert network_state(None) is None
+
+
+def test_snapshot_merge_replaces_only_the_rerun_payer():
+    from src.directory.plannet import PAYERS, PayerResult
+
+    old = {"payers": {"uhc": {"name": "UHC old"}, "cigna": {"name": "Cigna"}},
+           "claims": {"1": {"uhc": [{"network_id": "OLD"}], "cigna": [{"network_id": "C"}]}, "2": {"uhc": [{"network_id": "OLD"}]}}}
+    r = PayerResult(PAYERS["uhc"], claims={"3": [{"network_id": "NEW"}]}, listed=1, errors={"9": "boom"})
+    snap = snapshot("Phoenix", "cardiology", 3, [r], old)
+    assert snap["claims"] == {"1": {"cigna": [{"network_id": "C"}]}, "3": {"uhc": [{"network_id": "NEW"}]}}
+    assert snap["payers"]["cigna"] == {"name": "Cigna"} and snap["payers"]["uhc"]["failed"] == {"9": "boom"}
+
+
 def test_claims_keep_this_specialty_and_merge_per_network():
     claims = claims_from_roles([
         role("r1", ["A", "B"]),
@@ -78,7 +100,7 @@ async def test_identifier_payer_pages_roles_and_batches_network_names():
     async with fake_payer({"111": prac("p1", "111")}, roles, {f"N{i}": f"Plan {i}" for i in range(5)}, calls) as c:
         res = await fetch_payer(payer, [prov("111"), prov("222")], "cardiology", c)
     assert res.listed == 1 and not res.errors  # 222 is simply not in this directory
-    assert sorted(x["network_name"] for x in res.claims["111"]) == [f"Plan {i}" for i in range(5)]
+    assert sorted(res.networks[x["network_id"]] for x in res.claims["111"]) == [f"Plan {i}" for i in range(5)]
     assert sum(p.endswith("/PractitionerRole") for p, _ in calls) == 3  # followed next links
     assert [q["_id"].count(",") for p, q in calls if p.endswith("/Organization")] == [4]  # one batched name lookup
 
@@ -133,11 +155,14 @@ def test_directory_view_summarizes_payers(tmp_path):
     (tmp_path / "phoenix-cardiology.json").write_text(json.dumps({"metro": "Phoenix", "fetched_at": "2026-10-27", "providers": [prov("111").model_dump()]}))
     nets = snapshot("Phoenix", "cardiology", 1, [])
     nets["payers"] = {"uhc": {"name": "UnitedHealthcare", "checked": 1, "listed": 1, "with_networks": 1}}
+    nets["payers"]["uhc"]["networks"] = {"N0": "Plan 0", "N1": "Plan 1", "N2": "Plan 2", "NC": "AARP Medicare Advantage from UHC NC-23 (PPO)",
+                                         "AZ": "AARP Medicare Advantage from UHC AZ-1 (PPO)"}
     nets["claims"] = {"111": {"uhc": [
-        {"network_id": f"N{i}", "network_name": f"Plan {i}", "accepting_new_patients": "existptonly" if i else "newpt", "last_updated": None} for i in range(3)
+        {"network_id": n, "accepting_new_patients": "existptonly" if n != "N0" else "newpt", "last_updated": None} for n in ("N0", "N1", "N2", "NC", "AZ")
     ]}}
     (tmp_path / "phoenix-cardiology-networks.json").write_text(json.dumps(nets))
     v = directory_view(data_dir=tmp_path, max_names=2)
     row = v["providers"][0]["payers"]["uhc"]
-    assert row == {"networks": 3, "names": ["Plan 0", "Plan 1"], "accepting": "newpt"}
+    # the Arizona plan is listed first, the North Carolina plan is set aside, names are looked up once per payer
+    assert row == {"networks": 4, "other_state": 1, "names": ["AARP Medicare Advantage from UHC AZ-1 (PPO)", "Plan 0"], "accepting": "newpt"}
     assert v["payers"]["uhc"]["with_networks"] == 1
