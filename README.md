@@ -1,1 +1,54 @@
-# gltrax-hacks-healthcare-
+# swarm-scheduler
+
+An agent that calls many (simulated) medical offices at once to find an in-network appointment, built on the Meta Model API for the Meta Global AI Developer Hackathon.
+
+All offices, patients and data are fictional. No real clinic is ever called.
+
+## Quick start
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+# Offline, no key needed (scripted models: exercises the plumbing, not model quality)
+MOCK_LLM=1 pytest -q
+MOCK_LLM=1 uvicorn src.api.server:app --port 8000      # open http://localhost:8000 and click Start
+
+# With the real Meta Model API
+cp .env.example .env        # add MODEL_API_KEY
+python scripts/smoke_meta.py                            # every line should say PASS
+uvicorn src.api.server:app --port 8000
+```
+
+Add `?debug=1` to the dashboard URL to show each office's hidden persona.
+
+## Evals
+
+```bash
+python -m src.eval.run_batch --n 40 --split dev --k 8   # isolated calls, scored against ground truth
+python -m src.eval.run_batch --swarm                    # the fixed 15-office demo, shared blackboard
+```
+
+Results land in `data/runs/` with the prompt hash and the safety-block hash. Keep the `holdout` split out of prompt tuning.
+
+## Layout
+
+| Path | Purpose |
+|---|---|
+| `src/llm.py`, `src/config.py` | Meta Model API client (OpenAI-compatible) and per-role models |
+| `src/safety.py` | Immutable safety block, data-minimization and honesty checks |
+| `src/agents/worker.py` | The call agent and its tools (no tool can confirm a booking) |
+| `src/sim/` | Personas, IVR trees, scenario generator, simulated office |
+| `src/swarm/` | Blackboard, event bus, 15-way dispatcher |
+| `src/eval/` | Deterministic judge, optional LLM quality judge, batch CLI |
+| `src/api/` | FastAPI server, SSE stream, dashboard |
+| `prompts/worker_v0.txt` | The tunable worker prompt (the self-improvement loop edits this, never the safety block) |
+| `src/mock.py` | Offline scripted models for development |
+
+## Per-role models
+
+Set in `.env`. Defaults: Spark 1.3 for the worker, judge and receptionists; Wonder for planner and critic. To run receptionists on open-weight Muse Spark via a partner host, see the commented block in `.env.example`.
+
+## Status
+
+Built offline and not yet run against the live API. First job: `scripts/smoke_meta.py`.
