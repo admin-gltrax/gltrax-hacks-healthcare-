@@ -1,6 +1,6 @@
 # Live provider network data
 
-> **Status.** Research only; no connector is built yet. The swarm still calls the fixed, fictional 15-office demo. Real directory data is meant for the "directory says" side; simulated receptionists must never act under real practice names.
+> **Status.** The NPPES connector is built (`src/directory/nppes.py`); `data/directory/phoenix-cardiology.json` holds 677 Phoenix-metro cardiologists (fetched 2026-10-27). No payer connector yet. The swarm still calls the fixed, fictional 15-office demo. Real directory data is meant for the "directory says" side; simulated receptionists must never act under real practice names.
 
 ## Scope
 
@@ -36,7 +36,17 @@ From the developer portal's API library (`developerportal.aetna.com/apis`) and i
 
 Paging is by `_page_token`, not `_offset`.
 
-## Planned connector (one metro)
+## NPPES connector
+
+```bash
+python -m src.directory.nppes --metro phoenix --specialty cardiology   # ~1 minute, no key
+```
+
+- Queries each cardiology taxonomy statewide (Cardiovascular Disease, Interventional Cardiology, Clinical Cardiac Electrophysiology, Advanced Heart Failure and Transplant Cardiology), pages 200 at a time, and splits by ZIP3 if a query hits the API's 1200-row cap.
+- Keeps active individual providers with at least one practice location in the metro. Metro = Maricopa + Pinal counties, approximated as ZIP3 850-853 minus the Yuma, La Paz, Pima, Yavapai, Mohave and Gila ZIPs under those prefixes. A few Pinal towns under 856/857 are not covered.
+- Writes `Provider` records (`src/schemas.py`) with every in-metro practice location; `network` stays empty until a payer source fills it.
+
+## Planned payer join (one metro)
 
 1. NPPES: all cardiology NPIs in the metro → `Provider` rows (schema in `docs/swarm-architecture.md`).
 2. Aetna: `Location?address-city=…&address-state=…` → `PractitionerRole?location=…&specialty=<NUCC code>&_include=PractitionerRole:practitioner` → network references; `InsurancePlan?coverage-area=…` → plan ↔ network.
