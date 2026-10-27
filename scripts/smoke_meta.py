@@ -59,7 +59,7 @@ async def main() -> None:
         report("auth + models.list", False, f"{type(e).__name__}: {e}")
 
     try:
-        r = await llm.chat([{"role": "user", "content": "Reply with the single word: pong"}], max_tokens=64)
+        r = await llm.chat([{"role": "user", "content": "Reply with the single word: pong"}], max_tokens=1024)  # cap includes reasoning tokens
         report("plain chat", "pong" in r.content.lower(), repr(r.content[:60]))
     except Exception as e:
         report("plain chat", False, f"{type(e).__name__}: {e}")
@@ -85,7 +85,7 @@ async def main() -> None:
 
     # Planner model (Muse Wonder is preview; failure here is non-fatal for the build)
     try:
-        r = await MetaLLM(role_cfg("planner")).chat([{"role": "user", "content": "Reply with the single word: pong"}], max_tokens=64)
+        r = await MetaLLM(role_cfg("planner")).chat([{"role": "user", "content": "Reply with the single word: pong"}], max_tokens=1024)  # cap includes reasoning tokens
         report(f"planner model ({role_cfg('planner').model})", "pong" in r.content.lower(), repr(r.content[:60]))
     except Exception as e:
         report(f"planner model ({role_cfg('planner').model})", False, f"{type(e).__name__}: {e}")
