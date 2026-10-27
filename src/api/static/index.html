@@ -60,6 +60,25 @@
   .u small { display:block; color:var(--mute); font-size:10px; margin-bottom:2px; text-transform:uppercase; letter-spacing:.5px; }
   .tool { font:11px ui-monospace,Menlo,monospace; color:var(--violet); margin:0 0 8px; word-break:break-all; }
   .win { border-color:var(--ok); }
+  .tabs { display:flex; gap:4px; padding:0 20px; border-bottom:1px solid var(--line); }
+  .tabs button { background:none; color:var(--mute); border-radius:0; border-bottom:2px solid transparent; padding:10px 12px; }
+  .tabs button[aria-selected=true] { color:var(--text); border-bottom-color:var(--blue); }
+  .real { font-size:11px; font-weight:600; padding:3px 8px; border-radius:99px; background:#3fb95022; color:var(--ok); border:1px solid #3fb95055; }
+  #dir { padding:16px 20px; }
+  .dir-sum { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin-bottom:12px; }
+  .dir-sum .panel { margin:0; }
+  .filters { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; }
+  .filters input[type=search], .filters select { background:var(--panel); border:1px solid var(--line); color:var(--text); padding:7px 10px; border-radius:6px; font-size:13px; }
+  .filters input[type=search] { flex:1; min-width:200px; }
+  .prow { display:grid; grid-template-columns:minmax(180px,1.4fr) minmax(140px,1fr) minmax(110px,.8fr) 2fr; gap:10px; align-items:start; padding:9px 12px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .prow:hover { background:var(--panel); }
+  .prow.head { cursor:default; color:var(--mute); font-size:11px; text-transform:uppercase; letter-spacing:.6px; background:none; }
+  .prow small { display:block; color:var(--mute); font-size:11px; }
+  .pay { display:inline-block; font-size:11px; padding:2px 7px; border-radius:4px; margin:0 4px 4px 0; border:1px solid var(--line); color:var(--mute); }
+  .pay.in { color:var(--ok); border-color:#3fb95066; }
+  .pay .dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--ok); margin-left:5px; vertical-align:middle; }
+  .nets { grid-column:1/-1; font-size:12px; color:var(--mute); padding:2px 0 4px; }
+  @media (max-width:760px) { .prow { grid-template-columns:1fr; gap:4px; } .prow.head { display:none; } }
 </style>
 </head>
 <body>
@@ -73,6 +92,11 @@
   <button id="go" disabled>Start live swarm</button>
   <button id="replay" class="ghost" style="display:none">Replay recorded run</button>
 </header>
+<nav class="tabs" role="tablist">
+  <button role="tab" id="tab-swarm" aria-selected="true">Live swarm</button>
+  <button role="tab" id="tab-dir" aria-selected="false">Provider directory</button>
+</nav>
+<div id="swarmview">
 <div class="strip" id="mode" style="display:none"></div>
 <div class="strip" id="strip">Waiting to start. The agent discloses it is an AI on every call and can only hold a slot; you confirm.</div>
 <main>
@@ -93,6 +117,21 @@
     <div class="panel"><h2>Audit log</h2><div id="log"></div></div>
   </aside>
 </main>
+</div>
+<section id="dir" hidden>
+  <div class="strip" style="padding:0 0 10px;border:0"><span class="real">REAL PUBLIC DATA</span> <span id="dir-src">Loading…</span></div>
+  <div class="dir-sum" id="dir-sum"></div>
+  <div class="filters">
+    <input id="dir-q" type="search" placeholder="Search name, NPI, city or network" aria-label="Search providers">
+    <select id="dir-payer" aria-label="Payer"><option value="">Any payer</option></select>
+    <select id="dir-city" aria-label="City"><option value="">All cities</option></select>
+    <label style="font-size:13px"><input type="checkbox" id="dir-new"> Accepting new patients</label>
+    <span id="dir-n" style="color:var(--mute);font-size:12px"></span>
+  </div>
+  <div class="prow head"><span>Provider</span><span>Specialty</span><span>City · phone</span><span>Directory says in network</span></div>
+  <div id="dir-list"></div>
+  <div style="padding:12px 0"><button class="ghost" id="dir-more" hidden>Show more</button></div>
+</section>
 <div id="drawer"><header><b id="dtitle"></b><button class="ghost" onclick="closeDrawer()">Close</button></header><div id="dbody"></div></div>
 <script>
 const $ = id => document.getElementById(id);
@@ -210,7 +249,7 @@ $('approve').onclick = async () => {
 
 // ---- voice intake: record, convert to 16 kHz mono WAV in the browser, transcribe on the server ----
 let rec = null, recTimer = null;
-const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const esc = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 async function toWav16k(blob) {
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const decoded = await ctx.decodeAudioData(await blob.arrayBuffer());
@@ -262,6 +301,67 @@ function drawBody(id) {
     : `<div class="tool">⚙ ${t.text.replace(/</g, '&lt;')}</div>`).join('');
   $('dbody').scrollTop = $('dbody').scrollHeight;
 }
+// ---- provider directory tab: real public data from the local snapshots ----
+let dir = null, dirShown = 100;
+const PAYER_SHORT = {uhc: 'UHC', cigna: 'Cigna', humana: 'Humana'};
+function showTab(t) {
+  $('tab-swarm').setAttribute('aria-selected', t === 'swarm'); $('tab-dir').setAttribute('aria-selected', t === 'dir');
+  $('swarmview').hidden = t !== 'swarm'; $('dir').hidden = t !== 'dir';
+  if (t === 'dir' && !dir) loadDirectory();
+  try { history.replaceState(null, '', t === 'dir' ? '#directory' : location.pathname + location.search); } catch (e) {}
+}
+$('tab-swarm').onclick = () => showTab('swarm');
+$('tab-dir').onclick = () => showTab('dir');
+async function loadDirectory() {
+  const r = await fetch('/api/directory');
+  if (!r.ok) { $('dir-src').textContent = 'No directory snapshot on this server.'; return; }
+  dir = await r.json();
+  const nppesDate = (dir.nppes_fetched_at || '').slice(0, 10), netDate = (dir.networks_fetched_at || '').slice(0, 10);
+  $('dir-src').textContent = `${dir.count} ${dir.specialty} providers in ${dir.metro} · NPPES ${nppesDate}` +
+    (netDate ? ` · ${Object.values(dir.payers).map(p => p.name).join(', ')} public directories ${netDate}` : ' · payer networks not loaded yet') +
+    ' · directory claims, not verified · these providers are never called (the swarm calls simulated offices)';
+  $('dir-sum').innerHTML = `<div class="panel"><h2>Providers</h2><div class="big">${dir.count}</div><div style="color:var(--mute);font-size:12px">active NPIs, ${dir.metro}</div></div>` +
+    Object.entries(dir.payers).map(([k, p]) => { const pct = Math.round(100 * p.with_networks / Math.max(1, p.checked));
+      return `<div class="panel"><h2>${esc(p.name)}</h2><div class="big">${p.with_networks} <span style="font-size:13px;color:var(--mute)">· ${pct}%</span></div>
+      <div class="bar"><span style="width:${pct}%;background:var(--ok)"></span></div><div style="color:var(--mute);font-size:12px">in an Arizona ${esc(dir.specialty)} network · ${p.listed} listed</div></div>`; }).join('');
+  $('dir-payer').innerHTML = '<option value="">Any payer</option>' + Object.entries(dir.payers).map(([k, p]) => `<option value="${k}">${esc(p.name)}</option>`).join('') + (Object.keys(dir.payers).length ? '<option value="-">No payer network found</option>' : '');
+  const cities = {}; dir.providers.forEach(p => cities[p.city] = (cities[p.city] || 0) + 1);
+  $('dir-city').innerHTML = '<option value="">All cities</option>' + Object.entries(cities).sort((a, b) => b[1] - a[1]).map(([c, n]) => `<option>${esc(c)}</option>`).join('');
+  renderDirectory();
+}
+function dirMatches() {
+  const q = $('dir-q').value.trim().toLowerCase(), payer = $('dir-payer').value, city = $('dir-city').value, onlyNew = $('dir-new').checked;
+  return dir.providers.filter(p => {
+    if (city && p.city !== city) return false;
+    if (payer === '-' ? Object.keys(p.payers).length : payer && !p.payers[payer]) return false;
+    if (onlyNew && !Object.entries(p.payers).some(([k, x]) => (!payer || payer === k) && x.accepting === 'newpt')) return false;
+    if (!q) return true;
+    return (p.name + ' ' + p.npi + ' ' + p.city + ' ' + Object.values(p.payers).flatMap(x => x.names).join(' ')).toLowerCase().includes(q);
+  });
+}
+function renderDirectory() {
+  const rows = dirMatches();
+  $('dir-n').textContent = `${rows.length} shown`;
+  $('dir-list').innerHTML = rows.slice(0, dirShown).map(p => {
+    const pays = Object.entries(p.payers).map(([k, x]) => `<span class="pay in" title="${esc(x.names.join(' · '))}">${PAYER_SHORT[k] || k} · ${x.networks} network${x.networks === 1 ? '' : 's'}${x.accepting === 'newpt' ? '<span class="dot" title="Directory says accepting new patients"></span>' : ''}</span>`).join('')
+      || `<span class="pay">${Object.keys(dir.payers).length ? 'not listed by these payers' : '—'}</span>`;
+    return `<div class="prow" data-npi="${p.npi}"><span><b>${esc(p.name)}</b>${p.credential ? ', ' + esc(p.credential) : ''}<small>NPI ${p.npi}${p.locations > 1 ? ' · ' + p.locations + ' locations' : ''}</small></span>
+      <span>${esc(p.specialty)}</span><span>${esc(p.city)}<small>${esc(p.phone || '')}</small></span><span>${pays}</span></div>`;
+  }).join('') || '<div style="padding:12px;color:var(--mute)">No providers match.</div>';
+  $('dir-more').hidden = rows.length <= dirShown;
+}
+$('dir-list').onclick = e => {
+  const row = e.target.closest('.prow'); if (!row) return;
+  const next = row.nextElementSibling;
+  if (next && next.classList.contains('nets')) { next.remove(); return; }
+  const p = dir.providers.find(x => x.npi === row.dataset.npi);
+  const body = Object.entries(p.payers).map(([k, x]) => `<div><b>${esc(dir.payers[k]?.name || k)}</b> (${x.networks}): ${esc(x.names.join(' · '))}${x.networks > x.names.length ? ' …' : ''}</div>`).join('') || 'No payer directory lists this provider in an Arizona network.';
+  row.insertAdjacentHTML('afterend', `<div class="nets">${esc(p.line)}, ${esc(p.city)} ${p.zip}${body ? '<div style="margin-top:4px">' + body + '</div>' : ''}</div>`);
+};
+['dir-q', 'dir-payer', 'dir-city', 'dir-new'].forEach(id => $(id).addEventListener('input', () => { dirShown = 100; renderDirectory(); }));
+$('dir-more').onclick = () => { dirShown += 100; renderDirectory(); };
+if (location.hash === '#directory') showTab('dir');
+
 loadConfig();
 connect();
 </script>

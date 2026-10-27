@@ -27,6 +27,8 @@ from ..schemas import Constraints
 from ..sim.scenarios import DEMO_PATIENT, make_scenarios, swarm_demo_scenarios
 from ..swarm.dispatcher import run_swarm
 from ..swarm.events import EventBus
+from ..directory.nppes import METROS, TAXONOMIES
+from ..directory.store import directory_view
 from ..voice import MAX_WAV_BYTES, TranscribeError, transcribe_wav
 
 STATIC = Path(__file__).parent / "static"
@@ -129,6 +131,17 @@ def config():
         "mock": mock_enabled(),
         "replay_available": _replay_file().exists(),
     }
+
+
+@app.get("/api/directory")
+def directory(metro: str = "phoenix", specialty: str = "cardiology"):
+    """Public and free: real providers from the local directory snapshots. Nothing is fetched live."""
+    if metro not in METROS or specialty not in TAXONOMIES:
+        return JSONResponse({"error": "unknown metro or specialty"}, status_code=404)
+    try:
+        return directory_view(metro, specialty)
+    except FileNotFoundError:
+        return JSONResponse({"error": "no directory snapshot on this server"}, status_code=404)
 
 
 @app.get("/api/state")
