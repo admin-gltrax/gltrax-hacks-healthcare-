@@ -1,0 +1,132 @@
+# Deploys main to the AWS Lightsail container service after CI passes.
+#
+# It keeps the service's current settings (environment variables, port, health
+# check) and only swaps in the newly built image, so app secrets such as
+# MODEL_API_KEY stay in Lightsail and never pass through GitHub.
+#
+# Setup (once): see DEPLOY.md "Deploy on AWS Lightsail". Until AWS credentials
+# are added, this workflow skips with a notice instead of failing.
+name: deploy
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-lightsail
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write   # only used if AWS_ROLE_ARN (OIDC) is configured
+
+env:
+  AWS_REGION: ${{ vars.LIGHTSAIL_REGION || 'us-west-2' }}
+  SERVICE: ${{ vars.LIGHTSAIL_SERVICE || 'swarm-scheduler' }}
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check for AWS credentials
+        id: creds
+        env:
+          ROLE: ${{ vars.AWS_ROLE_ARN }}
+          HAS_KEYS: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
+        run: |
+          if [ -n "$ROLE" ]; then echo "mode=role" >> "$GITHUB_OUTPUT"
+          elif [ "$HAS_KEYS" = "true" ]; then echo "mode=keys" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Skipping deploy: add AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY repository secrets (see DEPLOY.md)."
+            echo "mode=none" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.creds.outputs.mode != 'none'
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        if: steps.creds.outputs.mode == 'role'
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        if: steps.creds.outputs.mode == 'keys'
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Read the current deployment
+        if: steps.creds.outputs.mode != 'none'
+        run: |
+          aws lightsail get-container-services --service-name "$SERVICE" \
+            --query 'containerServices[0]' --output json > service.json
+          if [ "$(jq -r '.currentDeployment // empty | .version' service.json)" = "" ]; then
+            echo "::error::$SERVICE has no current deployment. Deploy it once in the Lightsail console, then re-run."
+            exit 1
+          fi
+          if [ "$(jq '.currentDeployment.containers | length' service.json)" != "1" ]; then
+            echo "::error::Expected exactly one container in $SERVICE."
+            exit 1
+          fi
+          # Keep the existing environment values out of the logs.
+          jq -r '.currentDeployment.containers[].environment // {} | .[]' service.json \
+            | while IFS= read -r v; do [ "${#v}" -ge 8 ] && echo "::add-mask::$v"; done; true
+          echo "Current deployment: version $(jq -r '.currentDeployment.version' service.json), image $(jq -r '.currentDeployment.containers[].image' service.json)"
+
+      - name: Build the image
+        if: steps.creds.outputs.mode != 'none'
+        run: docker build -t "$SERVICE:${GITHUB_SHA::12}" .
+
+      - name: Push the image to Lightsail
+        id: push
+        if: steps.creds.outputs.mode != 'none'
+        run: |
+          sudo curl -fsSL "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-amd64/lightsailctl" \
+            -o /usr/local/bin/lightsailctl
+          sudo chmod +x /usr/local/bin/lightsailctl
+          out=$(aws lightsail push-container-image --service-name "$SERVICE" --label app \
+            --image "$SERVICE:${GITHUB_SHA::12}")
+          echo "$out"
+          image=$(echo "$out" | grep -o '":[^"]*"' | tr -d '"' | tail -1)
+          [ -n "$image" ] || { echo "::error::Could not read the pushed image name."; exit 1; }
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy with the existing settings
+        if: steps.creds.outputs.mode != 'none'
+        env:
+          IMAGE: ${{ steps.push.outputs.image }}
+        run: |
+          jq --arg img "$IMAGE" '.currentDeployment.containers | map_values(.image = $img)' service.json > containers.json
+          jq '.currentDeployment.publicEndpoint' service.json > endpoint.json
+          aws lightsail create-container-service-deployment --service-name "$SERVICE" \
+            --containers file://containers.json --public-endpoint file://endpoint.json \
+            --query 'containerService.nextDeployment.version' --output text
+          rm -f containers.json service.json
+
+      - name: Wait until it's live
+        if: steps.creds.outputs.mode != 'none'
+        env:
+          IMAGE: ${{ steps.push.outputs.image }}
+        run: |
+          for i in $(seq 1 60); do
+            read -r state img url <<< "$(aws lightsail get-container-services --service-name "$SERVICE" \
+              --query 'containerServices[0].[state, currentDeployment.containers.*.image | [0], url]' --output text)"
+            echo "state=$state image=$img"
+            if [ "$state" = "RUNNING" ] && [ "$img" = "$IMAGE" ]; then
+              curl -fsS "${url%/}/healthz" && echo && echo "Live: $url" && exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::Deployment did not go live within 15 minutes. Check the Lightsail console (Deployments tab)."
+          exit 1
