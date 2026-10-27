@@ -55,4 +55,4 @@ Set in `.env`. Defaults: Spark 1.3 for the worker, judge and receptionists; Wond
 
 ## Status
 
-Built offline and not yet run against the live API. First job: `scripts/smoke_meta.py`.
+`scripts/smoke_meta.py` passes all checks against the live Meta Model API (2026-10-27): auth, the model IDs for every role (`muse-spark-1.3`, `muse-wonder-1.0`), plain chat, tool calls, and structured output. The full swarm has not yet been run end to end on the live API.
