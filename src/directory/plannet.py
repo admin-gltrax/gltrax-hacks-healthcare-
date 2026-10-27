@@ -41,12 +41,13 @@ class Payer:
     base_url: str
     lookup: Literal["identifier", "name"]  # how to find a Practitioner by NPI
     batch_ids: bool = False  # Organization?_id=a,b,c returns all of them
+    page_size: int | None = None  # _count to send, where the server honors it
 
 
 PAYERS: dict[str, Payer] = {
-    "uhc": Payer("uhc", "UnitedHealthcare", "https://flex.optum.com/fhirpublic/R4", "identifier", batch_ids=True),
+    "uhc": Payer("uhc", "UnitedHealthcare", "https://flex.optum.com/fhirpublic/R4", "identifier", batch_ids=True, page_size=100),
     "cigna": Payer("cigna", "Cigna", "https://fhir.cigna.com/ProviderDirectory/v1", "name"),
-    "humana": Payer("humana", "Humana", "https://fhir.humana.com/api", "identifier"),
+    "humana": Payer("humana", "Humana", "https://fhir.humana.com/api", "identifier", page_size=100),
 }
 
 
@@ -79,15 +80,25 @@ class Fhir:
 
     async def search(self, resource: str, params: dict) -> list[dict]:
         """Every matching resource of the searched type (included resources are dropped)."""
+        return (await self.search_with_includes(resource, params))[0]
+
+    async def search_with_includes(self, resource: str, params: dict) -> tuple[list[dict], dict[str, dict]]:
+        """Matches of the searched type, plus every other resource in the bundles keyed by id."""
         out: list[dict] = []
+        included: dict[str, dict] = {}
         bundle = await self.get(resource, params)
         for _ in range(MAX_PAGES):
-            out += [e["resource"] for e in bundle.get("entry", []) if e.get("resource", {}).get("resourceType") == resource]
+            for e in bundle.get("entry", []):
+                r = e.get("resource", {})
+                if r.get("resourceType") == resource:
+                    out.append(r)
+                elif r.get("id"):
+                    included[r["id"]] = r
             nxt = next((link["url"] for link in bundle.get("link", []) if link.get("relation") == "next"), None)
             if not nxt:
                 break
             bundle = await self.get(nxt)
-        return out
+        return out, included
 
 
 def _npis(practitioner: dict) -> set[str]:
@@ -107,12 +118,20 @@ def _ref_id(ref: str) -> str:
     return ref.rstrip("/").rsplit("/", 1)[-1]
 
 
-def claims_from_roles(roles: list[dict], codes: set[str]) -> list[dict]:
-    """One claim per network across the provider's roles in this specialty."""
+def in_state(role: dict, locations: dict[str, dict], state: str) -> bool:
+    """False only when every location we could resolve is in another state."""
+    states = {locations[i].get("address", {}).get("state") for i in (_ref_id(x.get("reference", "")) for x in role.get("location", [])) if i in locations}
+    return not states or state in states
+
+
+def claims_from_roles(roles: list[dict], codes: set[str], locations: dict[str, dict] | None = None, state: str | None = None) -> list[dict]:
+    """One claim per network across the provider's in-state roles in this specialty."""
     claims: dict[str, dict] = {}
     for role in roles:
         if role.get("active") is False:
             continue
+        if state and not in_state(role, locations or {}, state):
+            continue  # e.g. the same cardiologist's role in a North Carolina clinic
         role_codes = {c.get("code") for s in role.get("specialty", []) for c in s.get("coding", [])}
         if role_codes and not role_codes & codes:
             continue  # a role in another specialty (e.g. internal medicine) says nothing about this one
@@ -149,7 +168,7 @@ class PayerResult:
 
 
 async def fetch_payer(payer: Payer, providers: list[Provider], specialty: str, client: httpx.AsyncClient,
-                      concurrency: int = 6, progress=None) -> PayerResult:
+                      concurrency: int = 6, progress=None, state: str | None = None) -> PayerResult:
     fhir = Fhir(payer, client, concurrency)
     codes = set(TAXONOMIES[specialty])
     res = PayerResult(payer)
@@ -161,8 +180,11 @@ async def fetch_payer(payer: Payer, providers: list[Provider], specialty: str, c
             if prac is None:
                 return
             res.listed += 1
-            roles = await fhir.search("PractitionerRole", {"practitioner": prac["id"]})
-            claims = claims_from_roles(roles, codes)
+            params = {"practitioner": prac["id"], "_include": "PractitionerRole:location"}
+            if payer.page_size:
+                params["_count"] = str(payer.page_size)
+            roles, included = await fhir.search_with_includes("PractitionerRole", params)
+            claims = claims_from_roles(roles, codes, included, state)
             if claims:
                 res.claims[p.npi] = claims
         except Exception as e:  # one provider must never sink the run
@@ -224,6 +246,7 @@ def snapshot(metro: str, specialty: str, checked: int, results: list[PayerResult
 
 
 async def amain(args) -> None:
+    from .nppes import METROS
     from .store import load_nppes
 
     base = Path(args.nppes or f"data/directory/{args.metro}-{args.specialty}.json")
@@ -237,7 +260,7 @@ async def amain(args) -> None:
             print(f"  {key}: {done[key]}/{len(providers)}", flush=True)
 
     async with httpx.AsyncClient(timeout=90) as client:
-        results = await asyncio.gather(*(fetch_payer(p, providers, args.specialty, client, args.concurrency, progress) for p in payers))
+        results = await asyncio.gather(*(fetch_payer(p, providers, args.specialty, client, args.concurrency, progress, METROS[args.metro].state) for p in payers))
     out = Path(args.out or base.with_name(f"{base.stem}-networks.json"))
     out.write_text(json.dumps(snapshot(meta["metro"], args.specialty, len(providers), list(results)), indent=1) + "\n")
     print(f"wrote {out}")
