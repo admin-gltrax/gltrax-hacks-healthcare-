@@ -49,7 +49,9 @@ Meta Global AI Developer Hackathon (Meta + Cerebral Valley).
 
 ## Status (honest)
 
-`MOCK_LLM=1 pytest -q` passes **42 tests**: 16 patient tests and 26 swarm tests.
+`MOCK_LLM=1 HOLD_SCALE=0 pytest -q` passes **63 tests**.
+
+**Live demo:** https://swarm-scheduler.72q91gp7bkhmc.us-west-2.cs.amazonlightsail.com/ (AWS Lightsail, one container). It redeploys automatically on every merge to `main` once the `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` repo secrets exist; until then, use `python scripts/deploy_lightsail.py`. See DEPLOY.md and `docs/aws-hosting.md`.
 
 **Patient layer (new). Works offline and is deterministic.**
 
@@ -69,7 +71,7 @@ The dashboard was checked in headless Chromium at iPhone and desktop widths, wit
 - **No Meta model is called anywhere in the patient layer yet.** Card reading, PJ chat, navigator copy and records extraction are all rules or mocks marked `TODO(meta)`.
 - "Do it, PJ" records a task but **does not start the swarm yet**. This is README next-step #2.
 
-**Swarm (original build).**
+**Swarm.**
 
 What exists:
 
@@ -81,18 +83,31 @@ What exists:
 - Token-gated live runs and public replay.
 - Dockerfile, `render.yaml`, CI.
 
-**Not verified. Do not assume these work:**
+**Verified on the live Meta API (Oct 27):**
 
-- **Nothing has been run against the live Meta API.** The first job is `python scripts/smoke_meta.py`.
-- `recordings/demo.jsonl` is a **mock** recording.
-- The Docker image was never built locally. CI builds it.
+- `scripts/smoke_meta.py` passes every check.
+- A full 15-call swarm ran on `muse-spark-1.3`: 15/15 calls, 15/15 safety, about 25 s. That run is the public replay (`recordings/demo.jsonl`). The best slot was won by honest leverage: the worker cited a real held slot, and an office released a hidden cancellation.
+- Voice intake: the 🎙 button on `/swarm`, transcribed by Muse Voice Transcribe file transcription (`src/voice.py`).
+
+**Real provider data (`src/directory/`):**
+
+- An NPPES snapshot of 677 Phoenix-metro cardiologists.
+- Plan-Net FHIR network claims from UHC, Cigna and Humana.
+- A directory tab on `/swarm`.
+- The swarm's step 1 is a real directory search. The simulated offices borrow only a city: no real name, NPI or phone reaches a simulated office.
+- See `docs/provider-data.md`.
+
+**Not verified:**
+
 - Cost per call is an unmeasured estimate (about 16 requests per call).
+
+**History note.** Everything from the live-API runs onward was built on branch `claude/pensive-hypatia-crv7nq` and folded into `main` on Oct 27, by replaying its commits on top of the patient-first work. `main`'s history had been squashed, so the two branches shared no commits. Develop from `main`.
 
 ## Next steps
 
 The ordered list, with acceptance criteria, is in README section 15. In short:
 
-1. Smoke-test the live API.
+1. Point the Care Team agent at the real directory (`src/directory/`) for UHC, Cigna and Humana.
 2. Wire "Do it, PJ" (in_network) to a swarm run whose held slot shows on the patient dashboard.
 3. Put PJ's chat on Muse Spark, with a hashed safety block and a red-team set at 100%.
 4. Read card photos with Spark vision.
@@ -101,7 +116,7 @@ The ordered list, with acceptance criteria, is in README section 15. In short:
 7. Extract records PDFs into `HealthItem`s.
 8. Build the Referrals agent.
 9. Add SQLite and delete-my-data.
-10. Add voice input.
+10. Reuse the swarm's voice intake (`src/voice.py`) for Ask PJ.
 11. Record the demo video and rewrite the demo script around the therapist story.
 12. Write `docs/COMPLIANCE.md`.
 
@@ -177,6 +192,9 @@ See the layout table in README section 14. Key files:
 | `src/swarm/` | Blackboard and dispatcher |
 | `src/eval/` | Judge and batch evals |
 | `prompts/worker_v0.txt` | The only prompt the improvement loop may edit |
+| `src/directory/` | Real NPPES + Plan-Net provider data (snapshots in `data/directory/`) |
+| `src/voice.py` | Muse Voice Transcribe for the 🎙 intake |
+| `scripts/deploy_lightsail.py`, `.github/workflows/deploy.yml` | Lightsail deploys (manual / on merge) |
 | `src/api/static/index.html` | Swarm dashboard, served at `/swarm` |
 
 **Docs:** `DEPLOY.md`, `docs/PLAN.md` (the original swarm plan; still valid for the swarm), `docs/DATA-SOURCES.md` (FHIR, Blue Button, sandboxes, public data).

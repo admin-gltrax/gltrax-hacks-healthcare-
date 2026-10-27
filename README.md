@@ -59,14 +59,16 @@ Messaging: **"Healthcare built for the patient, not built for the doctor."** / *
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 
-MOCK_LLM=1 pytest -q                                   # 42 tests, offline, no key
+MOCK_LLM=1 pytest -q                                   # 63 tests, offline, no key
 MOCK_LLM=1 uvicorn src.api.server:app --port 8000      # http://localhost:8000
 ```
 
 **Pages**
 
 - `http://localhost:8000/` is the **patient dashboard**. Type a first name to start, or click **Explore a demo patient** to see everything filled in.
-- `http://localhost:8000/swarm` is the original **Scheduling Swarm** dashboard (15 simulated calls). Add `?debug=1` to show each office's hidden persona.
+- `http://localhost:8000/swarm` is the **Scheduling Swarm** dashboard: 15 simulated calls, the real provider-directory tab, and voice intake. Add `?debug=1` to show each office's hidden persona.
+
+**Live demo:** https://swarm-scheduler.72q91gp7bkhmc.us-west-2.cs.amazonlightsail.com/ (AWS Lightsail; see [DEPLOY.md](DEPLOY.md)).
 
 **Demo insurance cards (all fictional)**
 
@@ -165,7 +167,7 @@ How each agent works today, and what it becomes:
 |---|---|---|
 | **PJ (guide)** | Deterministic routing and copy. | Muse Spark grounded on the patient's own record, with an immutable safety block like the one in `src/safety.py`. |
 | **Coverage** | Simulated insurer portal (`src/sim/payers.py`). | The payer Patient Access API (FHIR) through an aggregator, plus X12 270/271 eligibility checks. Computer-use on the insurer portal only as a fallback. |
-| **Care Team** | Simulated directory with planted errors (`src/sim/providers.py`). | The NPPES NPI registry and payer FHIR provider directories, followed by a verification call. |
+| **Care Team** | Simulated directory with planted errors (`src/sim/providers.py`). | The NPPES NPI registry and payer FHIR provider directories, followed by a verification call. The swarm already uses real NPPES and Plan-Net data (`src/directory/`). |
 | **Records** | `SimulatedFax` and a simulated records office. | A HIPAA-eligible fax API covered by a business associate agreement (BAA), e-signature, and OCR plus Muse Spark extraction of returned records into `HealthItem`s. |
 | **Care Navigator** | Rules over the patient's coverage and the true directory data. | Muse Wonder plans, Muse Spark explains, using real benefit and directory data. |
 | **Scheduling Swarm** | Built: 15 parallel simulated calls, honest leverage, holds only. | Real telephony in a post-hackathon pilot. The patient confirms every booking. |
@@ -296,7 +298,7 @@ The swarm keeps its existing routes: `POST /api/swarm/start`, `POST /api/approve
 | Planning care pathways, multi-step coordination, chasing late records | `muse-wonder-1.0` | Agentic and long horizon. Use sparingly because of cost. |
 | Logging into a simulated insurer portal to read benefits | Meta computer-use | **Simulated portal only** in the hackathon. Real portals use APIs, and passwords are never stored. |
 | Scheduling Swarm calls | `muse-spark-1.3` workers, with Wonder as planner and critic | The existing build. |
-| Patient talks instead of typing | `muse-voice-transcribe-1.0` (realtime speech-to-text) | Meta has no text-to-speech, so PJ replies on screen. |
+| Patient talks instead of typing | `muse-voice-transcribe-1.0` | Already used for the swarm's voice intake (`src/voice.py`, file transcription). Meta has no text-to-speech, so PJ replies on screen. |
 | PJ illustrations and plain-language visuals | `muse-image-1.0` | Fixed character art for PJ. No patient data goes into prompts. |
 
 Hard rule: **no real PHI goes to any model in this build, and nothing ever goes to `-contributor` models** (Meta trains on those prompts). All demo data is fictional.
@@ -352,6 +354,9 @@ These rules apply to code, prompts and copy. Tests enforce the ones marked ✓.
 | `src/api/patient.py` | Patient API (`/api/p/*`) |
 | `src/api/static/` | `home.html` (patient dashboard), `index.html` (swarm dashboard), `pj.webp` (PJ) |
 | `src/llm.py`, `src/config.py`, `src/mock.py` | Meta Model API client, per-role models, offline mocks |
+| `src/directory/`, `data/directory/` | Real provider data: NPPES and Plan-Net connectors (UHC, Cigna, Humana), plus the Phoenix cardiology snapshot ([docs/provider-data.md](docs/provider-data.md)) |
+| `src/intake.py`, `src/voice.py` | Request parsing; speech to text with Muse Voice Transcribe |
+| `.github/workflows/deploy.yml`, `scripts/deploy_lightsail.py` | Deploy to AWS Lightsail: automatically on merge, or by hand ([DEPLOY.md](DEPLOY.md), [docs/aws-hosting.md](docs/aws-hosting.md)) |
 | `src/safety.py` | Swarm safety block and checks |
 | `src/eval/` | Swarm judge and batch evals |
 | `tests/` | `test_patient.py` (patient flow, navigator, safety) and the swarm tests |
@@ -366,7 +371,7 @@ Planned additions:
 
 ## 15. Build status and next steps
 
-### Done (works offline, 42 tests pass)
+### Done (63 tests pass offline)
 
 | Area | Status | Proof |
 |---|---|---|
@@ -377,8 +382,12 @@ Planned additions:
 | Care Navigator: therapist on PPO with EAP, Medicaid, HMO specialist, physical therapy vs. talk therapy, crisis | ✅ rules | navigator tests, `test_crisis_always_first` |
 | PJ won't answer medical questions | ✅ | `test_pj_never_answers_medical_questions` |
 | Patient dashboard (mobile and desktop) | ✅ | Checked in a headless browser at iPhone and desktop widths |
-| Scheduling Swarm (original build) at `/swarm` | ✅ simulated | Swarm tests |
-| Any Meta model call in the patient layer | ❌ | Everything above is deterministic |
+| Scheduling Swarm at `/swarm` | ✅ simulated offices | Swarm tests |
+| Live Meta Model API | ✅ swarm only | `scripts/smoke_meta.py` passed every check on Oct 27. A full 15-call swarm ran live on `muse-spark-1.3` (15/15 calls, 15/15 safety, about 25 s), and that run is the public replay (`recordings/demo.jsonl`). |
+| Voice intake | ✅ swarm only | The 🎙 Speak button on `/swarm` records in the browser, and `src/voice.py` transcribes the recording with Muse Voice Transcribe (`POST /v1/asr/transcribe`). Verified on the live API. |
+| Real provider directory | ✅ swarm only | `src/directory/` holds 677 Phoenix-area cardiologists from NPPES, plus the networks UHC, Cigna and Humana list for them in their public Plan-Net FHIR directories. This is step 1 of the swarm. See `docs/provider-data.md`. |
+| Hosting | ✅ | Live on AWS Lightsail ([DEPLOY.md](DEPLOY.md)). Every merge to `main` redeploys automatically once the AWS secrets are added. |
+| Any Meta model call in the patient layer | ❌ | Everything in the patient layer is deterministic |
 
 ### Next, in priority order
 
@@ -386,7 +395,7 @@ Submission is due Nov 4, 9:00 PM ET. Aim to submit on Nov 3.
 
 | # | Task | Acceptance criteria |
 |---|---|---|
-| 1 | **Run the live API smoke test** (`scripts/smoke_meta.py`). | Every line says PASS. |
+| 1 | **Point the Care Team agent at the real directory.** Use `src/directory/` for doctor search when the patient's insurer is UHC, Cigna or Humana, and keep the simulated directory for the demo cards. | Searching for a real Phoenix cardiologist shows the networks that insurer's directory lists, marked `unverified` until confirmed. |
 | 2 | **Hook "Do it, PJ" (in-network) up to the swarm.** `POST /care/{id}/go?kind=in_network` starts a swarm run with the patient's plan and need. The task shows progress and the held slot. The patient confirms. | A held slot appears on the patient dashboard. Nothing is booked without the patient's yes. |
 | 3 | **Give PJ its voice on Muse Spark** (`guide.ask` for chat answers), grounded on the record, with the safety block hashed like `SAFETY_SHA`. | Safety tests still pass with the live model. A 30-question red-team set (dosing, diagnosis, crisis) passes 100%. |
 | 4 | **Read an insurance card photo into `Coverage`** with Muse Spark vision (fictional card images). | Upload a fake card photo, and the member ID and payer are read correctly. |
@@ -395,11 +404,11 @@ Submission is due Nov 4, 9:00 PM ET. Aim to submit on Nov 3.
 | 7 | **Extract records:** a fictional PDF or fax image → `HealthItem`s via Spark vision. | A sample PDF fills Clinicals and Family & Genes with the correct flags. |
 | 8 | **Build the Referrals agent** for `pcp_first`: draft the referral request to the PCP and track it. | The HMO dermatology flow ends with a referral task. |
 | 9 | **Add a SQLite store** (`PATIENT_STORE_DIR` → a real database) and delete-my-data. | Data survives a restart, and delete removes everything. |
-| 10 | **Add voice input** via Muse Voice Transcribe. | The patient can speak the Ask PJ question. |
+| 10 | **Reuse the swarm's voice intake for Ask PJ.** Call `src/voice.py` and reuse the browser WAV conversion from `index.html`. | The patient can speak the Ask PJ question. |
 | 11 | **Record the demo video and rewrite `docs/demo-script.md`** around the patient story (the therapist example), with the swarm as the climax. | A 3-minute video is recorded. |
 | 12 | **Write `docs/COMPLIANCE.md` and the pilot path.** | An honest posture, with no compliance claims. |
 
-If behind schedule, cut in this order: 10, 9, 7, 5. Protect 1, 2, 3 and 11.
+If behind schedule, cut in this order: 10, 9, 7, 5. Protect 2, 3 and 11.
 
 ### Suggested demo story (3 minutes)
 
