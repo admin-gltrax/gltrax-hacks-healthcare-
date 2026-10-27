@@ -47,6 +47,40 @@ class Offer(BaseModel):
     held: bool = False
 
 
+class Address(BaseModel):
+    line: str
+    city: str
+    state: str
+    zip: str  # 5-digit
+
+
+class NetworkClaim(BaseModel):
+    """One source's claim that a provider is (or is not) in a plan's network."""
+
+    plan_id: str
+    status: Literal["in", "out", "unknown"] = "unknown"
+    confidence: float = 0.0
+    last_verified: str | None = None  # ISO date
+    source: Literal["directory", "call", "portal"] = "directory"
+
+
+class Provider(BaseModel):
+    """A real provider from a public directory. Never used as a simulated office."""
+
+    npi: str
+    name: str
+    credential: str | None = None
+    specialty: str
+    taxonomy_codes: list[str] = Field(default_factory=list)
+    address: Address  # primary practice location in the metro
+    locations: list[Address] = Field(default_factory=list)  # every practice location in the metro
+    phone: str | None = None
+    booking_url: str | None = None
+    network: list[NetworkClaim] = Field(default_factory=list)
+    source: str = "nppes"
+    source_updated: str | None = None  # the source's own last-updated date
+
+
 class CallOutcome(BaseModel):
     office_id: str
     reached_human: bool = False
