@@ -3,25 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Swarm Scheduler</title>
+<title>Swarm Scheduler · PJ Health</title>
+<link rel="icon" href="/pj.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:#0e1116; --panel:#161b22; --line:#262d38; --text:#e6edf3; --mute:#8b97a6;
-    --ok:#3fb950; --warn:#d29922; --bad:#f85149; --blue:#58a6ff; --violet:#a371f7; --orange:#f0883e; --gray:#6e7681;
+    --bg:#0E1318; --panel:#161E26; --line:#26313C; --text:#ECF0F4; --mute:#8D98A6;
+    --ok:#5CC98F; --warn:#F2B24C; --bad:#F07B74; --blue:#2EC4B2; --violet:#A88CF5; --orange:#FF8A63; --gray:#6E7887;
+    --on-accent:#05211E;
   }
   @media (prefers-color-scheme: light) {
-    :root { --bg:#f6f8fa; --panel:#fff; --line:#d8dee4; --text:#1f2328; --mute:#59636e; }
+    :root { --bg:#F7F4EE; --panel:#fff; --line:#E8E2D8; --text:#1A2230; --mute:#5B6474;
+      --ok:#2B9361; --warn:#A86400; --bad:#C93C37; --blue:#0F766E; --violet:#7653D1; --orange:#B5441F; --gray:#7F8896; --on-accent:#fff; }
   }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 "Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,sans-serif; }
   header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; padding:14px 20px; border-bottom:1px solid var(--line); }
   h1 { font-size:16px; margin:0; letter-spacing:.2px; }
-  .sim { font-size:11px; font-weight:600; padding:3px 8px; border-radius:99px; background:#d2992233; color:var(--warn); border:1px solid #d2992266; }
+  .sim { font-size:11px; font-weight:600; padding:3px 8px; border-radius:99px; background:color-mix(in srgb,var(--warn) 20%,transparent); color:var(--warn); border:1px solid color-mix(in srgb,var(--warn) 40%,transparent); }
   .grow { flex:1; }
-  button { background:var(--blue); color:#fff; border:0; padding:8px 14px; border-radius:6px; font-weight:600; cursor:pointer; font-size:13px; }
+  .home img { width:32px; height:32px; border-radius:10px; display:block; object-fit:cover; box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--orange); }
+  button { background:var(--blue); color:var(--on-accent); border:0; padding:8px 14px; border-radius:999px; font-weight:600; cursor:pointer; font-size:13px; }
   button:disabled { opacity:.5; cursor:default; }
   button.ghost { background:transparent; border:1px solid var(--line); color:var(--text); }
-  #mic.rec { background:var(--bad); color:#fff; border-color:var(--bad); animation:pulse 1.2s ease-in-out infinite; }
+  #mic.rec { background:var(--bad); color:var(--on-accent); border-color:var(--bad); animation:pulse 1.2s ease-in-out infinite; }
   @keyframes pulse { 50% { opacity:.6; } }
   input[type=text], input[type=password] { background:var(--panel); border:1px solid var(--line); color:var(--text); padding:8px 10px; border-radius:6px; min-width:300px; font-size:13px; }
   .strip { padding:8px 20px; color:var(--mute); font-size:12px; border-bottom:1px solid var(--line); }
@@ -36,14 +43,14 @@
   .chip { display:inline-block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; padding:2px 7px; border-radius:99px; margin-top:6px; }
   .badges { display:flex; gap:5px; flex-wrap:wrap; margin-top:6px; }
   .badge { font-size:10px; padding:1px 6px; border-radius:4px; border:1px solid var(--line); color:var(--mute); }
-  .badge.good { color:var(--ok); border-color:#3fb95055; } .badge.bad { color:var(--bad); border-color:#f8514955; }
-  .s-dialing { border-left-color:var(--gray); } .s-dialing .chip { background:#6e768133; color:var(--mute); }
-  .s-ivr { border-left-color:var(--violet); } .s-ivr .chip { background:#a371f733; color:var(--violet); }
-  .s-hold { border-left-color:var(--warn); } .s-hold .chip { background:#d2992233; color:var(--warn); }
-  .s-talking { border-left-color:var(--blue); } .s-talking .chip { background:#58a6ff33; color:var(--blue); }
-  .s-done { border-left-color:var(--ok); } .s-done .chip { background:#3fb95033; color:var(--ok); }
-  .s-escalated { border-left-color:var(--orange); } .s-escalated .chip { background:#f0883e33; color:var(--orange); }
-  .s-error { border-left-color:var(--bad); } .s-error .chip { background:#f8514933; color:var(--bad); }
+  .badge.good { color:var(--ok); border-color:color-mix(in srgb,var(--ok) 33%,transparent); } .badge.bad { color:var(--bad); border-color:color-mix(in srgb,var(--bad) 33%,transparent); }
+  .s-dialing { border-left-color:var(--gray); } .s-dialing .chip { background:color-mix(in srgb,var(--gray) 20%,transparent); color:var(--mute); }
+  .s-ivr { border-left-color:var(--violet); } .s-ivr .chip { background:color-mix(in srgb,var(--violet) 20%,transparent); color:var(--violet); }
+  .s-hold { border-left-color:var(--warn); } .s-hold .chip { background:color-mix(in srgb,var(--warn) 20%,transparent); color:var(--warn); }
+  .s-talking { border-left-color:var(--blue); } .s-talking .chip { background:color-mix(in srgb,var(--blue) 20%,transparent); color:var(--blue); }
+  .s-done { border-left-color:var(--ok); } .s-done .chip { background:color-mix(in srgb,var(--ok) 20%,transparent); color:var(--ok); }
+  .s-escalated { border-left-color:var(--orange); } .s-escalated .chip { background:color-mix(in srgb,var(--orange) 20%,transparent); color:var(--orange); }
+  .s-error { border-left-color:var(--bad); } .s-error .chip { background:color-mix(in srgb,var(--bad) 20%,transparent); color:var(--bad); }
   .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin-bottom:12px; }
   .panel h2 { font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--mute); margin:0 0 8px; }
   .big { font-size:20px; font-weight:700; }
@@ -56,7 +63,7 @@
   #drawer header { justify-content:space-between; }
   #dbody { overflow:auto; padding:12px 16px; flex:1; }
   .u { margin:0 0 8px; padding:7px 10px; border-radius:8px; max-width:92%; font-size:13px; }
-  .u.agent { background:#58a6ff22; margin-left:auto; } .u.office { background:var(--bg); border:1px solid var(--line); }
+  .u.agent { background:color-mix(in srgb,var(--blue) 13%,transparent); margin-left:auto; } .u.office { background:var(--bg); border:1px solid var(--line); }
   .u small { display:block; color:var(--mute); font-size:10px; margin-bottom:2px; text-transform:uppercase; letter-spacing:.5px; }
   .tool { font:11px ui-monospace,Menlo,monospace; color:var(--violet); margin:0 0 8px; word-break:break-all; }
   .win { border-color:var(--ok); }
@@ -64,7 +71,7 @@
   .tabs { display:flex; gap:4px; padding:0 20px; border-bottom:1px solid var(--line); }
   .tabs button { background:none; color:var(--mute); border-radius:0; border-bottom:2px solid transparent; padding:10px 12px; }
   .tabs button[aria-selected=true] { color:var(--text); border-bottom-color:var(--blue); }
-  .real { font-size:11px; font-weight:600; padding:3px 8px; border-radius:99px; background:#3fb95022; color:var(--ok); border:1px solid #3fb95055; }
+  .real { font-size:11px; font-weight:600; padding:3px 8px; border-radius:99px; background:color-mix(in srgb,var(--ok) 13%,transparent); color:var(--ok); border:1px solid color-mix(in srgb,var(--ok) 33%,transparent); }
   #dir { padding:16px 20px; }
   .dir-sum { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin-bottom:12px; }
   .dir-sum .panel { margin:0; }
@@ -76,14 +83,17 @@
   .prow.head { cursor:default; color:var(--mute); font-size:11px; text-transform:uppercase; letter-spacing:.6px; background:none; }
   .prow small { display:block; color:var(--mute); font-size:11px; }
   .pay { display:inline-block; font-size:11px; padding:2px 7px; border-radius:4px; margin:0 4px 4px 0; border:1px solid var(--line); color:var(--mute); }
-  .pay.in { color:var(--ok); border-color:#3fb95066; }
+  .pay.in { color:var(--ok); border-color:color-mix(in srgb,var(--ok) 40%,transparent); }
   .pay .dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--ok); margin-left:5px; vertical-align:middle; }
   .nets { grid-column:1/-1; font-size:12px; color:var(--mute); padding:2px 0 4px; }
   @media (max-width:760px) { .prow { grid-template-columns:1fr; gap:4px; } .prow.head { display:none; } }
+  .tile, .panel, #drawer { border-radius:12px; }
+  #drawer { border-radius:16px 0 0 16px; }
 </style>
 </head>
 <body>
 <header>
+  <a class="home" href="/" title="Back to your PJ dashboard"><img src="/pj.webp" alt=""></a>
   <h1>Swarm Scheduler</h1>
   <span class="sim">SIMULATED OFFICES — no real clinics are called</span>
   <span class="grow"></span>
