@@ -5,177 +5,532 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>PJ Health: healthcare built for you</title>
 <meta name="description" content="Your healthcare, owned by you. PJ handles the insurance, the records and the phone calls, and explains everything in plain words. Demo with fictional data.">
+<meta name="theme-color" content="#F7F4EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1318" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="/pj.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#F3F6F4;--card:#FFFFFF;--ink:#0F1A16;--ink-2:#4A5A53;--ink-3:#7C8B84;--line:#DCE5E0;
-  --green:#0FA968;--green-d:#0B7C4E;--green-s:#E3F6EC;--amber:#B7791F;--amber-s:#FFF5E1;--red:#C53030;--red-s:#FDECEC;--blue:#2F6BFF;--blue-s:#E8EEFF;
-  --r:18px;--font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --bg:#F7F4EE;--bg-2:#EFEAE1;--surface:#FFFFFF;--surface-2:#FBF9F5;--line:#E8E2D8;--line-2:#DCD3C5;
+  --ink:#1A2230;--ink-2:#4B5566;--ink-3:#7F8896;
+  --brand:#0F766E;--brand-strong:#0B5E58;--brand-ink:#FFFFFF;--brand-soft:#E2F2EF;
+  --coral:#EF6A43;--coral-ink:#B5441F;--coral-soft:#FDEBE4;
+  --rose:#D9467A;--rose-soft:#FBE8F0;--blue:#3767D6;--blue-soft:#E8EEFC;
+  --green:#2B9361;--green-soft:#E3F4EA;--violet:#7653D1;--violet-soft:#EFE9FB;
+  --amber:#A86400;--amber-soft:#FFF1D4;--red:#C93C37;--red-soft:#FCE6E4;
+  --shadow:0 1px 2px rgba(26,34,48,.05),0 10px 30px -14px rgba(26,34,48,.18);
+  --shadow-lg:0 24px 60px -20px rgba(26,34,48,.35);
+  --r:20px;--r-sm:14px;
+  --font:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0E1318;--bg-2:#131A21;--surface:#161E26;--surface-2:#1B242E;--line:#26313C;--line-2:#33404D;
+  --ink:#ECF0F4;--ink-2:#B3BDC9;--ink-3:#808B99;
+  --brand:#2EC4B2;--brand-strong:#5AD6C6;--brand-ink:#05211E;--brand-soft:#123833;
+  --coral:#FF8A63;--coral-ink:#FFB59C;--coral-soft:#3A2119;
+  --rose:#F07AA2;--rose-soft:#3A1A27;--blue:#7DA2F5;--blue-soft:#17254A;
+  --green:#5CC98F;--green-soft:#14301F;--violet:#A88CF5;--violet-soft:#251C45;
+  --amber:#F2B24C;--amber-soft:#35280E;--red:#F07B74;--red-soft:#3A1C1A;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -14px rgba(0,0,0,.6);
+  --shadow-lg:0 24px 60px -20px rgba(0,0,0,.8);
+}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--font);-webkit-font-smoothing:antialiased}
-button,input{font:inherit}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--font);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body.locked{overflow:hidden}
+button,input{font:inherit;color:inherit}
 button{cursor:pointer}
-a{color:var(--green-d)}
-.wrap{max-width:1080px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left)) 40px max(16px,env(safe-area-inset-right))}
-header{display:flex;align-items:center;gap:12px;padding:14px 0}
-header .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.02em}
-header .brand img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--green)}
-header .sp{flex:1}
-.link{background:none;border:0;color:var(--ink-2);font-weight:600;padding:6px 8px;border-radius:10px}
-.link:hover{background:#fff}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px}
-h1,h2,h3{margin:0;letter-spacing:-.02em;line-height:1.2}
-h2{font-size:19px}
-h3{font-size:16px}
-.muted{color:var(--ink-3)}
-.small{font-size:14px}
-.tiny{font-size:12.5px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.btn{border:0;border-radius:12px;padding:11px 16px;font-weight:700;background:var(--green);color:#fff}
-.btn:hover{background:var(--green-d)}
-.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
-.btn.small{padding:7px 12px;font-size:14px}
-input[type=text]{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:11px 12px;background:#fff}
-input[type=text]:focus{outline:2px solid var(--green);border-color:transparent}
-.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700;background:var(--green-s);color:var(--green-d)}
-.chip.watch{background:var(--amber-s);color:var(--amber)}
-.chip.act{background:var(--red-s);color:var(--red)}
-.chip.blue{background:var(--blue-s);color:var(--blue)}
-.chip.gray{background:#EEF1EF;color:var(--ink-2)}
-.hero{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;margin:28px 0}
-.hero img{width:180px;height:180px;border-radius:50%;object-fit:cover;border:4px solid var(--green);box-shadow:0 20px 50px -20px rgba(15,169,104,.6)}
-.hero h1{font-size:clamp(30px,5vw,46px)}
-.hero h1 em{font-style:normal;color:var(--green)}
-.hero p{color:var(--ink-2);font-size:18px;max-width:52ch}
-.demo-note{margin-top:14px;padding:10px 12px;border-radius:12px;background:var(--amber-s);color:#6b4a12;font-size:14px}
-.pj{display:flex;gap:14px;align-items:flex-start;position:sticky;top:0;z-index:5;padding:14px;margin:0 -2px 18px;background:rgba(243,246,244,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-.pj img{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--green);flex:none}
-.pj .bubble{flex:1;min-width:0}
-.pj .say{background:#fff;border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:10px 14px;margin-bottom:8px}
-.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:start}
-.col{display:flex;flex-direction:column;gap:18px;min-width:0}
-.buckets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.bucket h3{display:flex;justify-content:space-between;gap:8px}
-.bucket .tag{font-size:13.5px;color:var(--ink-3);margin:2px 0 10px}
-.item{padding:9px 0;border-top:1px solid var(--line)}
-.item:first-of-type{border-top:0}
-.item .t{display:flex;justify-content:space-between;gap:8px;font-weight:600;font-size:14.5px}
-.item .m{font-size:13.5px;color:var(--ink-2)}
-.item .s{font-size:12px;color:var(--ink-3)}
-.empty{font-size:14px;color:var(--ink-3);padding:6px 0}
-.task{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
-.task:first-of-type{border-top:0}
-.task .dot{width:10px;height:10px;border-radius:50%;margin-top:7px;flex:none;background:var(--ink-3)}
-.task .dot.working{background:var(--blue)}
-.task .dot.waiting_on_you{background:var(--amber)}
-.task .dot.waiting_on_them{background:#8b5cf6}
-.task .dot.done{background:var(--green)}
-.task .dot.blocked{background:var(--red)}
-.ben{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:14px;padding:7px 0;border-top:1px solid var(--line)}
-.ben b{font-weight:600}
-.ben .tiny{grid-column:1/-1}
-.path{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
-.path.best{border-color:var(--green);box-shadow:0 0 0 3px var(--green-s)}
-.path.crisis{border-color:var(--red);background:var(--red-s)}
-.path ul{margin:6px 0 0;padding-left:18px;font-size:14px;color:var(--ink-2)}
-.letter{white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:#FAFBFA;border:1px solid var(--line);border-radius:12px;padding:12px;max-height:260px;overflow:auto}
-.results button{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px}
-.results button:hover{border-color:var(--green)}
-footer{margin-top:26px;font-size:13.5px;color:var(--ink-3)}
+a{color:var(--brand)}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{letter-spacing:-.025em;line-height:1.15}
+svg.i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 [hidden]{display:none!important}
-@media (max-width:860px){.grid{grid-template-columns:1fr}.hero{grid-template-columns:1fr;text-align:center;justify-items:center}.hero img{width:140px;height:140px}}
-@media (max-width:560px){.buckets{grid-template-columns:1fr}.pj img{width:42px;height:42px}}
+.wrap{max-width:1160px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left))}
+
+/* buttons, inputs, chips */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:11px 18px;font-weight:700;font-size:15px;background:var(--brand);color:var(--brand-ink);transition:background .15s,transform .15s,box-shadow .15s;white-space:nowrap}
+.btn:hover{background:var(--brand-strong)}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible,.input:focus-visible,.chip-btn:focus-visible,.fab:focus-visible{outline:3px solid color-mix(in srgb,var(--brand) 45%,transparent);outline-offset:2px}
+.btn.lg{padding:14px 22px;font-size:16px}
+.btn.sm{padding:8px 14px;font-size:14px}
+.btn.quiet{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2)}
+.btn.quiet:hover{background:var(--surface-2)}
+.btn.text{background:none;color:var(--brand);padding:8px 4px}
+.btn.text:hover{text-decoration:underline}
+.btn[disabled]{opacity:.6;cursor:default}
+.btn.done{background:var(--green-soft);color:var(--green)}
+.input{flex:1;min-width:0;border:1px solid var(--line-2);border-radius:999px;padding:12px 18px;background:var(--surface);font-size:16px;transition:border-color .15s}
+.input:focus{border-color:var(--brand);outline:none}
+.input::placeholder{color:var(--ink-3)}
+.field{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700;white-space:nowrap;background:var(--bg-2);color:var(--ink-2)}
+.chip .i{width:14px;height:14px}
+.chip.ok{background:var(--green-soft);color:var(--green)}
+.chip.watch{background:var(--amber-soft);color:var(--amber)}
+.chip.act{background:var(--red-soft);color:var(--red)}
+.chip.info{background:var(--blue-soft);color:var(--blue)}
+.chip.teal{background:var(--brand-soft);color:var(--brand)}
+.chip.violet{background:var(--violet-soft);color:var(--violet)}
+.chip-btn{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600;color:var(--ink-2);transition:border-color .15s,color .15s,background .15s}
+.chip-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
+.muted{color:var(--ink-3)}
+.fine{font-size:13px;color:var(--ink-3)}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:12px;padding:14px 0}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-size:19px;font-weight:800;letter-spacing:-.03em}
+.brand img{width:36px;height:36px;border-radius:12px;object-fit:cover;box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--coral)}
+.brand span b{font-weight:500;color:var(--ink-3);margin-left:3px}
+.demo-pill{font-size:11.5px;font-weight:700;letter-spacing:.02em;padding:4px 10px;border-radius:999px;background:var(--amber-soft);color:var(--amber)}
+.sp{flex:1}
+.menu{position:relative}
+.menu summary{list-style:none;cursor:pointer;border-radius:999px}
+.menu summary::-webkit-details-marker{display:none}
+.avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;background:var(--brand);color:var(--brand-ink)}
+.menu-pop{position:absolute;right:0;top:calc(100% + 8px);min-width:230px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);box-shadow:var(--shadow-lg);padding:6px;z-index:30}
+.menu-pop .who{padding:10px 12px 8px;font-weight:700;border-bottom:1px solid var(--line);margin-bottom:4px}
+.menu-pop .who small{display:block;font-weight:500;color:var(--ink-3)}
+.menu-pop button,.menu-pop a{display:flex;gap:10px;align-items:center;width:100%;border:0;background:none;padding:10px 12px;border-radius:10px;text-align:left;font-size:14.5px;font-weight:600;color:var(--ink);text-decoration:none}
+.menu-pop button:hover,.menu-pop a:hover{background:var(--bg-2)}
+
+/* welcome */
+.welcome{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:40px;align-items:center;padding:40px 0 24px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand)}
+.eyebrow::before{content:"";width:22px;height:3px;border-radius:3px;background:var(--coral)}
+.welcome h1{font-size:clamp(36px,5.6vw,62px);margin:14px 0 16px;font-weight:800}
+.welcome h1 .hl{color:var(--coral);position:relative;white-space:nowrap}
+.welcome h1 .hl::after{content:"";position:absolute;left:0;right:0;bottom:.06em;height:.16em;border-radius:99px;background:var(--coral);opacity:.25}
+.lede{font-size:clamp(17px,2vw,19px);color:var(--ink-2);max-width:54ch}
+.start{display:flex;gap:10px;margin:26px 0 6px;max-width:560px;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;box-shadow:var(--shadow)}
+.start .input{border:0;background:none;padding-left:16px}
+.welcome .fine{margin-top:14px;max-width:56ch}
+.art{position:relative;aspect-ratio:1/1;max-width:460px;justify-self:center;width:100%}
+.art .blob{position:absolute;inset:6%;border-radius:42% 58% 55% 45%/50% 42% 58% 50%;background:radial-gradient(circle at 30% 30%,var(--coral-soft),transparent 60%),linear-gradient(140deg,var(--brand-soft),var(--coral-soft));animation:morph 14s ease-in-out infinite alternate}
+.art img{position:absolute;inset:16%;width:68%;height:68%;object-fit:cover;border-radius:50%;box-shadow:0 0 0 8px var(--surface),var(--shadow-lg)}
+.float{position:absolute;display:flex;gap:10px;align-items:center;max-width:250px;padding:10px 14px;border-radius:16px;background:var(--surface);box-shadow:var(--shadow-lg);font-size:13.5px;font-weight:600;line-height:1.35;animation:bob 6s ease-in-out infinite}
+.float .ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
+.float.f1{top:4%;left:-6%}.float.f1 .ic{background:var(--brand-soft);color:var(--brand)}
+.float.f2{top:46%;right:-8%;animation-delay:-2s}.float.f2 .ic{background:var(--coral-soft);color:var(--coral-ink)}
+.float.f3{bottom:3%;left:2%;animation-delay:-4s}.float.f3 .ic{background:var(--violet-soft);color:var(--violet)}
+@keyframes bob{50%{transform:translateY(-8px)}}
+@keyframes morph{to{border-radius:58% 42% 45% 55%/42% 58% 42% 58%}}
+.props{list-style:none;padding:0;margin:8px 0 40px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;grid-column:1/-1}
+.props li{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;gap:6px}
+.props .ic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;margin-bottom:6px}
+.props li:nth-child(1) .ic{background:var(--brand-soft);color:var(--brand)}
+.props li:nth-child(2) .ic{background:var(--coral-soft);color:var(--coral-ink)}
+.props li:nth-child(3) .ic{background:var(--violet-soft);color:var(--violet)}
+.props b{font-size:16.5px}
+.props span{color:var(--ink-2);font-size:14.5px}
+
+/* app: greeting */
+.app{padding-bottom:110px}
+.greet{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:24px;align-items:center;margin:18px 0 22px}
+.hello{font-size:15px;font-weight:600;color:var(--ink-3)}
+.greet h1{font-size:clamp(28px,4vw,40px);font-weight:800;margin-top:2px}
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.pjsay{display:flex;gap:14px;align-items:flex-end}
+.pjsay img{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--coral)}
+.bubble{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:22px 22px 22px 6px;padding:14px 18px;box-shadow:var(--shadow);font-size:15.5px;font-weight:500;min-height:52px}
+.bubble.pulse{animation:pop .45s ease}
+@keyframes pop{0%{transform:scale(.98);opacity:.6}100%{transform:none;opacity:1}}
+
+/* setup stepper */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px;box-shadow:var(--shadow)}
+.setup{margin-bottom:22px;padding:0;overflow:hidden}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:1px solid var(--line);background:var(--surface-2)}
+.st{display:flex;align-items:center;gap:10px;padding:14px 18px;font-size:14px;font-weight:700;color:var(--ink-3);position:relative}
+.st .n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;flex:none;background:var(--bg-2);color:var(--ink-3)}
+.st.now{color:var(--ink)}
+.st.now .n{background:var(--brand);color:var(--brand-ink)}
+.st.now::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:var(--brand)}
+.st.ok .n{background:var(--green-soft);color:var(--green)}
+.st .n .i{width:16px;height:16px;stroke-width:2.4}
+.step-body{padding:22px;display:grid;gap:14px}
+.step-body h2{font-size:22px}
+.step-body p.lead{color:var(--ink-2);max-width:62ch}
+.try{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13.5px;color:var(--ink-3)}
+.try .chip-btn{padding:5px 12px;font-size:13px}
+.results{display:grid;gap:8px}
+.result{display:flex;gap:14px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px;transition:border-color .15s,box-shadow .15s}
+.result:hover{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.result .who{flex:1;min-width:0}
+.result small{display:block;color:var(--ink-3);font-size:13px}
+.result .go{color:var(--brand);font-weight:700;font-size:14px;display:flex;gap:4px;align-items:center}
+@media (max-width:640px){.result .go span{display:none}}
+.letter{white-space:pre-wrap;font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:16px;max-height:240px;overflow:auto;color:var(--ink-2)}
+
+/* ask card */
+.ask{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 16px;align-items:center;margin-bottom:28px;background:linear-gradient(120deg,var(--brand-soft),var(--surface) 55%,var(--coral-soft));border-color:transparent}
+.ask img{width:54px;height:54px;border-radius:16px;object-fit:cover;grid-row:span 2}
+.ask h2{font-size:21px}
+.ask p{color:var(--ink-2);font-size:14.5px}
+.ask .fake{grid-column:1/-1;display:flex;align-items:center;gap:10px;width:100%;margin-top:10px;padding:14px 8px 14px 20px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-3);font-size:16px;text-align:left;box-shadow:var(--shadow);transition:border-color .15s}
+.ask .fake:hover{border-color:var(--brand)}
+.ask .fake span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ask .fake .send{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--brand);color:var(--brand-ink);flex:none}
+.sugg{display:flex;gap:8px;flex-wrap:wrap}
+.ask .sugg{grid-column:1/-1;margin-top:4px}
+
+/* layout */
+.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px;align-items:start}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 2px 12px}
+.sec-head h2{font-size:20px}
+.side{display:flex;flex-direction:column;gap:18px;min-width:0}
+.card-h{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.card-h h2{font-size:17px;flex:1}
+.card-h .ic{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--bg-2);color:var(--ink-2)}
+.empty{color:var(--ink-3);font-size:14.5px}
+
+/* buckets */
+.buckets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.bucket{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.bucket .bh{padding:18px 18px 12px;display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:center;background:linear-gradient(180deg,var(--soft),transparent)}
+.bucket .bh .ic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--surface);color:var(--hue);grid-row:span 2;box-shadow:var(--shadow)}
+.bucket .bh h3{font-size:17px}
+.bucket .bh .count{grid-row:span 2;font-size:12.5px;font-weight:800;color:var(--hue);background:var(--surface);border-radius:999px;padding:3px 10px}
+.bucket .bh .tag{font-size:13px;color:var(--ink-2);line-height:1.35}
+.items{padding:4px 18px 14px;display:flex;flex-direction:column}
+.item{padding:11px 0 11px 14px;border-top:1px solid var(--line);position:relative}
+.item:first-child{border-top:0}
+.item::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:3px;background:var(--line-2)}
+.item.watch::before{background:var(--amber)}
+.item.act::before{background:var(--red)}
+.item .t{font-weight:700;font-size:14.5px;line-height:1.35}
+.item .fl{display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.item.watch .fl{color:var(--amber)}
+.item.act .fl{color:var(--red)}
+.item .v{font-weight:600;color:var(--ink-2)}
+.item .m{font-size:13.5px;color:var(--ink-2);margin-top:3px}
+.item .s{font-size:12px;color:var(--ink-3);margin-top:3px}
+.more{align-self:flex-start;margin-top:6px}
+.bucket .pjq{display:flex;gap:10px;align-items:flex-start;padding:4px 18px 18px;color:var(--ink-2);font-size:14px;font-style:italic}
+.bucket .pjq img{width:26px;height:26px;border-radius:50%;flex:none}
+
+/* tasks */
+.task{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;padding:12px 0;border-top:1px solid var(--line)}
+.task:first-child{border-top:0;padding-top:0}
+.task .dot{width:12px;height:12px;border-radius:50%;margin-top:5px;background:var(--ink-3);box-shadow:0 0 0 4px var(--bg-2)}
+.task .dot.working{background:var(--blue);box-shadow:0 0 0 4px var(--blue-soft);animation:breathe 1.8s ease-in-out infinite}
+.task .dot.waiting_on_you{background:var(--amber);box-shadow:0 0 0 4px var(--amber-soft)}
+.task .dot.waiting_on_them{background:var(--violet);box-shadow:0 0 0 4px var(--violet-soft)}
+.task .dot.done{background:var(--green);box-shadow:0 0 0 4px var(--green-soft)}
+.task .dot.blocked{background:var(--red);box-shadow:0 0 0 4px var(--red-soft)}
+@keyframes breathe{50%{box-shadow:0 0 0 7px var(--blue-soft)}}
+.task .tt{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;font-weight:700;font-size:14.5px;line-height:1.35}
+.task .dd{grid-column:2;font-size:13.5px;color:var(--ink-2)}
+.task .ag{grid-column:2;font-size:12px;color:var(--ink-3)}
+.task.you{background:var(--amber-soft);border-radius:var(--r-sm);padding:12px;margin:0 -12px 6px;border-top:0}
+
+/* coverage */
+.plan{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.plan b{font-size:16px;display:block;line-height:1.3}
+.plan small{color:var(--ink-3);font-size:13px}
+.summary{font-size:14.5px;color:var(--ink-2);margin:12px 0 4px}
+.meter{margin-top:14px}
+.meter .ml{display:flex;justify-content:space-between;font-size:13.5px;font-weight:600}
+.meter .ml span{color:var(--ink-3);font-weight:500}
+.meter .bar{height:8px;border-radius:99px;background:var(--bg-2);overflow:hidden;margin-top:6px}
+.meter .bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),var(--brand-strong))}
+.eap{display:flex;gap:12px;align-items:center;margin-top:16px;padding:12px 14px;border-radius:var(--r-sm);background:var(--green-soft);color:var(--ink)}
+.eap .ic{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--surface);color:var(--green);flex:none}
+.eap b{display:block;font-size:14.5px}
+.eap small{color:var(--ink-2);font-size:13px}
+.bens{margin-top:16px;border-top:1px solid var(--line)}
+.ben{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.ben b{font-weight:600}
+.ben .pay{font-weight:700;text-align:right}
+.ben .pay.no{color:var(--red)}
+.ben .tags{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}
+.ben .tags .chip{font-size:11.5px;padding:2px 8px}
+
+/* care team */
+.member{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;padding:12px 0;border-top:1px solid var(--line)}
+.member:first-child{border-top:0;padding-top:0}
+.member .av{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-weight:800;background:var(--violet-soft);color:var(--violet);grid-row:span 3}
+.member b{font-size:15px}
+.member small{color:var(--ink-3);font-size:13px}
+.member .lines{font-size:13.5px;color:var(--ink-2);display:flex;gap:14px;flex-wrap:wrap}
+.member .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+
+/* records */
+.req{padding:12px 0;border-top:1px solid var(--line)}
+.req:first-child{border-top:0;padding-top:0}
+.req .rh{display:flex;justify-content:space-between;gap:10px;font-weight:700;font-size:14.5px}
+.track{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:12px 0 6px}
+.track i{height:6px;border-radius:99px;background:var(--bg-2)}
+.track i.on{background:var(--brand)}
+.track i.bad{background:var(--red)}
+.track-l{display:grid;grid-template-columns:repeat(4,1fr);font-size:11.5px;color:var(--ink-3);font-weight:600}
+.req .s{font-size:13px;color:var(--ink-3);margin-top:6px}
+
+footer.foot{margin-top:34px;padding:22px 0 10px;border-top:1px solid var(--line);font-size:13.5px;color:var(--ink-3);display:flex;gap:10px 22px;flex-wrap:wrap;justify-content:space-between}
+footer.foot b{color:var(--ink-2)}
+
+/* floating ask button */
+.fab{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));z-index:20;display:flex;align-items:center;gap:10px;border:0;border-radius:999px;padding:7px 20px 7px 7px;background:var(--ink);color:var(--bg);font-weight:800;font-size:15px;box-shadow:var(--shadow-lg);transition:transform .2s,opacity .2s}
+.fab img{width:40px;height:40px;border-radius:50%;object-fit:cover}
+.fab:hover{transform:translateY(-2px)}
+.fab.away{transform:translateY(140%);opacity:0;pointer-events:none}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,14,20,.45);z-index:40;opacity:0;transition:opacity .2s}
+.scrim.on{opacity:1}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);z-index:41;background:var(--bg);display:flex;flex-direction:column;box-shadow:var(--shadow-lg);transform:translateX(102%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+.drawer.on{transform:none}
+.dh{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line);background:var(--surface)}
+.dh img{width:44px;height:44px;border-radius:50%;object-fit:cover}
+.dh div{flex:1}
+.dh h2{font-size:18px}
+.dh p{font-size:13px;color:var(--ink-3)}
+.icon-btn{width:40px;height:40px;border-radius:50%;border:0;background:var(--bg-2);display:grid;place-items:center;color:var(--ink-2)}
+.icon-btn:hover{background:var(--line)}
+.thread{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:14px;overscroll-behavior:contain}
+.msg{max-width:88%;padding:11px 15px;border-radius:20px;font-size:15px;line-height:1.5}
+.msg.me{align-self:flex-end;background:var(--brand);color:var(--brand-ink);border-bottom-right-radius:6px}
+.msg.pj{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:6px}
+.pjrow{display:flex;gap:10px;align-items:flex-end}
+.pjrow > img{width:30px;height:30px;border-radius:50%;flex:none}
+.pjrow .msg{max-width:none}
+.opts{display:flex;flex-direction:column;gap:10px;margin-left:40px}
+.opt{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;display:grid;gap:6px}
+.opt.best{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.opt.crisis{border-color:var(--red);background:var(--red-soft)}
+.opt .oh{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.opt .oh b{font-size:15px;line-height:1.35}
+.opt .cost{font-size:13.5px;font-weight:700;color:var(--brand)}
+.opt.crisis .cost{color:var(--red)}
+.opt .why{font-size:14px;color:var(--ink-2)}
+.opt details{font-size:14px;color:var(--ink-2)}
+.opt summary{cursor:pointer;font-weight:700;color:var(--ink);font-size:13.5px}
+.opt ol{margin:6px 0 0;padding-left:20px;display:grid;gap:3px}
+.opt .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.typing{display:inline-flex;gap:4px;padding:14px 16px}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--ink-3);animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{50%{opacity:.25}}
+.dsugg{padding:0 18px 10px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.dsugg .chip-btn{flex:none}
+.composer{display:flex;gap:8px;padding:12px 14px max(12px,env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--surface)}
+.composer .send{width:46px;height:46px;padding:0;border-radius:50%;flex:none}
+.dfoot{padding:0 18px 10px;background:var(--surface);font-size:12px;color:var(--ink-3);text-align:center}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:calc(max(18px,env(safe-area-inset-bottom)) + 70px);transform:translate(-50%,20px);z-index:50;max-width:min(520px,calc(100% - 32px));display:flex;gap:10px;align-items:center;background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:16px;font-size:14.5px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast img{width:28px;height:28px;border-radius:50%;flex:none}
+
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr}
+  .greet{grid-template-columns:1fr;gap:16px}
+  .welcome{grid-template-columns:1fr;gap:12px;padding-top:16px}
+  .art{max-width:320px;margin-top:8px}
+  .props{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .buckets{grid-template-columns:1fr}
+  .steps .st span.lbl{display:none}
+  .steps .st{justify-content:center}
+  .start{flex-direction:column;border-radius:24px}
+  .start .btn{width:100%}
+  .float{max-width:190px;font-size:12.5px}
+  .float.f1{left:-2%}.float.f2{right:-2%}
+  .card{padding:18px}
+  .step-body{padding:18px}
+  .field .btn{width:100%}
+  .drawer{top:auto;height:92vh;height:92dvh;width:100%;border-radius:24px 24px 0 0;transform:translateY(102%)}
+  .drawer.on{transform:none}
+  .dh{border-radius:24px 24px 0 0}
+  .opts{margin-left:0}
+  .fab{padding-right:16px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div class="brand"><img src="/pj.webp" alt="">PJ Health</div>
+  <header class="top">
+    <a class="brand" href="/"><img src="/pj.webp" alt=""><span>PJ<b>Health</b></span></a>
+    <span class="demo-pill">Demo · fictional data</span>
     <div class="sp"></div>
-    <button class="link" id="exportBtn" hidden>Download my data</button>
-    <button class="link" id="outBtn" hidden>Sign out</button>
+    <details class="menu" id="menu" hidden>
+      <summary aria-label="Your account"><span class="avatar" id="avatar"></span></summary>
+      <div class="menu-pop">
+        <div class="who"><span id="menuName"></span><small>Demo account, no password</small></div>
+        <button type="button" id="exportBtn" data-i="download">Download my data</button>
+        <a href="/swarm" data-i="phone">Watch PJ's crew make calls</a>
+        <button type="button" id="outBtn" data-i="out">Sign out</button>
+      </div>
+    </details>
   </header>
 
-  <section id="welcome" hidden>
-    <div class="hero">
-      <img src="/pj.webp" alt="PJ the Gila monster">
-      <div>
-        <h1>Healthcare built for <em>you</em>,<br>not for your doctor's office.</h1>
-        <p>Hi, I'm PJ. I handle the insurance, the records requests and the phone calls, and I explain everything in plain words. Your health, owned by you.</p>
-        <form id="startForm" class="row" style="margin-top:14px;max-width:520px">
-          <input type="text" id="name" placeholder="Your first and last name" autocomplete="name" aria-label="Your name" required>
-          <button class="btn" type="submit">Start</button>
-        </form>
-        <div class="row" style="margin-top:12px"><button class="btn ghost small" id="demoBtn">Or explore a demo patient</button></div>
-        <div class="demo-note"><b>Demo only.</b> Every insurer, doctor and record here is fictional. Don't enter real health information.</div>
-      </div>
-    </div>
-  </section>
-
-  <section id="app" hidden>
-    <div class="pj">
-      <img src="/pj.webp" alt="PJ">
-      <div class="bubble">
-        <div class="say" id="pjSay" aria-live="polite"></div>
-        <form id="askForm" class="row">
-          <input type="text" id="ask" placeholder="Ask PJ, e.g. &quot;I think I need to see a therapist&quot;" aria-label="Ask PJ">
-          <button class="btn small" type="submit">Ask</button>
-        </form>
-      </div>
-    </div>
-
-    <div id="stepCoverage" class="card" hidden style="margin-bottom:18px">
-      <h2>1. Your insurance</h2>
-      <p class="small muted">Type the member ID from your card (later: snap a photo). PJ figures out what's actually covered.</p>
-      <form id="covForm">
-        <div class="row"><input type="text" id="card" placeholder="Member ID, e.g. EVG-55120943" aria-label="Member ID"></div>
-        <div class="row" style="margin-top:8px"><input type="text" id="employer" placeholder="Where you work (optional, to find free benefits)" aria-label="Employer"><button class="btn" type="submit">Check my coverage</button></div>
+  <main id="welcome" class="welcome" hidden>
+    <div>
+      <span class="eyebrow">Your healthcare, owned by you</span>
+      <h1>Healthcare built for <span class="hl">you</span>, not for the doctor's office.</h1>
+      <p class="lede">I'm PJ. I read your insurance, call the offices, request your records, and explain all of it in plain words. You just tell me what you need.</p>
+      <form id="startForm" class="start">
+        <label for="name" class="sr">Your name</label>
+        <input class="input" type="text" id="name" placeholder="Your first and last name" autocomplete="name" required>
+        <button class="btn lg" type="submit">Get started <span data-i="arrow"></span></button>
       </form>
-      <p class="tiny muted" style="margin:10px 0 0">Demo cards: <span id="demoCards"></span>. Demo employers: Northwind Logistics, Acme Schools.</p>
+      <button class="btn text" type="button" id="demoBtn">Or explore a demo patient <span data-i="arrow"></span></button>
+      <p class="fine">No password, because this is a demo: every insurer, doctor and record here is fictional. Please don't enter real health information.</p>
     </div>
-
-    <div id="stepPcp" class="card" hidden style="margin-bottom:18px">
-      <h2>2. Your regular doctor</h2>
-      <p class="small muted">Name or practice. PJ finds them, then double-checks the phone, fax and insurance by calling the office.</p>
-      <form id="pcpForm" class="row"><input type="text" id="pcpQ" placeholder="e.g. Lee, Harbor, Juniper" aria-label="Doctor name"><button class="btn" type="submit">Find</button></form>
-      <div class="results" id="pcpResults"></div>
+    <div class="art" aria-hidden="true">
+      <div class="blob"></div>
+      <img src="/pj.webp" alt="">
+      <div class="float f1"><span class="ic" data-i="shield"></span>Your plan covers 6 free counseling sessions</div>
+      <div class="float f2"><span class="ic" data-i="phone"></span>Good thing I called: the fax number was wrong</div>
+      <div class="float f3"><span class="ic" data-i="doc"></span>Records request sent. I'll follow up.</div>
     </div>
+    <ul class="props">
+      <li><span class="ic" data-i="shield"></span><b>I decode your insurance</b><span>What's covered, what you'll pay, and the free benefits nobody told you about.</span></li>
+      <li><span class="ic" data-i="phone"></span><b>I make the calls</b><span>Checking your doctor's details, chasing your records, finding appointments.</span></li>
+      <li><span class="ic" data-i="user"></span><b>You stay in charge</b><span>Nothing goes out without your OK, and you can download everything, anytime.</span></li>
+    </ul>
+  </main>
 
-    <div id="stepRecords" class="card" hidden style="margin-bottom:18px">
-      <h2>3. Get your records</h2>
-      <p class="small muted">It's your legal right to a copy of your records. PJ writes the request; you sign; PJ faxes it and follows up.</p>
-      <button class="btn" id="draftBtn">Draft my request</button>
-      <div id="signBox" hidden style="margin-top:12px">
-        <div class="letter" id="letter"></div>
-        <form id="signForm" class="row" style="margin-top:10px"><input type="text" id="sig" placeholder="Type your full name to sign" aria-label="Type your name to sign"><button class="btn" type="submit">Sign and send</button></form>
+  <main id="app" class="app" hidden>
+    <section class="greet">
+      <div>
+        <p class="hello" id="hello"></p>
+        <h1 id="greetName"></h1>
+        <div class="stats" id="stats"></div>
       </div>
-    </div>
+      <div class="pjsay">
+        <img src="/pj.webp" alt="PJ">
+        <p class="bubble" id="pjSay" aria-live="polite"></p>
+      </div>
+    </section>
 
-    <div id="answer" class="card" hidden style="margin-bottom:18px"></div>
+    <section id="setup" class="card setup" hidden aria-label="Set up">
+      <div class="steps" id="steps"></div>
 
-    <div class="grid">
-      <div class="col">
+      <div id="stepCoverage" class="step-body" hidden>
+        <h2>Let's start with your insurance</h2>
+        <p class="lead">Type the member ID from your card. I'll work out what's actually covered, what you'll pay, and any free benefits through work.</p>
+        <form id="covForm" class="field">
+          <label for="card" class="sr">Member ID</label>
+          <input class="input" type="text" id="card" placeholder="Member ID, e.g. EVG-55120943" required>
+          <label for="employer" class="sr">Employer</label>
+          <input class="input" type="text" id="employer" placeholder="Where you work (optional)">
+          <button class="btn" type="submit">Check my coverage</button>
+        </form>
+        <div class="try"><span>Try a demo card:</span><span id="demoCards" class="sugg"></span></div>
+      </div>
+
+      <div id="stepPcp" class="step-body" hidden>
+        <h2>Who's your regular doctor?</h2>
+        <p class="lead">Search by name or practice. I'll find them, then call the office to double-check the phone, fax and whether they take your plan. Directories are often wrong.</p>
+        <form id="pcpForm" class="field">
+          <label for="pcpQ" class="sr">Doctor or practice name</label>
+          <input class="input" type="text" id="pcpQ" placeholder="e.g. Lee, Harbor, Juniper" required>
+          <button class="btn" type="submit">Search</button>
+        </form>
+        <div class="results" id="pcpResults"></div>
+      </div>
+
+      <div id="stepRecords" class="step-body" hidden>
+        <h2>Get your records</h2>
+        <p class="lead">You have a legal right to a copy of your records. I write the request, you sign it, then I fax it and follow up until it arrives.</p>
+        <div><button class="btn" type="button" id="draftBtn">Draft my request</button></div>
+        <div id="signBox" hidden style="display:grid;gap:12px">
+          <div class="letter" id="letter"></div>
+          <form id="signForm" class="field">
+            <label for="sig" class="sr">Type your full name to sign</label>
+            <input class="input" type="text" id="sig" placeholder="Type your full name to sign" required>
+            <button class="btn" type="submit">Sign and send</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="card ask" id="askCard">
+      <img src="/pj.webp" alt="">
+      <h2>What do you need?</h2>
+      <p>Say it in your own words. I'll check your coverage, find the options, and do the legwork.</p>
+      <button type="button" class="fake" id="openAsk"><span>"I think I need to see a therapist"</span><span class="send" data-i="send"></span></button>
+      <div class="sugg" id="sugg1"></div>
+    </section>
+
+    <div class="layout">
+      <section aria-labelledby="hHealth">
+        <div class="sec-head"><h2 id="hHealth">Your health, in plain words</h2><span class="fine">From your records, your plan and you</span></div>
         <div class="buckets" id="buckets"></div>
-      </div>
-      <div class="col">
-        <div class="card"><h2>What PJ is doing for you</h2><p class="tiny muted" style="margin:2px 0 8px">The calls, forms and follow-ups. You only see what needs you.</p><div id="tasks"></div></div>
-        <div class="card"><h2>My Coverage</h2><div id="coverage"></div></div>
-        <div class="card"><h2>My Care Team</h2><div id="team"></div></div>
-        <div class="card"><h2>Records requests</h2><div id="reqs"></div></div>
-      </div>
+      </section>
+      <aside class="side">
+        <section class="card"><div class="card-h"><span class="ic" data-i="list"></span><h2>What PJ is doing for you</h2></div><div id="tasks"></div></section>
+        <section class="card"><div class="card-h"><span class="ic" data-i="shield"></span><h2>My coverage</h2></div><div id="coverage"></div></section>
+        <section class="card"><div class="card-h"><span class="ic" data-i="steth"></span><h2>My care team</h2></div><div id="team"></div></section>
+        <section class="card"><div class="card-h"><span class="ic" data-i="doc"></span><h2>Records requests</h2></div><div id="reqs"></div></section>
+      </aside>
     </div>
-  </section>
 
-  <footer>
-    <p>PJ explains and organizes; PJ doesn't diagnose or give medical advice. In a crisis call or text 988, or call 911.
-    <a href="/swarm">Watch PJ's crew call 15 offices at once</a>.</p>
-  </footer>
+    <footer class="foot">
+      <span><b>PJ explains and organizes. PJ doesn't diagnose or give medical advice.</b> In a crisis, call or text <a href="tel:988">988</a>, or call <a href="tel:911">911</a>.</span>
+      <a href="/swarm">Watch PJ's crew call 15 offices at once</a>
+    </footer>
+  </main>
 </div>
+
+<button class="fab" id="fab" type="button" hidden aria-haspopup="dialog"><img src="/pj.webp" alt="">Ask PJ</button>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden>
+  <div class="dh">
+    <img src="/pj.webp" alt="">
+    <div><h2 id="drawerTitle">Ask PJ</h2><p>Plain answers. Real legwork.</p></div>
+    <button type="button" class="icon-btn" id="closeAsk" aria-label="Close" data-i="x"></button>
+  </div>
+  <div class="thread" id="thread" aria-live="polite"></div>
+  <div class="sugg dsugg" id="sugg2"></div>
+  <form id="askForm" class="composer">
+    <label for="ask" class="sr">Ask PJ</label>
+    <input class="input" type="text" id="ask" placeholder="Tell PJ what you need" autocomplete="off">
+    <button class="btn send" type="submit" aria-label="Send" data-i="send"></button>
+  </form>
+  <div class="dfoot">PJ doesn't diagnose. In a crisis, call or text 988.</div>
+</aside>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><img src="/pj.webp" alt=""><span id="toastText"></span></div>
 
 <script>
 (function () {
   var $ = function (s) { return document.querySelector(s); };
-  var currentReq = null;
+  var ICONS = {
+    arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+    shield: '<path d="M12 3l7 3v6c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
+    phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+    doc: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.3-4 4.3-6 8-6s6.7 2 8 6"/>',
+    people: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.8-3.2 3-5 5.5-5s4.7 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.2c2.2.3 3.8 1.9 4.5 4.8"/>',
+    flask: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/>',
+    leaf: '<path d="M5 19C5 11 10 5 20 5c0 10-6 15-14 15"/><path d="M5 19l7-7"/>',
+    dna: '<path d="M7 3c0 5 10 7 10 12s-4 5-5 6M17 3c0 5-10 7-10 12s4 5 5 6"/><path d="M8.5 7h7M8.5 17h7"/>',
+    list: '<path d="M10 6h10M10 12h10M10 18h10"/><path d="M4 6l1.2 1.2L7.5 5M4 12l1.2 1.2L7.5 11M4 18l1.2 1.2L7.5 17"/>',
+    steth: '<path d="M6 3v5a4 4 0 0 0 8 0V3"/><path d="M10 12v3a5 5 0 0 0 10 0v-2"/><circle cx="20" cy="11" r="2"/>',
+    send: '<path d="M4 12l16-8-6 16-3-6z"/><path d="M11 14l9-10"/>',
+    x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
+    download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+    out: '<path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9"/>',
+    gift: '<path d="M4 10h16v10H4zM2 7h20v3H2zM12 7v13"/><path d="M12 7C10 3 6 4 7.5 6.5 8.3 7.8 12 7 12 7zm0 0c2-4 6-3 4.5-.5C15.7 7.8 12 7 12 7z"/>'
+  };
+  function icon(name) {
+    var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('class', 'i'); s.setAttribute('aria-hidden', 'true');
+    s.innerHTML = ICONS[name] || '';
+    return s;
+  }
+  document.querySelectorAll('[data-i]').forEach(function (n) {
+    var ic = icon(n.getAttribute('data-i'));
+    if (n.tagName === 'BUTTON' || n.tagName === 'A') n.insertBefore(ic, n.firstChild); else n.appendChild(ic);
+  });
   function el(tag, attrs, kids) {
     var e = document.createElement(tag);
     Object.keys(attrs || {}).forEach(function (k) {
@@ -188,133 +543,332 @@ footer{margin-top:26px;font-size:13.5px;color:var(--ink-3)}
     return fetch(path, { method: method, headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined, credentials: 'same-origin' })
       .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.detail || 'Something went wrong'); return j; }); });
   }
-  function say(t) { $('#pjSay').textContent = t; }
-  function oops(e) { say(e.message); }
-  var FLAG = { ok: ['ok', ''], watch: ['worth a look', 'watch'], act: ['next step', 'act'] };
-  var STATUS = { todo: 'to do', working: 'PJ is on it', waiting_on_you: 'needs you', waiting_on_them: 'waiting on them', done: 'done', blocked: 'stuck' };
+  function busy(btn, p) {
+    if (btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); }
+    return p.finally(function () { if (btn) { btn.disabled = false; btn.removeAttribute('aria-busy'); } });
+  }
+  function say(t) { var b = $('#pjSay'); b.textContent = t; b.classList.remove('pulse'); void b.offsetWidth; b.classList.add('pulse'); }
+  var toastTimer;
+  function toast(t) {
+    $('#toastText').textContent = t; $('#toast').classList.add('on');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { $('#toast').classList.remove('on'); }, 4800);
+  }
+  function oops(e) { say(e.message); toast(e.message); }
+  function money(s) { var n = parseFloat(String(s || '').replace(/[^0-9.]/g, '')); return isNaN(n) ? 0 : n; }
+  function initials(n) { return n.replace(/^Dr\.?\s+/i, '').split(/\s+/).filter(Boolean).slice(0, 2).map(function (w) { return w[0].toUpperCase(); }).join(''); }
+
+  var BUCKET_STYLE = {
+    connection: { icon: 'people', hue: 'var(--rose)', soft: 'var(--rose-soft)' },
+    clinicals: { icon: 'flask', hue: 'var(--blue)', soft: 'var(--blue-soft)' },
+    routines: { icon: 'leaf', hue: 'var(--green)', soft: 'var(--green-soft)' },
+    family_genes: { icon: 'dna', hue: 'var(--violet)', soft: 'var(--violet-soft)' }
+  };
+  var FLAG = { watch: ['Keep an eye on', 'watch'], act: ['Worth acting on', 'act'] };
+  var FLAG_ORDER = { act: 0, watch: 1, ok: 2 };
+  var STATUS = { todo: ['To do', ''], working: ['PJ is on it', 'info'], waiting_on_you: ['Needs you', 'watch'], waiting_on_them: ['Waiting on them', 'violet'], done: ['Done', 'ok'], blocked: ['Stuck', 'act'] };
+  var AGENT = { coverage: 'Coverage agent', care_team: 'Care team agent', records: 'Records agent', navigator: 'Care navigator', swarm: 'Scheduling swarm', guide: 'PJ' };
   var SOURCE = { you: 'you told PJ', insurance_card: 'your card', insurer: 'your insurer', directory: 'provider directory', call: 'confirmed by a call', records: "your doctor's records", demo: 'demo' };
+  var STEPS = [['coverage', 'Insurance'], ['pcp', 'Your doctor'], ['records', 'Your records']];
+  var SUGGEST = ['I think I need to see a therapist', 'What does my plan cover?', 'I need a dermatologist for a mole', 'I need physical therapy for my knee'];
+  var expanded = {};
+  var currentReq = null;
 
   function render(d) {
-    $('#welcome').hidden = true; $('#app').hidden = false; $('#outBtn').hidden = false; $('#exportBtn').hidden = false;
+    var p = d.patient, first = p.display_name.split(/\s+/)[0];
+    $('#welcome').hidden = true; $('#app').hidden = false; $('#menu').hidden = false; $('#fab').hidden = false;
+    var h = new Date().getHours();
+    $('#hello').textContent = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+    $('#greetName').textContent = first;
+    $('#avatar').textContent = initials(p.display_name);
+    $('#menuName').textContent = p.display_name;
     say(d.pj.say);
-    $('#stepCoverage').hidden = d.pj.step !== 'coverage';
-    $('#stepPcp').hidden = d.pj.step !== 'pcp';
-    $('#stepRecords').hidden = d.pj.step !== 'records';
-    $('#demoCards').textContent = d.demo_cards.join(', ');
 
+    var working = d.tasks.filter(function (t) { return t.status === 'working' || t.status === 'waiting_on_them'; }).length;
+    var needYou = d.tasks.filter(function (t) { return t.status === 'waiting_on_you'; }).length;
+    var st = $('#stats'); st.textContent = '';
+    if (working) st.appendChild(el('span', { class: 'chip info', text: working + (working === 1 ? ' thing' : ' things') + ' PJ is handling' }));
+    if (needYou) st.appendChild(el('span', { class: 'chip watch', text: needYou + ' need' + (needYou === 1 ? 's' : '') + ' you' }));
+    if (d.coverage) st.appendChild(el('span', { class: 'chip teal' }, [icon('shield'), d.coverage.plan_name]));
+
+    var step = d.pj.step, idx = STEPS.map(function (s) { return s[0]; }).indexOf(step);
+    $('#setup').hidden = step === 'done';
+    var sp = $('#steps'); sp.textContent = '';
+    STEPS.forEach(function (s, i) {
+      var cls = i < idx ? 'ok' : i === idx ? 'now' : '';
+      sp.appendChild(el('div', { class: 'st ' + cls, 'aria-current': i === idx ? 'step' : 'false' }, [
+        el('span', { class: 'n' }, [i < idx ? icon('check') : String(i + 1)]), el('span', { class: 'lbl', text: s[1] })
+      ]));
+    });
+    $('#stepCoverage').hidden = step !== 'coverage';
+    $('#stepPcp').hidden = step !== 'pcp';
+    $('#stepRecords').hidden = step !== 'records';
+    var dc = $('#demoCards'); dc.textContent = '';
+    d.demo_cards.forEach(function (c) {
+      var b = el('button', { type: 'button', class: 'chip-btn', text: c });
+      b.addEventListener('click', function () { $('#card').value = c; if (c.indexOf('EVG') === 0 && !$('#employer').value) $('#employer').value = 'Northwind Logistics'; $('#card').focus(); });
+      dc.appendChild(b);
+    });
+    var pending = d.records_requests.filter(function (r) { return r.status === 'awaiting_signature'; })[0];
+    if (pending) { currentReq = pending.id; $('#letter').textContent = pending.letter; $('#signBox').hidden = false; $('#draftBtn').parentNode.hidden = true; }
+    else { $('#signBox').hidden = true; $('#draftBtn').parentNode.hidden = false; }
+
+    renderBuckets(d.buckets);
+    renderTasks(d.tasks);
+    renderCoverage(d.coverage);
+    renderTeam(d.care_team);
+    renderReqs(d.records_requests);
+  }
+
+  function renderBuckets(buckets) {
     var b = $('#buckets'); b.textContent = '';
-    d.buckets.forEach(function (bk) {
-      var c = el('div', { class: 'card bucket' }, [
-        el('h3', {}, [bk.name, el('span', { class: 'chip gray', text: String(bk.items.length) })]),
+    buckets.forEach(function (bk) {
+      var sty = BUCKET_STYLE[bk.key] || BUCKET_STYLE.clinicals;
+      var card = el('article', { class: 'card bucket', style: '--hue:' + sty.hue + ';--soft:' + sty.soft });
+      card.appendChild(el('div', { class: 'bh' }, [
+        el('span', { class: 'ic' }, [icon(sty.icon)]), el('h3', { text: bk.name }),
+        el('span', { class: 'count', text: bk.items.length ? String(bk.items.length) : 'New' }),
         el('div', { class: 'tag', text: bk.tagline })
-      ]);
-      if (!bk.items.length) c.appendChild(el('div', { class: 'empty', text: bk.pj }));
-      bk.items.forEach(function (it) {
-        var f = FLAG[it.flag] || FLAG.ok;
-        c.appendChild(el('div', { class: 'item' }, [
-          el('div', { class: 't' }, [el('span', { text: it.title + (it.value ? ': ' + it.value : '') }), it.flag !== 'ok' ? el('span', { class: 'chip ' + f[1], text: f[0] }) : null]),
-          it.plain_meaning ? el('div', { class: 'm', text: it.plain_meaning }) : null,
-          el('div', { class: 's', text: 'From ' + (SOURCE[it.source] || it.source) + (it.when ? ' · ' + it.when : '') })
-        ]));
-      });
-      b.appendChild(c);
+      ]));
+      if (!bk.items.length) {
+        card.appendChild(el('div', { class: 'pjq' }, [el('img', { src: '/pj.webp', alt: '' }), el('span', { text: bk.pj })]));
+      } else {
+        var items = bk.items.slice().sort(function (a, z) { return (FLAG_ORDER[a.flag] || 2) - (FLAG_ORDER[z.flag] || 2); });
+        var list = el('div', { class: 'items' }), limit = expanded[bk.key] ? items.length : 4;
+        items.slice(0, limit).forEach(function (it) {
+          var f = FLAG[it.flag];
+          list.appendChild(el('div', { class: 'item ' + (it.flag || '') }, [
+            f ? el('span', { class: 'fl', text: f[0] }) : null,
+            el('div', { class: 't' }, [it.title, it.value ? el('span', { class: 'v', text: ' · ' + it.value }) : null]),
+            it.plain_meaning ? el('div', { class: 'm', text: it.plain_meaning }) : null,
+            el('div', { class: 's', text: 'From ' + (SOURCE[it.source] || it.source) + (it.when ? ' · ' + it.when : '') })
+          ]));
+        });
+        if (items.length > 4) {
+          var more = el('button', { type: 'button', class: 'btn text sm more', text: expanded[bk.key] ? 'Show less' : 'Show all ' + items.length });
+          more.addEventListener('click', function () { expanded[bk.key] = !expanded[bk.key]; renderBuckets(buckets); });
+          list.appendChild(more);
+        }
+        card.appendChild(list);
+      }
+      b.appendChild(card);
     });
+  }
 
+  function renderTasks(tasks) {
     var t = $('#tasks'); t.textContent = '';
-    if (!d.tasks.length) t.appendChild(el('div', { class: 'empty', text: 'Nothing yet. Start with your insurance card.' }));
-    d.tasks.forEach(function (tk) {
-      t.appendChild(el('div', { class: 'task' }, [el('span', { class: 'dot ' + tk.status }), el('div', {}, [
-        el('div', {}, [el('b', { text: tk.title }), ' ', el('span', { class: 'chip ' + (tk.status === 'waiting_on_you' ? 'watch' : tk.status === 'done' ? '' : 'blue'), text: STATUS[tk.status] || tk.status })]),
-        tk.needs_you ? el('div', { class: 'small', text: tk.needs_you }) : null,
-        tk.detail ? el('div', { class: 'small muted', text: tk.detail }) : null
-      ])]));
+    if (!tasks.length) { t.appendChild(el('p', { class: 'empty', text: 'Nothing yet. Once you add your insurance card, I get to work.' })); return; }
+    tasks.slice().sort(function (a, z) { return (a.status === 'waiting_on_you' ? 0 : 1) - (z.status === 'waiting_on_you' ? 0 : 1); }).forEach(function (tk) {
+      var s = STATUS[tk.status] || [tk.status, ''];
+      t.appendChild(el('div', { class: 'task' + (tk.status === 'waiting_on_you' ? ' you' : '') }, [
+        el('span', { class: 'dot ' + tk.status }),
+        el('div', { class: 'tt' }, [el('span', { text: tk.title }), el('span', { class: 'chip ' + s[1], text: s[0] })]),
+        tk.needs_you ? el('div', { class: 'dd', text: tk.needs_you }) : null,
+        tk.detail ? el('div', { class: 'dd', text: tk.detail }) : null,
+        el('div', { class: 'ag', text: AGENT[tk.agent] || tk.agent })
+      ]));
     });
+  }
 
+  function meter(label, met, max) {
+    var pct = max ? Math.min(100, Math.round(money(met) / money(max) * 100)) : 0;
+    var bar = el('div', { class: 'bar', role: 'img', 'aria-label': label + ': ' + (met || '$0') + ' of ' + max }, [el('i', { style: 'width:' + pct + '%' })]);
+    return el('div', { class: 'meter' }, [el('div', { class: 'ml' }, [el('span', { text: label }), el('b', { text: (met || '$0') + ' of ' + max })]), bar]);
+  }
+
+  function renderCoverage(c) {
     var cv = $('#coverage'); cv.textContent = '';
-    if (!d.coverage) cv.appendChild(el('div', { class: 'empty', text: 'Not set up yet.' }));
-    else {
-      var c2 = d.coverage;
-      cv.appendChild(el('p', { class: 'small', text: c2.plain_summary }));
-      cv.appendChild(el('div', { class: 'row small' }, [
-        el('span', { class: 'chip gray', text: 'Deductible ' + (c2.deductible_met || '$0') + ' of ' + (c2.deductible || 'n/a') }),
-        el('span', { class: 'chip gray', text: 'Out-of-pocket ' + (c2.out_of_pocket_met || '$0') + ' of ' + (c2.out_of_pocket_max || 'n/a') }),
-        c2.eap_available ? el('span', { class: 'chip', text: 'Work EAP: ' + c2.eap_sessions }) : null
-      ]));
-      c2.benefits.slice(0, 8).forEach(function (bn) {
-        var note = [bn.needs_referral ? 'Needs a referral.' : '', bn.needs_prior_auth ? 'Needs approval first.' : '', bn.notes || ''].join(' ').trim();
-        cv.appendChild(el('div', { class: 'ben' }, [el('b', { text: bn.label }), el('span', { text: bn.covered === 'no' ? 'Not covered' : (bn.you_pay || bn.covered) }),
-          note ? el('span', { class: 'tiny muted', text: note }) : null]));
-      });
+    if (!c) { cv.appendChild(el('p', { class: 'empty', text: "Add your insurance card and I'll explain your plan here, in plain words." })); return; }
+    cv.appendChild(el('div', { class: 'plan' }, [
+      el('div', {}, [el('b', { text: c.plan_name }), el('small', { text: c.payer + ' · Member ' + c.member_id })]),
+      el('span', { class: 'chip teal', text: c.plan_type || c.program })
+    ]));
+    if (c.plain_summary) cv.appendChild(el('p', { class: 'summary', text: c.plain_summary }));
+    if (c.deductible && money(c.deductible) > 0) cv.appendChild(meter('Deductible met', c.deductible_met, c.deductible));
+    if (c.out_of_pocket_max) cv.appendChild(meter('Out-of-pocket so far', c.out_of_pocket_met, c.out_of_pocket_max));
+    if (c.eap_available) cv.appendChild(el('div', { class: 'eap' }, [el('span', { class: 'ic' }, [icon('gift')]), el('div', {}, [
+      el('b', { text: 'Through work: ' + (c.eap_sessions || 'free counseling sessions') }),
+      el('small', { text: 'Your employee assistance program. Confidential, and no copay.' })
+    ])]));
+    var bens = el('div', { class: 'bens' }), all = c.benefits || [], limit = expanded.__bens ? all.length : 5;
+    all.slice(0, limit).forEach(function (bn) {
+      var tags = [];
+      if (bn.needs_referral) tags.push(el('span', { class: 'chip info', text: 'Referral needed' }));
+      if (bn.needs_prior_auth) tags.push(el('span', { class: 'chip watch', text: 'Approval first' }));
+      if (bn.visit_limit) tags.push(el('span', { class: 'chip', text: bn.visit_limit }));
+      if (bn.notes) tags.push(el('span', { class: 'chip', text: bn.notes }));
+      var no = bn.covered === 'no';
+      bens.appendChild(el('div', { class: 'ben' }, [el('b', { text: bn.label }), el('span', { class: 'pay' + (no ? ' no' : ''), text: no ? 'Not covered' : (bn.you_pay || (bn.covered === 'yes' ? 'Covered' : bn.covered)) }),
+        tags.length ? el('div', { class: 'tags' }, tags) : null]));
+    });
+    cv.appendChild(bens);
+    if (all.length > 5) {
+      var more = el('button', { type: 'button', class: 'btn text sm', text: expanded.__bens ? 'Show less' : 'See all ' + all.length + ' benefits' });
+      more.addEventListener('click', function () { expanded.__bens = !expanded.__bens; renderCoverage(c); });
+      cv.appendChild(more);
     }
+  }
 
+  function renderTeam(team) {
     var tm = $('#team'); tm.textContent = '';
-    if (!d.care_team.length) tm.appendChild(el('div', { class: 'empty', text: 'Add your regular doctor.' }));
-    d.care_team.forEach(function (m) {
-      tm.appendChild(el('div', { class: 'item' }, [
-        el('div', { class: 't' }, [el('span', { text: m.name + ' · ' + (m.practice || '') }), el('span', { class: 'chip ' + (m.confidence === 'confirmed' ? '' : 'watch'), text: m.confidence === 'confirmed' ? 'checked by a call' : 'not checked yet' })]),
-        el('div', { class: 'm', text: 'Phone ' + m.phone + ' · Fax ' + m.fax + ' · Takes your plan: ' + m.in_network })
+    if (!team.length) { tm.appendChild(el('p', { class: 'empty', text: "Add your regular doctor and I'll double-check their details." })); return; }
+    team.forEach(function (m) {
+      var net = m.in_network === 'yes' ? ['Takes your plan', 'ok'] : m.in_network === 'no' ? ['Not in your network', 'act'] : ['Network unknown', ''];
+      tm.appendChild(el('div', { class: 'member' }, [
+        el('span', { class: 'av', text: initials(m.name) }),
+        el('div', {}, [el('b', { text: m.name }), el('small', { text: ' · ' + (m.role === 'pcp' ? 'Primary care' : (m.specialty || m.role)) })]),
+        el('div', { class: 'lines' }, [el('span', { text: m.practice || '' }), m.phone ? el('span', { text: 'Phone ' + m.phone }) : null, m.fax ? el('span', { text: 'Fax ' + m.fax }) : null]),
+        el('div', { class: 'chips' }, [el('span', { class: 'chip ' + net[1], text: net[0] }),
+          el('span', { class: 'chip ' + (m.confidence === 'confirmed' ? 'teal' : 'watch') }, [m.confidence === 'confirmed' ? icon('check') : null, m.confidence === 'confirmed' ? 'Checked by a call' : 'Not checked yet'])])
       ]));
     });
+  }
 
+  var TRACK = { draft: 1, awaiting_signature: 1, sent: 3, acknowledged: 3, overdue: 3, received: 4, failed: -1 };
+  var REQ_LABEL = { draft: ['Draft', ''], awaiting_signature: ['Needs your signature', 'watch'], sent: ['Sent', 'info'], acknowledged: ['Office confirmed', 'info'], received: ['Received', 'ok'], overdue: ['Overdue: PJ is following up', 'watch'], failed: ["Didn't go through", 'act'] };
+  function renderReqs(reqs) {
     var rq = $('#reqs'); rq.textContent = '';
-    if (!d.records_requests.length) rq.appendChild(el('div', { class: 'empty', text: 'None yet.' }));
-    d.records_requests.forEach(function (r) {
-      var row = el('div', { class: 'item' }, [
-        el('div', { class: 't' }, [el('span', { text: r.to.practice || r.to.name }), el('span', { class: 'chip ' + (r.status === 'received' ? '' : r.status === 'failed' ? 'act' : 'blue'), text: r.status.replace(/_/g, ' ') })]),
-        r.due_by ? el('div', { class: 's', text: 'They have until ' + r.due_by + ' to respond' }) : null
+    if (!reqs.length) { rq.appendChild(el('p', { class: 'empty', text: "None yet. Once your doctor is confirmed, I'll request your records." })); return; }
+    reqs.forEach(function (r) {
+      var lab = REQ_LABEL[r.status] || [r.status, ''], n = TRACK[r.status];
+      var track = el('div', { class: 'track' });
+      for (var i = 0; i < 4; i++) track.appendChild(el('i', { class: n < 0 ? (i === 0 ? 'bad' : '') : (i < n ? 'on' : '') }));
+      var row = el('div', { class: 'req' }, [
+        el('div', { class: 'rh' }, [el('span', { text: r.to.practice || r.to.name }), el('span', { class: 'chip ' + lab[1], text: lab[0] })]),
+        track,
+        el('div', { class: 'track-l' }, ['Drafted', 'Signed', 'Sent', 'Received'].map(function (x) { return el('span', { text: x }); })),
+        r.due_by && r.status !== 'received' ? el('div', { class: 's', text: 'By law they should answer by ' + r.due_by + ". I'll follow up if they don't." }) : null
       ]);
-      if (r.status === 'sent') {
-        var sim = el('button', { class: 'btn ghost small', text: 'Demo: the office answers' });
-        sim.style.marginTop = '6px';
-        sim.addEventListener('click', function () { api('POST', '/api/p/records/' + r.id + '/simulate-response').then(function (d2) { render(d2); say('Your records arrived. I filed them into your buckets and flagged what is worth asking about.'); }).catch(oops); });
+      if (r.status === 'sent' || r.status === 'acknowledged') {
+        var sim = el('button', { type: 'button', class: 'btn quiet sm', text: 'Demo: the office answers' });
+        sim.style.marginTop = '10px';
+        sim.addEventListener('click', function () {
+          busy(sim, api('POST', '/api/p/records/' + r.id + '/simulate-response')).then(function (d2) {
+            render(d2); var m = 'Your records arrived. I filed them into your health sections and flagged what to ask about.'; say(m); toast(m);
+          }).catch(oops);
+        });
         row.appendChild(sim);
       }
       rq.appendChild(row);
     });
   }
 
-  function renderAnswer(a) {
-    var box = $('#answer'); box.textContent = ''; box.hidden = false;
-    box.appendChild(el('h2', { text: a.type === 'care_request' ? 'Your options' : 'PJ' }));
-    box.appendChild(el('p', { class: 'small', text: a.say }));
-    if (a.type === 'care_request') {
-      var cr = a.care_request;
-      cr.pathways.forEach(function (p) {
-        var card = el('div', { class: 'path' + (p.kind === cr.recommended ? ' best' : '') + (p.kind === 'crisis' ? ' crisis' : '') }, [
-          el('div', { class: 'row' }, [el('b', { text: p.title }), p.kind === cr.recommended && p.kind !== 'crisis' ? el('span', { class: 'chip', text: 'best fit' }) : null, p.cost ? el('span', { class: 'chip gray', text: p.cost }) : null]),
-          el('div', { class: 'small', text: p.why }),
-          p.steps.length ? el('ul', {}, p.steps.map(function (s) { return el('li', { text: s }); })) : null
-        ]);
-        if (p.agent_can_do.length) {
-          var go = el('button', { class: 'btn small', text: 'Do it, PJ' });
-          go.style.marginTop = '8px';
-          go.addEventListener('click', function () { api('POST', '/api/p/care/' + cr.id + '/go?kind=' + encodeURIComponent(p.kind)).then(function (d) { render(d); say('On it. Follow along in "What PJ is doing for you".'); }).catch(oops); });
-          card.appendChild(go);
-        }
-        box.appendChild(card);
+  /* Ask PJ drawer */
+  var lastFocus = null;
+  function openAsk(prefill) {
+    lastFocus = document.activeElement;
+    var dr = $('#drawer'), sc = $('#scrim');
+    dr.hidden = false; sc.hidden = false; document.body.classList.add('locked');
+    requestAnimationFrame(function () { dr.classList.add('on'); sc.classList.add('on'); });
+    if (!$('#thread').children.length) pjMsg('Hi! Tell me what you need, in your own words. I\'ll check your coverage and lay out your options.');
+    if (prefill) { $('#ask').value = prefill; send(); } else setTimeout(function () { $('#ask').focus(); }, 280);
+  }
+  function closeAsk() {
+    var dr = $('#drawer'), sc = $('#scrim');
+    dr.classList.remove('on'); sc.classList.remove('on'); document.body.classList.remove('locked');
+    setTimeout(function () { dr.hidden = true; sc.hidden = true; }, 280);
+    if (lastFocus) lastFocus.focus();
+  }
+  function scrollThread() { var th = $('#thread'); th.scrollTop = th.scrollHeight; }
+  function pjMsg(text, extra) {
+    var row = el('div', { class: 'pjrow' }, [el('img', { src: '/pj.webp', alt: '' }), el('div', { class: 'msg pj', text: text })]);
+    $('#thread').appendChild(row); if (extra) $('#thread').appendChild(extra); scrollThread();
+  }
+  function optionCard(cr, p) {
+    var best = p.kind === cr.recommended && p.kind !== 'crisis';
+    var card = el('div', { class: 'opt' + (best ? ' best' : '') + (p.kind === 'crisis' ? ' crisis' : '') }, [
+      el('div', { class: 'oh' }, [el('b', { text: p.title }), best ? el('span', { class: 'chip teal', text: 'Best fit' }) : null]),
+      p.cost ? el('div', { class: 'cost', text: p.cost }) : null,
+      el('div', { class: 'why', text: p.why })
+    ]);
+    if (p.steps.length) card.appendChild(el('details', {}, [el('summary', { text: 'How it works' }), el('ol', {}, p.steps.map(function (s) { return el('li', { text: s }); }))]));
+    var acts = el('div', { class: 'acts' });
+    if (p.kind === 'crisis') {
+      acts.appendChild(el('a', { class: 'btn sm', href: 'tel:988', text: 'Call 988' }));
+      acts.appendChild(el('a', { class: 'btn quiet sm', href: 'sms:988', text: 'Text 988' }));
+    } else if (p.agent_can_do.length) {
+      var go = el('button', { type: 'button', class: 'btn sm', text: 'Do it, PJ' });
+      go.addEventListener('click', function () {
+        busy(go, api('POST', '/api/p/care/' + cr.id + '/go?kind=' + encodeURIComponent(p.kind))).then(function (d) {
+          render(d); go.textContent = 'PJ is on it'; go.className = 'btn sm done'; go.disabled = true; go.insertBefore(icon('check'), go.firstChild);
+          pjMsg('On it. I\'ll ' + p.agent_can_do.join(', ').replace(/\.$/, '').replace(/^./, function (c) { return c.toLowerCase(); }) + '. You can follow along in "What PJ is doing for you".');
+        }).catch(function (e) { pjMsg(e.message); });
       });
+      acts.appendChild(go);
     }
-    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (acts.children.length) card.appendChild(acts);
+    return card;
+  }
+  function send() {
+    var q = $('#ask').value.trim(); if (!q) return;
+    $('#ask').value = '';
+    $('#thread').appendChild(el('div', { class: 'msg me', text: q }));
+    $('#sugg2').hidden = true;
+    var typing = el('div', { class: 'pjrow' }, [el('img', { src: '/pj.webp', alt: '' }), el('div', { class: 'msg pj typing', 'aria-label': 'PJ is typing' }, [el('i'), el('i'), el('i')])]);
+    $('#thread').appendChild(typing); scrollThread();
+    api('POST', '/api/p/ask', { text: q }).then(function (d) {
+      render(d);
+      setTimeout(function () {
+        typing.remove();
+        var a = d.answer, extra = null;
+        if (a.type === 'care_request') {
+          extra = el('div', { class: 'opts' }, a.care_request.pathways.map(function (p) { return optionCard(a.care_request, p); }));
+        } else if (a.type === 'coverage' && a.benefits) {
+          extra = el('div', { class: 'opts' }, [el('div', { class: 'opt' }, a.benefits.slice(0, 6).map(function (bn) {
+            return el('div', { class: 'ben' }, [el('b', { text: bn.label }), el('span', { class: 'pay' + (bn.covered === 'no' ? ' no' : ''), text: bn.covered === 'no' ? 'Not covered' : (bn.you_pay || 'Covered') })]);
+          }))]);
+        }
+        pjMsg(a.say, extra);
+      }, 450);
+    }).catch(function (e) { typing.remove(); pjMsg(e.message); });
+  }
+  function suggestions(box, inDrawer) {
+    SUGGEST.forEach(function (s) {
+      var b = el('button', { type: 'button', class: 'chip-btn', text: s });
+      b.addEventListener('click', function () { if (inDrawer) { $('#ask').value = s; send(); } else openAsk(s); });
+      box.appendChild(b);
+    });
+  }
+  suggestions($('#sugg1'), false); suggestions($('#sugg2'), true);
+  $('#openAsk').addEventListener('click', function () { openAsk(); });
+  $('#fab').addEventListener('click', function () { openAsk(); });
+  $('#closeAsk').addEventListener('click', closeAsk);
+  $('#scrim').addEventListener('click', closeAsk);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('#drawer').hidden) closeAsk(); });
+  $('#askForm').addEventListener('submit', function (e) { e.preventDefault(); send(); });
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (es) { $('#fab').classList.toggle('away', es[0].isIntersecting); }).observe($('#askCard'));
   }
 
-  $('#startForm').addEventListener('submit', function (e) { e.preventDefault(); api('POST', '/api/p/start', { name: $('#name').value }).then(render).catch(function (err) { $('#name').setCustomValidity(err.message); $('#name').reportValidity(); }); });
+  /* onboarding + account */
+  $('#startForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    busy(e.submitter, api('POST', '/api/p/start', { name: $('#name').value })).then(render).catch(function (err) { $('#name').setCustomValidity(err.message); $('#name').reportValidity(); });
+  });
   $('#name').addEventListener('input', function () { this.setCustomValidity(''); });
-  $('#demoBtn').addEventListener('click', function () { api('POST', '/api/p/demo').then(render).catch(oops); });
+  $('#demoBtn').addEventListener('click', function () { busy(this, api('POST', '/api/p/demo')).then(render).catch(oops); });
   $('#outBtn').addEventListener('click', function () { api('POST', '/api/p/signout').then(function () { location.reload(); }); });
   $('#exportBtn').addEventListener('click', function () { window.open('/api/p/me/export', '_blank'); });
-  $('#covForm').addEventListener('submit', function (e) { e.preventDefault(); say('Checking your plan...'); api('POST', '/api/p/coverage', { card: $('#card').value, employer: $('#employer').value || null }).then(render).catch(oops); });
+  document.addEventListener('click', function (e) { var m = $('#menu'); if (m.open && !m.contains(e.target)) m.open = false; });
+  $('#covForm').addEventListener('submit', function (e) {
+    e.preventDefault(); say('Checking your plan...');
+    busy(e.submitter, api('POST', '/api/p/coverage', { card: $('#card').value, employer: $('#employer').value || null })).then(render).catch(oops);
+  });
   $('#pcpForm').addEventListener('submit', function (e) {
     e.preventDefault();
-    api('GET', '/api/p/providers?q=' + encodeURIComponent($('#pcpQ').value)).then(function (list) {
+    busy(e.submitter, api('GET', '/api/p/providers?q=' + encodeURIComponent($('#pcpQ').value))).then(function (list) {
       var box = $('#pcpResults'); box.textContent = '';
-      if (!list.length) box.appendChild(el('div', { class: 'empty', text: 'No match. Try a last name or the practice name.' }));
+      if (!list.length) box.appendChild(el('p', { class: 'empty', text: 'No match. Try a last name or the practice name.' }));
       list.forEach(function (p) {
-        var b = el('button', {}, [el('b', { text: p.name }), ' · ' + p.practice, el('div', { class: 'tiny muted', text: p.address + ' · ' + p.phone })]);
+        var b = el('button', { type: 'button', class: 'result' }, [
+          el('span', { class: 'avatar', text: initials(p.name), style: 'background:var(--violet-soft);color:var(--violet);border-radius:14px' }),
+          el('span', { class: 'who' }, [el('b', { text: p.name }), el('small', { text: p.practice + ' · ' + p.address })]),
+          el('span', { class: 'go' }, [el('span', { text: 'Choose' }), icon('arrow')])
+        ]);
         b.addEventListener('click', function () {
           say('Calling ' + p.practice + ' to double-check their details...');
-          api('POST', '/api/p/pcp', { sim_id: p.sim_id }).then(function (d) {
-            render(d);
-            if (d.corrections && d.corrections.length) say('Good thing I called: ' + d.corrections.join('; ') + '. ' + d.pj.say);
+          busy(b, api('POST', '/api/p/pcp', { sim_id: p.sim_id })).then(function (d) {
+            render(d); box.textContent = '';
+            if (d.corrections && d.corrections.length) { say('Good thing I called: ' + d.corrections.join('; ') + '. ' + d.pj.say); toast('Fixed ' + d.corrections.length + ' wrong detail' + (d.corrections.length === 1 ? '' : 's') + ' from the directory'); }
           }).catch(oops);
         });
         box.appendChild(b);
@@ -322,23 +876,16 @@ footer{margin-top:26px;font-size:13.5px;color:var(--ink-3)}
     }).catch(oops);
   });
   $('#draftBtn').addEventListener('click', function () {
-    api('POST', '/api/p/records').then(function (d) {
-      render(d); currentReq = d.request_id;
-      $('#letter').textContent = d.records_requests[0].letter; $('#signBox').hidden = false; $('#stepRecords').hidden = false;
-    }).catch(oops);
+    busy(this, api('POST', '/api/p/records')).then(function (d) { render(d); currentReq = d.request_id; $('#sig').focus(); }).catch(oops);
   });
   $('#signForm').addEventListener('submit', function (e) {
     e.preventDefault();
-    api('POST', '/api/p/records/' + currentReq + '/sign', { typed_name: $('#sig').value }).then(function (d) {
-      render(d); $('#signBox').hidden = true;
+    busy(e.submitter, api('POST', '/api/p/records/' + currentReq + '/sign', { typed_name: $('#sig').value })).then(function (d) {
+      render(d);
       var r = d.records_requests[0];
-      say(r.status === 'sent' ? 'Sent! They have until ' + r.due_by + ' to answer. I\'ll follow up if they don\'t.' : 'The fax didn\'t go through. I\'m checking the number with the office.');
+      var m = r.status === 'sent' ? 'Sent! They should answer by ' + r.due_by + ". I'll follow up if they don't." : "The fax didn't go through. I'm checking the number with the office.";
+      say(m); toast(m);
     }).catch(oops);
-  });
-  $('#askForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    var q = $('#ask').value.trim(); if (!q) return;
-    api('POST', '/api/p/ask', { text: q }).then(function (d) { render(d); renderAnswer(d.answer); $('#ask').value = ''; }).catch(oops);
   });
 
   api('GET', '/api/p/me').then(render).catch(function () { $('#welcome').hidden = false; });
