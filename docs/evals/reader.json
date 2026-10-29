@@ -1,0 +1,894 @@
+{
+ "overall": 0.9736,
+ "right": 1071,
+ "total": 1100,
+ "by_level": {
+  "clean": {
+   "right": 274,
+   "total": 275
+  },
+  "phone": {
+   "right": 274,
+   "total": 275
+  },
+  "messy": {
+   "right": 273,
+   "total": 275
+  },
+  "harsh": {
+   "right": 250,
+   "total": 275
+  }
+ },
+ "by_kind": {
+  "denial_letter": {
+   "right": 563,
+   "total": 572
+  },
+  "bill": {
+   "right": 254,
+   "total": 264
+  },
+  "eob": {
+   "right": 254,
+   "total": 264
+  }
+ },
+ "by_field": {
+  "bill.account": {
+   "right": 39,
+   "total": 44
+  },
+  "bill.amount_due": {
+   "right": 43,
+   "total": 44
+  },
+  "bill.biller": {
+   "right": 44,
+   "total": 44
+  },
+  "bill.lines": {
+   "right": 41,
+   "total": 44
+  },
+  "bill.patient_name": {
+   "right": 43,
+   "total": 44
+  },
+  "bill.service_date": {
+   "right": 44,
+   "total": 44
+  },
+  "denial_letter.appeal_by": {
+   "right": 44,
+   "total": 44
+  },
+  "denial_letter.appeal_days": {
+   "right": 44,
+   "total": 44
+  },
+  "denial_letter.appeals_fax": {
+   "right": 44,
+   "total": 44
+  },
+  "denial_letter.case_number": {
+   "right": 42,
+   "total": 44
+  },
+  "denial_letter.criteria": {
+   "right": 44,
+   "total": 44
+  },
+  "denial_letter.denied_on": {
+   "right": 44,
+   "total": 44
+  },
+  "denial_letter.expedited_available": {
+   "right": 44,
+   "total": 44
+  },
+  "denial_letter.member_id": {
+   "right": 41,
+   "total": 44
+  },
+  "denial_letter.member_name": {
+   "right": 44,
+   "total": 44
+  },
+  "denial_letter.plan": {
+   "right": 44,
+   "total": 44
+  },
+  "denial_letter.reason_category": {
+   "right": 40,
+   "total": 44
+  },
+  "denial_letter.reason_quote": {
+   "right": 44,
+   "total": 44
+  },
+  "denial_letter.service": {
+   "right": 44,
+   "total": 44
+  },
+  "eob.claim": {
+   "right": 40,
+   "total": 44
+  },
+  "eob.lines": {
+   "right": 39,
+   "total": 44
+  },
+  "eob.member_name": {
+   "right": 44,
+   "total": 44
+  },
+  "eob.payer": {
+   "right": 44,
+   "total": 44
+  },
+  "eob.service_date": {
+   "right": 44,
+   "total": 44
+  },
+  "eob.total_you_owe": {
+   "right": 43,
+   "total": 44
+  }
+ },
+ "date": "2026-10-29",
+ "model": "muse-spark-1.3",
+ "documents": 33,
+ "reads": 132,
+ "levels": [
+  "clean",
+  "phone",
+  "messy",
+  "harsh"
+ ],
+ "errors": 0,
+ "cost_usd": 0.605487,
+ "misses": [
+  {
+   "file": "denial-01.png",
+   "kind": "denial_letter",
+   "level": "clean",
+   "tags": [
+    "not_medically_necessary",
+    "deadline printed"
+   ],
+   "fields": {
+    "plan": true,
+    "member_name": true,
+    "member_id": false,
+    "service": true,
+    "denied_on": true,
+    "reason_category": true,
+    "reason_quote": true,
+    "criteria": true,
+    "appeal_by": true,
+    "appeal_days": true,
+    "appeals_fax": true,
+    "expedited_available": true,
+    "case_number": true
+   },
+   "misses": {
+    "member_id": "BWM-7000000"
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 27.72
+  },
+  {
+   "file": "denial-01.png",
+   "kind": "denial_letter",
+   "level": "phone",
+   "tags": [
+    "not_medically_necessary",
+    "deadline printed"
+   ],
+   "fields": {
+    "plan": true,
+    "member_name": true,
+    "member_id": true,
+    "service": true,
+    "denied_on": true,
+    "reason_category": false,
+    "reason_quote": true,
+    "criteria": true,
+    "appeal_by": true,
+    "appeal_days": true,
+    "appeals_fax": true,
+    "expedited_available": true,
+    "case_number": true
+   },
+   "misses": {
+    "reason_category": "missing_info"
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 28.52
+  },
+  {
+   "file": "denial-01.png",
+   "kind": "denial_letter",
+   "level": "messy",
+   "tags": [
+    "not_medically_necessary",
+    "deadline printed"
+   ],
+   "fields": {
+    "plan": true,
+    "member_name": true,
+    "member_id": true,
+    "service": true,
+    "denied_on": true,
+    "reason_category": false,
+    "reason_quote": true,
+    "criteria": true,
+    "appeal_by": true,
+    "appeal_days": true,
+    "appeals_fax": true,
+    "expedited_available": true,
+    "case_number": true
+   },
+   "misses": {
+    "reason_category": "missing_info"
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 26.8
+  },
+  {
+   "file": "denial-01.png",
+   "kind": "denial_letter",
+   "level": "harsh",
+   "tags": [
+    "not_medically_necessary",
+    "deadline printed"
+   ],
+   "fields": {
+    "plan": true,
+    "member_name": true,
+    "member_id": true,
+    "service": true,
+    "denied_on": true,
+    "reason_category": false,
+    "reason_quote": true,
+    "criteria": true,
+    "appeal_by": true,
+    "appeal_days": true,
+    "appeals_fax": true,
+    "expedited_available": true,
+    "case_number": true
+   },
+   "misses": {
+    "reason_category": "missing_info"
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 26.44
+  },
+  {
+   "file": "denial-02.png",
+   "kind": "denial_letter",
+   "level": "harsh",
+   "tags": [
+    "missing_info",
+    "days only"
+   ],
+   "fields": {
+    "plan": true,
+    "member_name": true,
+    "member_id": false,
+    "service": true,
+    "denied_on": true,
+    "reason_category": true,
+    "reason_quote": true,
+    "criteria": true,
+    "appeal_by": true,
+    "appeal_days": true,
+    "appeals_fax": true,
+    "expedited_available": true,
+    "case_number": false
+   },
+   "misses": {
+    "member_id": "SOM-71234567",
+    "case_number": "SIM-PA-90137"
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 25.19
+  },
+  {
+   "file": "denial-03.png",
+   "kind": "denial_letter",
+   "level": "harsh",
+   "tags": [
+    "not_medically_necessary",
+    "no deadline"
+   ],
+   "fields": {
+    "plan": true,
+    "member_name": true,
+    "member_id": true,
+    "service": true,
+    "denied_on": true,
+    "reason_category": true,
+    "reason_quote": true,
+    "criteria": true,
+    "appeal_by": true,
+    "appeal_days": true,
+    "appeals_fax": true,
+    "expedited_available": true,
+    "case_number": false
+   },
+   "misses": {
+    "case_number": "SM-PA-30174"
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 23.55
+  },
+  {
+   "file": "denial-08.png",
+   "kind": "denial_letter",
+   "level": "messy",
+   "tags": [
+    "not_medically_necessary",
+    "days only"
+   ],
+   "fields": {
+    "plan": true,
+    "member_name": true,
+    "member_id": true,
+    "service": true,
+    "denied_on": true,
+    "reason_category": false,
+    "reason_quote": true,
+    "criteria": true,
+    "appeal_by": true,
+    "appeal_days": true,
+    "appeals_fax": true,
+    "expedited_available": true,
+    "case_number": true
+   },
+   "misses": {
+    "reason_category": "not_sure"
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 5.18
+  },
+  {
+   "file": "denial-11.png",
+   "kind": "denial_letter",
+   "level": "harsh",
+   "tags": [
+    "not_sure",
+    "days only"
+   ],
+   "fields": {
+    "plan": true,
+    "member_name": true,
+    "member_id": false,
+    "service": true,
+    "denied_on": true,
+    "reason_category": true,
+    "reason_quote": true,
+    "criteria": true,
+    "appeal_by": true,
+    "appeal_days": true,
+    "appeals_fax": true,
+    "expedited_available": true,
+    "case_number": true
+   },
+   "misses": {
+    "member_id": "BWH-82345670"
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 2.79
+  },
+  {
+   "file": "bill-01.png",
+   "kind": "bill",
+   "level": "harsh",
+   "tags": [
+    "duplicate"
+   ],
+   "fields": {
+    "biller": true,
+    "patient_name": true,
+    "service_date": true,
+    "account": false,
+    "lines": true,
+    "amount_due": true
+   },
+   "misses": {
+    "account": "S94-AC-51000"
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 2.38
+  },
+  {
+   "file": "eob-01.png",
+   "kind": "eob",
+   "level": "harsh",
+   "tags": [
+    "duplicate"
+   ],
+   "fields": {
+    "payer": true,
+    "member_name": true,
+    "service_date": true,
+    "claim": true,
+    "lines": false,
+    "total_you_owe": true
+   },
+   "misses": {
+    "lines": [
+     {
+      "code": "99213",
+      "description": "Office visit, established patients",
+      "billed": 145.0,
+      "plan_paid": 92.9,
+      "you_owe": 20.0
+     },
+     {
+      "code": "80053",
+      "description": "Comprehensive metabolic panel",
+      "billed": 62.0,
+      "plan_paid": 14.0,
+      "you_owe": 20.0
+     }
+    ]
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 2.43
+  },
+  {
+   "file": "bill-02.png",
+   "kind": "bill",
+   "level": "harsh",
+   "tags": [
+    "out_of_network"
+   ],
+   "fields": {
+    "biller": true,
+    "patient_name": true,
+    "service_date": true,
+    "account": true,
+    "lines": false,
+    "amount_due": true
+   },
+   "misses": {
+    "lines": [
+     {
+      "code": "99214",
+      "description": "Office visit, established patient",
+      "amount": 328.0
+     },
+     {
+      "code": "85025",
+      "description": "Complete blood count",
+      "amount": 68.8
+     },
+     {
+      "code": "71046",
+      "description": "Chest X-ray, 2 views",
+      "amount": 288.0
+     }
+    ]
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 3.71
+  },
+  {
+   "file": "eob-02.png",
+   "kind": "eob",
+   "level": "harsh",
+   "tags": [
+    "out_of_network"
+   ],
+   "fields": {
+    "payer": true,
+    "member_name": true,
+    "service_date": true,
+    "claim": false,
+    "lines": true,
+    "total_you_owe": true
+   },
+   "misses": {
+    "claim": "SM-CL-80153"
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 2.54
+  },
+  {
+   "file": "bill-03.png",
+   "kind": "bill",
+   "level": "harsh",
+   "tags": [
+    "already_paid"
+   ],
+   "fields": {
+    "biller": true,
+    "patient_name": false,
+    "service_date": true,
+    "account": true,
+    "lines": true,
+    "amount_due": true
+   },
+   "misses": {
+    "patient_name": "Grace Apara"
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 2.22
+  },
+  {
+   "file": "eob-03.png",
+   "kind": "eob",
+   "level": "harsh",
+   "tags": [
+    "already_paid"
+   ],
+   "fields": {
+    "payer": true,
+    "member_name": true,
+    "service_date": true,
+    "claim": true,
+    "lines": false,
+    "total_you_owe": true
+   },
+   "misses": {
+    "lines": [
+     {
+      "code": "99293",
+      "description": "Office visit, new patient",
+      "billed": 230.0,
+      "plan_paid": 151.0,
+      "you_owe": 20.0
+     },
+     {
+      "code": "36415",
+      "description": "Blood draw (venipuncture)",
+      "billed": 25.0,
+      "plan_paid": 3.0,
+      "you_owe": 20.0
+     },
+     {
+      "code": "97110",
+      "description": "Therapeutic exercise, 15 min",
+      "billed": 85.0,
+      "plan_paid": 29.0,
+      "you_owe": 20.0
+     },
+     {
+      "code": "99213",
+      "description": "Office visit, established patient",
+      "billed": 145.0,
+      "plan_paid": 92.0,
+      "you_owe": 20.0
+     }
+    ]
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 2.11
+  },
+  {
+   "file": "bill-04.png",
+   "kind": "bill",
+   "level": "harsh",
+   "tags": [
+    "clean"
+   ],
+   "fields": {
+    "biller": true,
+    "patient_name": true,
+    "service_date": true,
+    "account": false,
+    "lines": true,
+    "amount_due": true
+   },
+   "misses": {
+    "account": "S04-AC-51123"
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 2.63
+  },
+  {
+   "file": "eob-04.png",
+   "kind": "eob",
+   "level": "harsh",
+   "tags": [
+    "clean"
+   ],
+   "fields": {
+    "payer": true,
+    "member_name": true,
+    "service_date": true,
+    "claim": false,
+    "lines": false,
+    "total_you_owe": true
+   },
+   "misses": {
+    "claim": "SM-CL-80259",
+    "lines": [
+     {
+      "code": "80053",
+      "description": "Comprehensive metabolic panel",
+      "billed": 62.0,
+      "plan_paid": 14.0,
+      "you_owe": 20.0
+     },
+     {
+      "code": "93000",
+      "description": "Electrocardiogram (EKG)",
+      "billed": 95.0,
+      "plan_paid": 23.0,
+      "you_owe": 20.0
+     }
+    ]
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 2.37
+  },
+  {
+   "file": "bill-05.png",
+   "kind": "bill",
+   "level": "harsh",
+   "tags": [
+    "duplicate"
+   ],
+   "fields": {
+    "biller": true,
+    "patient_name": true,
+    "service_date": true,
+    "account": false,
+    "lines": true,
+    "amount_due": false
+   },
+   "misses": {
+    "account": "SM-AC-51164",
+    "amount_due": 316.0
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 4.77
+  },
+  {
+   "file": "eob-05.png",
+   "kind": "eob",
+   "level": "harsh",
+   "tags": [
+    "duplicate"
+   ],
+   "fields": {
+    "payer": true,
+    "member_name": true,
+    "service_date": true,
+    "claim": true,
+    "lines": false,
+    "total_you_owe": false
+   },
+   "misses": {
+    "lines": [
+     {
+      "code": "85025",
+      "description": "Complete blood count",
+      "billed": 38.0,
+      "plan_paid": 9.0,
+      "you_owe": 20.0
+     },
+     {
+      "code": "71046",
+      "description": "Chest x-ray, 2 views",
+      "billed": 180.0,
+      "plan_paid": 41.0,
+      "you_owe": 20.0
+     },
+     {
+      "code": "G0438",
+      "description": "Annual wellness visit, first",
+      "billed": 260.0,
+      "plan_paid": 168.0,
+      "you_owe": 28.0
+     }
+    ],
+    "total_you_owe": 68.0
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 6.67
+  },
+  {
+   "file": "bill-07.png",
+   "kind": "bill",
+   "level": "harsh",
+   "tags": [
+    "out_of_network"
+   ],
+   "fields": {
+    "biller": true,
+    "patient_name": true,
+    "service_date": true,
+    "account": false,
+    "lines": true,
+    "amount_due": true
+   },
+   "misses": {
+    "account": "S04-AC-51246"
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 2.5
+  },
+  {
+   "file": "eob-07.png",
+   "kind": "eob",
+   "level": "harsh",
+   "tags": [
+    "out_of_network"
+   ],
+   "fields": {
+    "payer": true,
+    "member_name": true,
+    "service_date": true,
+    "claim": false,
+    "lines": true,
+    "total_you_owe": true
+   },
+   "misses": {
+    "claim": "S04-CL-80418"
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 2.08
+  },
+  {
+   "file": "bill-08.png",
+   "kind": "bill",
+   "level": "harsh",
+   "tags": [
+    "already_paid"
+   ],
+   "fields": {
+    "biller": true,
+    "patient_name": true,
+    "service_date": true,
+    "account": true,
+    "lines": false,
+    "amount_due": true
+   },
+   "misses": {
+    "lines": [
+     {
+      "code": "71048",
+      "description": "Chest X-ray, 2 views",
+      "amount": 180.0
+     },
+     {
+      "code": "G0438",
+      "description": "Annual wellness visit, first",
+      "amount": 260.0
+     },
+     {
+      "code": "99203",
+      "description": "Office visit, new patient",
+      "amount": 230.0
+     }
+    ]
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 1.74
+  },
+  {
+   "file": "bill-10.png",
+   "kind": "bill",
+   "level": "harsh",
+   "tags": [
+    "duplicate"
+   ],
+   "fields": {
+    "biller": true,
+    "patient_name": true,
+    "service_date": true,
+    "account": false,
+    "lines": true,
+    "amount_due": true
+   },
+   "misses": {
+    "account": "SM-AC-51369"
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 2.61
+  },
+  {
+   "file": "eob-10.png",
+   "kind": "eob",
+   "level": "harsh",
+   "tags": [
+    "duplicate"
+   ],
+   "fields": {
+    "payer": true,
+    "member_name": true,
+    "service_date": true,
+    "claim": false,
+    "lines": false,
+    "total_you_owe": true
+   },
+   "misses": {
+    "claim": "SM-CL-80577",
+    "lines": [
+     {
+      "code": "90471",
+      "description": "Vaccine administration",
+      "billed": 48.0,
+      "plan_paid": 17.0,
+      "you_owe": 20.0
+     },
+     {
+      "code": "99214",
+      "description": "Office visit, established patient",
+      "billed": 210.0,
+      "plan_paid": 142.0,
+      "you_owe": 20.0
+     }
+    ]
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 2.38
+  },
+  {
+   "file": "bill-11.png",
+   "kind": "bill",
+   "level": "harsh",
+   "tags": [
+    "out_of_network"
+   ],
+   "fields": {
+    "biller": true,
+    "patient_name": true,
+    "service_date": true,
+    "account": true,
+    "lines": false,
+    "amount_due": true
+   },
+   "misses": {
+    "lines": [
+     {
+      "code": "G0438",
+      "description": "Annual wellness visit, first",
+      "amount": 410.0
+     },
+     {
+      "code": "99203",
+      "description": "Office visit, new patient",
+      "amount": 368.0
+     },
+     {
+      "code": "36415",
+      "description": "Blood draw (venipuncture)",
+      "amount": 46.0
+     }
+    ]
+   },
+   "dropped": [],
+   "error": null,
+   "seconds": 3.35
+  }
+ ]
+}

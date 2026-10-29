@@ -28,8 +28,14 @@ os.environ.setdefault("PJ_AI_DAILY_REQUESTS", "200000")
 os.environ.setdefault("PJ_AI_ACCOUNT_REQUESTS", "200000")
 
 from src.config import role_cfg  # noqa: E402
+from src.eval import evals_md  # noqa: E402
 from src.eval import gym as runner  # noqa: E402
 from src.sim import gym  # noqa: E402
+
+
+def runner_provider() -> str:
+    from src.config import provider_for
+    return provider_for("office")
 
 
 def main() -> int:
@@ -41,15 +47,22 @@ def main() -> int:
     ap.add_argument("--caller-rpm", type=int, default=1500, help="Meta's limit is 3,000 RPM per team; keep headroom")
     ap.add_argument("--office-rpm", type=int, default=600)
     ap.add_argument("--pilot", action="store_true", help="small run: print cost per call and the projection")
+    ap.add_argument("--kinds", default="", help="comma-separated persona kinds: re-run only those (a check, not the headline run)")
     ap.add_argument("--project", type=int, default=600, help="calls to project the spend for")
     ap.add_argument("--max-usd", type=float, default=25.0)
     ap.add_argument("--per-call-usd", type=float, default=None, help="measured pilot cost per call, to gate a big run")
     a = ap.parse_args()
 
+    if evals_md.over_limit():
+        print(f"refusing: a partner credit is at 70%: {evals_md.spent()}. Ask first.")
+        return 3
     if a.per_call_usd is not None and a.per_call_usd * a.n > a.max_usd:
         print(f"refusing: {a.n} calls x ${a.per_call_usd:.4f} = ${a.per_call_usd * a.n:.2f} > ${a.max_usd:.2f}. Ask first.")
         return 3
     personas = gym.make_personas(a.start + a.n, a.seed)[a.start:]
+    if a.kinds:
+        personas = [p for p in personas if p["kind"] in a.kinds.split(",")]
+        a.pilot, a.n = True, len(personas)  # a targeted re-check never replaces the headline report
     cfg = {"caller": role_cfg("caller").model, "office": role_cfg("office").model, "office_host": role_cfg("office").base_url}
     print(f"{a.n} calls · caller {cfg['caller']} (Meta) · receptionists {cfg['office']} · concurrency {a.concurrency}")
     t0, n_done = time.time(), [0]
@@ -79,6 +92,10 @@ def main() -> int:
         (ROOT / "docs" / "evals" / "gym-report.json").write_text(json.dumps(rep, indent=1))
     else:
         (out / f"{run_id}.report.json").write_text(json.dumps(rep, indent=1))
+    if os.getenv("MOCK_LLM") != "1":
+        evals_md.log_spend("call gym" + (" check" if a.pilot else ""), f"{len(rows)} calls, seed {a.seed}" + (f", kinds {a.kinds}" if a.kinds else ""),
+                           by_provider={"meta": rep["cost_usd"]["caller_meta"], runner_provider(): rep["cost_usd"]["office_partner"]})
+        evals_md.write()
     print(f"transcripts: {(out / run_id).relative_to(ROOT)}.jsonl.gz")
     return 0 if rep["safety_pass_rate"] == 1.0 else 1
 

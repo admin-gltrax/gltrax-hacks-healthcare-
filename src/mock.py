@@ -49,6 +49,8 @@ class MockLLM:
             return self._writer(first)
         if "[PJ REVIEWER]" in first:
             return self._reviewer(first)
+        if "[PJ JUDGE]" in first:
+            return self._judge(first)
         if "[PJ CHAT]" in first:
             return self._pj(messages, tools)
         if tools:
@@ -341,6 +343,13 @@ class MockLLM:
                 + "\n\nPlease send me your decision in writing, and a copy of anything you relied on. "
                   "Thank you for your prompt attention to this request.")
         return ChatResult(content=json.dumps({"subject": f"Request for review: {what}", "body": body}))
+
+    def _judge(self, prompt: str) -> ChatResult:
+        """Both judges pass everything, except the open judge is stricter on courtesy for long calls (a planted disagreement)."""
+        rubric = json.JSONDecoder().raw_decode(prompt[prompt.index("RUBRIC:") + 7:].strip())[0]
+        long_call = prompt.count('"speaker"') > 14
+        return ChatResult(content=json.dumps({k: {"pass": not (self.role == "judge_open" and k == "courtesy" and long_call),
+                                                  "why": "mock verdict"} for k in rubric}))
 
     def _reviewer(self, prompt: str) -> ChatResult:
         """Round 1: one fair objection the letter can answer, plus a made-up rule (the guard drops it).

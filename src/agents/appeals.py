@@ -129,10 +129,20 @@ def check_letter(body: str, facts: dict) -> list[dict]:
         {"check": "Names the member ID", "ok": bool(facts.get("member_id")) and facts["member_id"].lower() in body.lower()},
         {"check": "Names what was denied or billed", "ok": any(w in body.lower() for w in _keywords(facts.get("subject_of", "")))},
         {"check": "Every number comes from the facts", "ok": not numbers, **({"detail": "not in facts: " + ", ".join(sorted(set(numbers))[:5])} if numbers else {})},
-        {"check": "No medical advice or dosing", "ok": not _ADVICE.search(body)},
+        {"check": "No medical advice or dosing", "ok": not _advice(body, blob)},
         {"check": "Reasonable length", "ok": 250 <= len(body) <= 4500},
     ]
     return checks
+
+
+def _advice(body: str, facts_blob: str) -> bool:
+    """Dosing or start/stop language. A match quoting the facts word for word ("takes 5 or more
+    medicines", from the record) is a fact, not advice."""
+    for m in _ADVICE.finditer(body):
+        phrase = " ".join(re.findall(r"[a-z0-9]+", body[m.start():m.end() + 30].lower())[1:4])  # "5 or more"...
+        if not phrase or phrase not in " ".join(re.findall(r"[a-z0-9]+", facts_blob)):
+            return True
+    return False
 
 
 def _keywords(s: str) -> list[str]:

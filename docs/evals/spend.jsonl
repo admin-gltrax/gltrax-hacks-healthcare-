@@ -1,0 +1,11 @@
+{"date": "2026-10-29 04:12", "run": "smoke", "detail": "1 chat + 1 JSON request on each partner (Baseten returned 403)", "usd": {"fireworks": 0.0012}}
+{"date": "2026-10-29 04:12", "run": "reviewer live", "detail": "8 stress-test runs (full appeal on Meta + reviewer on Fireworks)", "usd": {"meta": 0.6866, "fireworks": 0.0505}}
+{"date": "2026-10-29 04:12", "run": "gym pilot", "detail": "10 calls, seed 7", "usd": {"meta": 0.2392, "fireworks": 0.0685}}
+{"date": "2026-10-29 04:15", "run": "reader eval", "detail": "132 vision reads", "usd": {"meta": 0.6055}}
+{"date": "2026-10-29 04:15", "run": "reader eval (lost)", "detail": "estimate: 33 harsh-level reads; a piped command killed the script before it saved (33 x $0.0046)", "usd": {"meta": 0.152}}
+{"date": "2026-10-29 04:16", "run": "call gym", "detail": "600 calls, seed 7 (first headline run: 3 safety failures)", "usd": {"meta": 14.2226, "fireworks": 3.9827}}
+{"date": "2026-10-29 04:20", "run": "call gym check", "detail": "112 calls, seed 7, kinds spanish_first,ai_refuser,mishears", "usd": {"meta": 2.7057, "fireworks": 0.834}}
+{"date": "2026-10-29 04:21", "run": "reviewer live", "detail": "stress test, scenario thin", "usd": {"meta": 0.0858, "fireworks": 0.005}}
+{"date": "2026-10-29 04:21", "run": "reviewer live", "detail": "stress test, scenario strong-standard", "usd": {"meta": 0.0962, "fireworks": 0.0071}}
+{"date": "2026-10-29 04:21", "run": "reviewer live", "detail": "stress test, scenario full", "usd": {"meta": 0.0933, "fireworks": 0.0071}}
+{"date": "2026-10-29 04:23", "run": "reviewer live", "detail": "stress test, scenario full", "usd": {"meta": 0.0895, "fireworks": 0.0045}}

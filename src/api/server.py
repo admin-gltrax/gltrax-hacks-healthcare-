@@ -151,6 +151,22 @@ def swarm_view():
     return FileResponse(STATIC / "index.html")
 
 
+@app.get("/gym")
+def gym_view():
+    """The proving ground: the call gym, cross-family judges, the reader eval, the voice loop."""
+    return FileResponse(STATIC / "gym.html")
+
+
+EVALS = Path(__file__).resolve().parents[2] / "docs" / "evals"
+
+
+@app.get("/api/evals")
+def evals():
+    """The latest committed eval reports (fictional data only), plus one sample call per gym persona."""
+    from ..eval.reports import latest
+    return latest(EVALS)
+
+
 @app.get("/pj.webp")
 @app.get("/favicon.ico", include_in_schema=False)
 def pj_image():

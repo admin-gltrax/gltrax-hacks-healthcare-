@@ -24,8 +24,9 @@ sys.path.insert(0, str(ROOT))
 os.environ.setdefault("PJ_BACKGROUND", "0")
 os.environ.setdefault("PJ_AI_ACCOUNT_REQUESTS", "400")
 
-from src.agents import ai, workflows  # noqa: E402
+from src.agents import ai, appeals, workflows  # noqa: E402
 from src.config import role_cfg  # noqa: E402
+from src.eval import evals_md  # noqa: E402
 from src.eval.spend import USAGE  # noqa: E402
 from src.patient.demo import build_demo  # noqa: E402
 from src.patient.models import HealthRecord, Patient  # noqa: E402
@@ -80,10 +81,14 @@ def main() -> int:
     scenario = "-".join(k for k in ("thin", "strong", "standard") if getattr(a, k)) or "full"
     out = {"scenario": scenario, "seconds": secs, "reviewer": role_cfg("reviewer").model,
            "provider": role_cfg("reviewer").base_url, "steps": [s.model_dump() for s in wf.steps], "review": rv,
-           "letter": wf.letter, "usage": USAGE.snapshot(), "cost_usd": USAGE.cost(), "cost_by_provider": USAGE.by_provider()}
+           "letter": wf.letter, "facts": workflows._pa_facts(wf, rec)[0],
+           "evidence": [e["what"] for e in appeals.evidence_for(rec, wf.calls)],
+           "usage": USAGE.snapshot(), "cost_usd": USAGE.cost(), "cost_by_provider": USAGE.by_provider()}
     path = ROOT / "docs" / "evals" / f"reviewer-{out['scenario']}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, indent=1))
+    evals_md.log_spend("reviewer live", f"stress test, scenario {scenario}", USAGE)
+    evals_md.write()
     print(f"\n{secs}s  cost ${USAGE.cost():.4f}  {USAGE.by_provider()}  -> {path.relative_to(ROOT)}")
     return 0
 

@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proving ground · PJ Health</title>
+<link rel="icon" href="/pj.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0E1318; --panel:#161E26; --line:#26313C; --text:#ECF0F4; --mute:#8D98A6;
+    --ok:#5CC98F; --warn:#F2B24C; --bad:#F07B74; --blue:#2EC4B2; --violet:#A88CF5; --orange:#FF8A63;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#F7F4EE; --panel:#fff; --line:#E8E2D8; --text:#1A2230; --mute:#5B6474;
+      --ok:#2B9361; --warn:#A86400; --bad:#C93C37; --blue:#0F766E; --violet:#7653D1; --orange:#B5441F; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.5 "Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,sans-serif; }
+  header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; padding:14px 20px; border-bottom:1px solid var(--line); }
+  header a { color:inherit; text-decoration:none; display:flex; gap:10px; align-items:center; }
+  header img { width:32px; height:32px; border-radius:10px; object-fit:cover; box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--orange); }
+  h1 { font-size:16px; margin:0; }
+  .sim { font-size:11px; font-weight:600; padding:3px 8px; border-radius:99px; background:color-mix(in srgb,var(--warn) 20%,transparent); color:var(--warn); border:1px solid color-mix(in srgb,var(--warn) 40%,transparent); }
+  .grow { flex:1; }
+  nav a { color:var(--mute); font-size:13px; margin-left:14px; text-decoration:none; }
+  main { max-width:1080px; margin:0 auto; padding:20px 16px 60px; }
+  section { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 20px; margin-bottom:18px; }
+  h2 { font-size:18px; margin:0 0 4px; }
+  .lede { color:var(--mute); margin:0 0 14px; max-width:760px; }
+  .tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:14px; }
+  .tile { border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+  .tile b { display:block; font-size:22px; font-weight:800; letter-spacing:-.3px; }
+  .tile span { color:var(--mute); font-size:12px; }
+  .tile.good b { color:var(--ok); }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { text-align:left; padding:6px 8px; border-top:1px solid var(--line); vertical-align:top; }
+  th { color:var(--mute); font-weight:600; border-top:0; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .scroll { overflow-x:auto; }
+  .bar { height:6px; border-radius:6px; background:var(--line); min-width:60px; }
+  .bar i { display:block; height:100%; border-radius:6px; background:var(--blue); }
+  .cols { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; }
+  @media (max-width:760px) { .cols { grid-template-columns:minmax(0,1fr); } }
+  .ok { color:var(--ok); } .bad { color:var(--bad); } .mute { color:var(--mute); }
+  select { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:6px 10px; font:inherit; max-width:100%; }
+  .tx { margin-top:10px; border:1px solid var(--line); border-radius:12px; padding:10px 12px; max-height:420px; overflow:auto; font-size:13px; }
+  .tx p { margin:4px 0; }
+  .tx .pj b { color:var(--blue); } .tx .office b { color:var(--violet); } .tx .hold { color:var(--mute); font-style:italic; }
+  .chip { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; border:1px solid var(--line); margin-right:4px; }
+  .chip.ok { border-color:color-mix(in srgb,var(--ok) 50%,transparent); }
+  .chip.bad { border-color:color-mix(in srgb,var(--bad) 50%,transparent); }
+  .fine { color:var(--mute); font-size:12px; }
+  .letter { white-space:pre-wrap; border:1px solid var(--line); border-radius:10px; padding:10px; font-size:12.5px; max-height:280px; overflow:auto; }
+  details > summary { cursor:pointer; font-weight:600; margin:6px 0; }
+  .empty { color:var(--mute); font-style:italic; }
+  ul.obj { padding-left:18px; margin:6px 0; }
+  code { font-size:12px; }
+</style>
+</head>
+<body>
+<header>
+  <a href="/"><img src="/pj.webp" alt=""><h1>Proving ground</h1></a>
+  <span class="sim">Simulated offices · synthetic data</span>
+  <span class="grow"></span>
+  <nav><a href="/">Home</a><a href="/swarm">Swarm</a></nav>
+</header>
+<main>
+  <section id="gym">
+    <h2>Call gym</h2>
+    <p class="lede">Hundreds of fictional doctor's offices, each a different kind of hard call, against PJ's real caller. The caller runs on
+      Meta's Muse Spark; the receptionists run on Muse Spark Open (open weights) on partner credits. Every call is scored in code.</p>
+    <div id="gymBody"><p class="empty">Loading…</p></div>
+  </section>
+  <section id="rev">
+    <h2>Stress test: the insurer tries to deny the appeal first</h2>
+    <p class="lede">Muse Spark Open plays the plan's medical reviewer and argues for denial using only the plan's own rules. Muse Spark (on Meta)
+      revises. Objections must cite real rules; revisions must pass the letter checks; the reviewer never writes the letter.</p>
+    <div id="revBody"><p class="empty">No stress-test run committed yet.</p></div>
+  </section>
+  <section id="judges">
+    <h2>Cross-family judges</h2>
+    <p class="lede">Two judges from different deployments score the same calls and appeals on a fixed rubric: Muse Spark on Meta, and Muse Spark Open
+      on a partner. Where they disagree, a person looks.</p>
+    <div id="judgeBody"><p class="empty">No judge run committed yet.</p></div>
+  </section>
+  <section id="reader">
+    <h2>Reader eval</h2>
+    <p class="lede">Muse Spark vision reads fictional denial letters, bills and EOBs, clean and as messy phone photos. Field accuracy against ground truth.</p>
+    <div id="readerBody"><p class="empty">No reader run committed yet.</p></div>
+  </section>
+  <section id="voice">
+    <h2>Voice loop</h2>
+    <p class="lede">Simulated call, synthetic voices. Speech-to-text on the caller's side is Meta's Muse Voice Transcribe.</p>
+    <div id="voiceBody"><p class="empty">No voice run committed yet.</p></div>
+  </section>
+  <p class="fine">Every office, person, plan, phone number and ID on this page is fictional (555-01xx numbers, SIM- IDs). Nothing here is a real call.</p>
+</main>
+<script>
+(function () {
+  function el(tag, attrs, kids) {
+    var n = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) { if (attrs[k] == null) return; if (k === 'text') n.textContent = attrs[k]; else if (k === 'class') n.className = attrs[k]; else n.setAttribute(k, attrs[k]); });
+    (kids || []).forEach(function (c) { if (c == null) return; n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+    return n;
+  }
+  function pct(x) { return (x * 100).toFixed(x === 1 ? 0 : 1) + '%'; }
+  function words(k) { return k.replace(/_/g, ' '); }
+  function tile(v, label, good) { return el('div', { class: 'tile' + (good ? ' good' : '') }, [el('b', { text: v }), el('span', { text: label })]); }
+  function table(head, rows) {
+    return el('div', { class: 'scroll' }, [el('table', {}, [el('thead', {}, [el('tr', {}, head.map(function (h, i) { return el('th', { text: h, class: i ? 'n' : null }); }))]),
+      el('tbody', {}, rows.map(function (r) { return el('tr', {}, r.map(function (c, i) { return el('td', { class: i ? 'n' : null }, [typeof c === 'string' ? c : c]); })); }))])]);
+  }
+  function bar(x) { var b = el('div', { class: 'bar' }, [el('i')]); b.firstChild.style.width = Math.round(x * 100) + '%'; return b; }
+
+  function gym(d) {
+    var r = d.gym_report, box = document.getElementById('gymBody'); box.textContent = '';
+    if (!r) { box.appendChild(el('p', { class: 'empty', text: 'No gym run committed yet.' })); return; }
+    box.appendChild(el('div', { class: 'tiles' }, [
+      tile(String(r.completed), 'calls completed (' + r.errors + ' errored)'),
+      tile(pct(r.safety_pass_rate), 'safety, every check', r.safety_pass_rate === 1),
+      tile(pct(r.success_rate), 'reached the right outcome'),
+      tile(r.latency_s.p50 + ' s', 'p50 call (p95 ' + r.latency_s.p95 + ' s)'),
+      tile(String(r.requests_per_call.mean), 'model requests per call'),
+      tile('$' + r.cost_usd.per_call.toFixed(3), 'per call ($' + r.cost_usd.total.toFixed(2) + ' total)')]));
+    var cols = el('div', { class: 'cols' });
+    cols.appendChild(el('div', {}, [el('h3', { text: 'Safety (must be 100%)' }), table(['Check', 'Passed'], Object.keys(r.safety_checks).map(function (k) {
+      var v = r.safety_checks[k], p = v.split('/'); return [words(k), el('span', { class: p[0] === p[1] ? 'ok' : 'bad', text: v })]; }))]));
+    cols.appendChild(el('div', {}, [el('h3', { text: 'By persona' }), table(['Persona', 'Success', ''], Object.keys(r.success_by_persona).map(function (k) {
+      var v = r.success_by_persona[k]; return [words(k), v.success + '/' + (v.calls - v.errors), bar(v.rate)]; }))]));
+    box.appendChild(cols);
+    box.appendChild(el('p', { class: 'fine', text: 'Run ' + r.run + ' · caller ' + r.models.caller + ' (Meta) · receptionists ' + r.models.office +
+      ' · caller prompt ' + r.caller_prompt_sha + ' · ' + r.wall_seconds + ' s wall at concurrency ' + r.concurrency + '.' }));
+    var s = d.gym_samples || [];
+    if (!s.length) return;
+    var pick = el('select', { 'aria-label': 'Pick a persona' }, s.map(function (x, i) { return el('option', { value: String(i), text: words(x.kind) + (x.success ? '' : ' (not won)') }); }));
+    var tx = el('div', { class: 'tx', 'aria-live': 'polite' });
+    function show() {
+      var x = s[+pick.value]; tx.textContent = '';
+      tx.appendChild(el('p', {}, Object.keys(x.safety).map(function (k) { return el('span', { class: 'chip ' + (x.safety[k] ? 'ok' : 'bad'), text: (x.safety[k] ? '✓ ' : '✗ ') + words(k) }); })));
+      tx.appendChild(el('p', { class: 'fine', text: 'Outcome: ' + words(x.outcome) + (x.reference && x.reference !== 'not confirmed' ? ' · reference ' + x.reference : '') + ' · ' + x.seconds + ' s' }));
+      x.transcript.forEach(function (t) {
+        var who = { pj: 'PJ: ', office: 'Office: ' }[t.speaker];
+        tx.appendChild(el('p', { class: t.speaker }, [who ? el('b', { text: who }) : null, t.text]));
+      });
+    }
+    pick.addEventListener('change', show);
+    box.appendChild(el('h3', { text: 'Listen in: one call per persona' }));
+    box.appendChild(pick); box.appendChild(tx); show();
+  }
+
+  function rev(d) {
+    var r = d.reviewer_strong_standard || d.reviewer_full, box = document.getElementById('revBody');
+    if (!r || !r.review || !r.review.rounds) return;
+    box.textContent = '';
+    var rv = r.review;
+    box.appendChild(el('div', { class: 'tiles' }, [tile(String(rv.rounds.length), 'review rounds'), tile(rv.passed ? 'No reason left' : (rv.todos || []).length + ' still stand', 'reviewer\'s final verdict', rv.passed),
+      tile('$' + r.cost_usd.toFixed(3), 'whole appeal, every model')]));
+    rv.rounds.forEach(function (x) {
+      box.appendChild(el('h3', { text: 'Round ' + x.round + ': ' + (x.verdict === 'approve' ? 'no reason to deny' : 'would deny') }));
+      if (x.objections.length) box.appendChild(el('ul', { class: 'obj' }, x.objections.map(function (o) { return el('li', {}, [el('b', { text: o.rule_id + ' ' }), o.reason, el('span', { class: 'mute', text: ' (' + (o.fix === 'letter' ? 'the letter can answer it' : 'needs evidence') + ')' })]); })));
+      if (x.revision) box.appendChild(el('details', {}, [el('summary', { text: 'Revision ' + (x.revision.accepted ? '(passed every letter check)' : '(rejected by the letter checks)') }), el('div', { class: 'letter', text: x.revision.body })]));
+    });
+    box.appendChild(el('details', {}, [el('summary', { text: 'The first draft (before the stress test)' }), el('div', { class: 'letter', text: rv.original })]));
+    box.appendChild(el('p', { class: 'fine', text: 'Reviewer ' + r.reviewer + '. Scenario "' + r.scenario + '": a file whose records meet the rules, starting from the generic standard letter.' }));
+  }
+
+  function judges(d) {
+    var j = d.judges, box = document.getElementById('judgeBody');
+    if (!j) return;
+    box.textContent = '';
+    box.appendChild(el('div', { class: 'tiles' }, [tile(String(j.items), 'items judged by both'), tile(j.kappa.toFixed(2), 'Cohen\'s kappa (pass/fail)', j.kappa >= 0.6),
+      tile(pct(j.agreement), 'raw agreement'), tile(String(j.disagreements.length), 'sent for human review')]));
+    if (j.per_criterion) box.appendChild(table(['Rubric item', 'Kappa', 'Agree'], Object.keys(j.per_criterion).map(function (k) { var v = j.per_criterion[k]; return [words(k), v.kappa == null ? 'n/a' : v.kappa.toFixed(2), pct(v.agreement)]; })));
+    if (j.disagreements.length) box.appendChild(el('details', {}, [el('summary', { text: 'Disagreements for human review' }), el('ul', { class: 'obj' }, j.disagreements.slice(0, 30).map(function (x) {
+      return el('li', {}, [el('b', { text: x.item + ' · ' + words(x.criterion) + ': ' }), 'Meta says ' + (x.meta ? 'pass' : 'fail') + ', open says ' + (x.open ? 'pass' : 'fail') + '. ', el('span', { class: 'mute', text: (x.why_meta || '') + ' / ' + (x.why_open || '') })]); }))]));
+    box.appendChild(el('p', { class: 'fine', text: 'Judges: ' + j.models.meta + ' and ' + j.models.open + '. Cost $' + j.cost_usd.toFixed(3) + '.' }));
+  }
+
+  function reader(d) {
+    var r = d.reader, box = document.getElementById('readerBody');
+    if (!r) return;
+    box.textContent = '';
+    box.appendChild(el('div', { class: 'tiles' }, [tile(String(r.documents), 'fictional documents'), tile(pct(r.overall), 'field accuracy, all levels'),
+      tile(String(r.reads), 'reads (documents x messiness)')]));
+    box.appendChild(table(['Messiness', 'Fields right', 'Accuracy'], Object.keys(r.by_level).map(function (k) { var v = r.by_level[k]; return [k, v.right + '/' + v.total, pct(v.right / v.total)]; })));
+    box.appendChild(el('details', {}, [el('summary', { text: 'By field' }), table(['Field', 'Fields right', 'Accuracy'], Object.keys(r.by_field).map(function (k) { var v = r.by_field[k]; return [k, v.right + '/' + v.total, pct(v.right / v.total)]; }))]));
+    box.appendChild(el('p', { class: 'fine', text: 'Model ' + r.model + ' · ' + r.date + ' · cost $' + r.cost_usd.toFixed(3) + '.' }));
+  }
+
+  function voice(d) {
+    var v = d.voice, box = document.getElementById('voiceBody');
+    if (!v) return;
+    box.textContent = '';
+    box.appendChild(el('div', { class: 'tiles' }, Object.keys(v.wer || {}).map(function (k) { return tile(pct(v.wer[k]), 'word error rate: ' + words(k)); })));
+    if (v.note) box.appendChild(el('p', { class: 'fine', text: v.note }));
+  }
+
+  fetch('/api/evals').then(function (r) { return r.json(); }).then(function (d) { gym(d); rev(d); judges(d); reader(d); voice(d); })
+    .catch(function () { document.getElementById('gymBody').textContent = 'Could not load the reports.'; });
+})();
+</script>
+</body>
+</html>

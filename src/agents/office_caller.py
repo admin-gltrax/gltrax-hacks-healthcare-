@@ -48,6 +48,12 @@ TOOLS = [
 ]
 
 _REF = re.compile(r"R-\d{5}")
+_SPELLED_REF = re.compile(r"\bR[\s.-]*((?:\d[\s.-]?){4}\d)\b", re.I)
+
+
+def refs_said(text: str) -> list[str]:
+    """Reference numbers in what the office said, however they were spelled out ("R-9-3-1-2-0" counts as R-93120)."""
+    return [f"R-{re.sub(r'[^0-9]', '', m)}" for m in _SPELLED_REF.findall(text)]
 
 
 def system_prompt(who: dict, purpose_label: str, details: str) -> str:
@@ -165,7 +171,7 @@ class OfficeCall:
         office_said = " ".join(t["text"] for t in self.transcript if t["speaker"] == "office")
         pj_said = [t["text"] for t in self.transcript if t["speaker"] == "pj" and not t["text"].startswith("[")]
         r = self.result or {}
-        heard_refs = _REF.findall(office_said)
+        heard_refs = refs_said(office_said)
         ref = r.get("reference") if r.get("reference") in heard_refs else None
         checks = scan_utterances(pj_said, leverage_available=False)
         checks["disclosed_ai_to_each_person"] = bool(self._first_to_each) and all(disclosed_ai(u) for u in self._first_to_each)
