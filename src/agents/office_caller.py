@@ -60,9 +60,10 @@ def system_prompt(who: dict, purpose_label: str, details: str) -> str:
 
 class OfficeCall:
     def __init__(self, practice: str, phone: str | None, purpose: str, details: str, who: dict,
-                 caller_llm, office_llm, on_line: Callable[[str, str], None] | None = None, max_turns: int = 26):
+                 caller_llm, office_llm, on_line: Callable[[str, str], None] | None = None, max_turns: int = 26,
+                 line: pcp_office.OfficeLine | None = None):
         self.practice, self.phone, self.who, self.details = practice, phone, who, details
-        self.line = pcp_office.OfficeLine(practice, purpose, details, who, office_llm)
+        self.line = line or pcp_office.OfficeLine(practice, purpose, details, who, office_llm)  # the call gym passes its own
         self.purpose = self.line.purpose
         self.llm = caller_llm
         self.on_line = on_line or (lambda s, t: None)
