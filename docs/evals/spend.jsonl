@@ -19,3 +19,4 @@
 {"date": "2026-10-29 04:48", "run": "call gym", "detail": "600 calls, seed 9", "usd": {"meta": 14.9481, "fireworks": 4.1483}}
 {"date": "2026-10-29 12:02", "run": "voice call (lost)", "detail": "estimate: 1 call; the audio writer crashed before saving", "usd": {"meta": 0.03, "fireworks": 0.01}}
 {"date": "2026-10-29 12:07", "run": "voice call", "detail": "1 call (mishears), 136 s of audio", "usd": {"meta": 0.0246, "fireworks": 0.0102}}
+{"date": "2026-10-29 12:13", "run": "voice call", "detail": "1 call (mishears), 130 s of audio", "usd": {"meta": 0.0315, "fireworks": 0.0118}}
