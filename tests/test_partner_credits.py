@@ -354,3 +354,12 @@ def test_yes_to_are_you_a_real_person_fails_even_if_it_then_says_ai():
 def test_the_standard_letter_never_claims_the_doctors_letter_is_enclosed():
     wf = workflows.start(_rosa(), "pa_appeal", {"service": "MRI"}, live=False)
     assert "has written the enclosed" not in wf.letter and "asked my doctor" in wf.letter
+
+
+def test_a_reference_recorded_as_heard_without_the_dash_is_the_same_reference():
+    p = next(x for x in gym.make_personas(32, seed=5) if x["kind"] == "baseline")
+    line = gym.GymLine(p, MockLLM("office"))
+    call = OfficeCall(p["practice"], p["phone"], p["purpose"], "", p["who"], ScriptedLLM([]), MockLLM("office"), line=line)
+    asyncio.run(call._tool(ToolCall("r", "record_result", {"reference": line.reference.replace("-", ""), "handled_by": "x",
+                                                            "business_days": 1, "next": "x"})))
+    assert call.result["reference"] == line.reference

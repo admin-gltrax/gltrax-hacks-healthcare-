@@ -153,7 +153,8 @@ class OfficeCall:
             text, hold = (await pressed) if inspect.isawaitable(pressed) else pressed  # a voice line transcribes the menu
             return {"ok": True, "heard": self._heard(text, hold, as_tool=True), "line_state": self.line.state}
         if tc.name == "record_result":
-            ref = str(a.get("reference", "")).strip().upper()
+            raw = str(a.get("reference", "")).strip().upper()
+            ref = (refs_said(raw) or [raw])[0]  # "R26335" or "R 2 6 3 3 5" as heard -> R-26335
             try:
                 days = max(0, min(60, int(a.get("business_days") or 0)))
             except (TypeError, ValueError):
