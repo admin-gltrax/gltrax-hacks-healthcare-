@@ -53,7 +53,7 @@ Meta Global AI Developer Hackathon (Meta + Cerebral Valley).
 
 ## Status (honest)
 
-`MOCK_LLM=1 HOLD_SCALE=0 pytest -q` passes **84 tests**.
+`MOCK_LLM=1 HOLD_SCALE=0 pytest -q` passes **125 tests**.
 
 **Family care and agent workflows (Oct 29). Offline, deterministic, simulated counterparties.**
 
@@ -67,7 +67,26 @@ Meta Global AI Developer Hackathon (Meta + Cerebral Valley).
 | Demo family: Alex, mom Rosa (78, Medicare Advantage, POA), son Leo (9, Medicaid) | `src/patient/demo.py` |
 | Tests | `tests/test_family.py` |
 
-There is **no telephony**: office calls are simulated. The live swarm worker (`src/agents/worker.py`) is the agent that would drive a real line.
+**PJ's crew on Meta models (Oct 29), verified live:**
+
+| Agent | Model | Files | Live result |
+|---|---|---|---|
+| Caller: phones the PCP office (menu, hold, transfer), refuses data fishing, reference must be heard on the call | Muse Spark (and Spark receptionists) | `src/agents/office_caller.py`, `src/sim/pcp_office.py` (`OfficeLine`) | 12–22 s, 11–17 requests, every check passed |
+| Reader: denial letter, bill, EOB from a photo; validated; image not kept | Spark vision, JSON schema | `src/agents/reader.py`, `src/sim/documents.py` | `scripts/eval_reader.py` 25/25 fields |
+| Strategist: evidence → the plan's own rules; invented citations dropped | Muse Wonder | `src/agents/appeals.py` | ok |
+| Writer: appeal and dispute letters; `check_letter` gates the signature | Spark | `src/agents/appeals.py` | 5/5 checks |
+| PJ's chat: tools `find_care`, `propose_job`; crisis and medical pre-filters; reply scanner | Spark | `src/agents/guide.py` (`ask_live`) | `scripts/redteam_pj.py` 20/20 |
+
+- `src/agents/ai.py` meters every patient-layer request (`PJ_AI_DAILY_REQUESTS`, `PJ_AI_ACCOUNT_REQUESTS`), refuses `-contributor` models, and every model step falls back to the rules (`engine: "rules"` on screen).
+- Model steps return `workflows.Pending` and run in a background thread (`PJ_BACKGROUND`, auto = on unless mock); the UI polls while `busy` and streams call transcripts.
+- The prebuilt demo family is built with `live=False`, so loading the demo spends nothing.
+- **Token caps include reasoning tokens.** A 500-token cap on Spark returned empty replies; keep caps generous (see `max_tokens` in each agent).
+- Tool results must come right after the assistant's tool calls; return what the line said inside the tool result (fixed a bug where it was a separate user turn).
+- Storage: SQLite via `PATIENT_DB` (set in the Dockerfile), session tokens stored only as hashes, `DELETE /api/p/me`.
+- Swarm live runs are **open to anyone during judging** (`OPEN_LIVE_DEMO=1` default, still capped by `MAX_LIVE_RUNS_PER_DAY` and `MIN_SECONDS_BETWEEN_RUNS`). Set `OPEN_LIVE_DEMO=0` to require `APP_ACCESS_TOKEN` again.
+- Partner credits: Fireworks and Baseten keys go in `FIREWORKS_API_KEY` / `BASETEN_API_KEY`; point a role with `<ROLE>_API_KEY_ENV`, `<ROLE>_BASE_URL`, `<ROLE>_MODEL`. Rule: patient-facing crew stays on Meta's API; partner credits are for simulators, adversaries and evals.
+
+There is **no telephony**: the agents are live, the offices are simulated. A phone channel would sit behind the same interface as `FaxChannel`.
 
 **Live demo:** https://swarm-scheduler.72q91gp7bkhmc.us-west-2.cs.amazonlightsail.com/ (AWS Lightsail, one container). It redeploys automatically on every merge to `main` once the `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` repo secrets exist; until then, use `python scripts/deploy_lightsail.py`. See DEPLOY.md and `docs/aws-hosting.md`.
 
@@ -86,8 +105,8 @@ The dashboard was checked in headless Chromium at iPhone and desktop widths, wit
 
 **Patient layer: NOT done.**
 
-- **No Meta model is called anywhere in the patient layer yet.** Card reading, PJ chat, navigator copy and records extraction are all rules or mocks marked `TODO(meta)`.
-- "Do it, PJ" records a task but **does not start the swarm yet**. This is README next-step #2.
+- Card reading, navigator copy and records extraction are still rules (`TODO(meta)`); the reader pattern in `reader.py` is the template.
+- "Do it, PJ" on an in-network pathway records a task but **does not start the swarm yet**. This is README next-step #2.
 
 **Swarm.**
 
@@ -123,7 +142,7 @@ What exists:
 
 ## Next steps
 
-Family-layer next steps are in `docs/FAMILY-AND-AGING.md`. Highest value before judging: put Muse Spark into at least one crew workflow (reading a denial or bill, drafting the letter), and route the caller through the swarm worker against a simulated office.
+Family-layer next steps are in `docs/FAMILY-AND-AGING.md`. Highest value before judging (partner credits): an adversarial plan reviewer on Muse Spark Open (Baseten), a call gym of hundreds of simulated receptionists on open weights (Fireworks), cross-family judges, a bigger reader eval, and a real voice. Steps 3, 9 and 12 below are done.
 
 
 The ordered list, with acceptance criteria, is in README section 15. In short:
@@ -218,7 +237,7 @@ See the layout table in README section 14. Key files:
 | `scripts/deploy_lightsail.py`, `.github/workflows/deploy.yml` | Lightsail deploys (manual / on merge) |
 | `src/api/static/index.html` | Swarm dashboard, served at `/swarm` |
 
-**Docs:** `docs/DEMO-PITCH.md` (keep current), `docs/FAMILY-AND-AGING.md`, `DEPLOY.md`, `docs/PLAN.md` (the original swarm plan; still valid for the swarm), `docs/DATA-SOURCES.md` (FHIR, Blue Button, sandboxes, public data).
+**Docs:** `docs/DEMO-PITCH.md` (keep current), `docs/COMPLIANCE.md`, `docs/FAMILY-AND-AGING.md`, `DEPLOY.md`, `docs/PLAN.md` (the original swarm plan; still valid for the swarm), `docs/DATA-SOURCES.md` (FHIR, Blue Button, sandboxes, public data).
 
 ## Invariants: do not break these
 
@@ -238,7 +257,10 @@ See the layout table in README section 14. Key files:
 9. **Care circle consent.** An adult is invisible until they consent (typing their own name). A helper may act but never sign for an adult; only a parent of a minor or an attested legal representative signs, and the signature names the capacity.
 10. **Workflow consent gate.** No `send` step runs before its `approve` step is signed by someone allowed to sign. A "no" escalates; it never silently ends.
 11. **Outreach never advises.** Support actions name covered services and resources only; a test scans them for diagnostic or dosing language.
-12. **The caller discloses it's an AI** calling with the patient's permission, and shares only name, DOB, member ID and plan.
+12. **The caller discloses it's an AI** to every person it reaches, and shares only name, DOB, member ID and plan. It uses the same `SAFETY_BLOCK` as the swarm.
+13. **`PJ_SAFETY` is immutable;** `PJ_SAFETY_SHA` is pinned in `tests/test_spark_crew.py`. The PJ red team stays at 100%, offline and live.
+14. **Models are checked, never trusted:** a reference must appear in what the office said; letter numbers must come from the facts; citations must exist; money math is code; uploaded images are never stored.
+15. **Crisis words and medical questions never reach a model** in PJ's chat. PJ only proposes work; a person taps to start it.
 
 **Swarm**
 

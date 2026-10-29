@@ -324,6 +324,31 @@ svg.i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .transcript{display:grid;gap:4px;margin-top:8px;font-size:13.5px}
 .transcript p{color:var(--ink-2)}
 .transcript p.pj{color:var(--ink)}
+.eng{display:inline-flex;align-items:center;font-size:11px;font-weight:800;letter-spacing:.02em;padding:2px 8px;border-radius:999px;background:var(--violet-soft);color:var(--violet);margin-left:6px;vertical-align:1px;white-space:nowrap}
+.wsteps li.working .n{animation:pjpulse 1.2s ease-in-out infinite}
+@keyframes pjpulse{0%,100%{opacity:1}50%{opacity:.4}}
+@media (prefers-reduced-motion:reduce){.wsteps li.working .n{animation:none}}
+.transcript p.hold{color:var(--ink-3);font-style:italic}
+.transcript p.live-dot::after{content:' …';color:var(--ink-3)}
+.panel{margin-top:12px;border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 14px;background:var(--surface)}
+.panel > summary{cursor:pointer;font-size:13.5px;font-weight:700;color:var(--ink-2)}
+.panel dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:8px 0 0;font-size:13.5px}
+.panel dt{color:var(--ink-3);font-weight:600}
+.panel dd{margin:0;overflow-wrap:anywhere}
+.crit{display:grid;gap:10px;margin-top:8px}
+.crit .r{display:grid;gap:3px;font-size:13.5px;padding-top:8px;border-top:1px solid var(--line)}
+.crit .r:first-child{border-top:0;padding-top:0}
+.crit .r b{font-weight:700}
+.crit .r small{color:var(--ink-3)}
+.chip.miss{background:var(--red-soft);color:var(--red)}
+.guard{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:3px;font-size:13.5px}
+.guard li.ok::before{content:'✓ ';color:var(--green);font-weight:800}
+.guard li.no::before{content:'✗ ';color:var(--red);font-weight:800}
+.docf{display:grid;gap:8px;border:1px dashed var(--line-2);border-radius:var(--r-sm);padding:12px;font-size:14px}
+.docf .row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.docf img{max-width:100%;max-height:150px;border-radius:6px;border:1px solid var(--line);justify-self:start}
+.docf textarea{min-height:64px;resize:vertical;font:inherit;padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.models{font-size:13px;color:var(--ink-3);margin:2px 0 14px}
 .sim-ctl{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center;font-size:13px;color:var(--ink-3)}
 /* support plan */
 .support{display:grid;gap:10px;margin-bottom:30px}
@@ -442,6 +467,7 @@ footer.foot b{color:var(--ink-2)}
         <button type="button" id="exportBtn" data-i="download">Download my data</button>
         <a href="/swarm" data-i="phone">Watch PJ's crew make calls</a>
         <button type="button" id="outBtn" data-i="out">Sign out</button>
+        <button type="button" id="delBtn" data-i="out">Delete my data</button>
       </div>
     </details>
   </header>
@@ -928,7 +954,21 @@ footer.foot b{color:var(--ink-2)}
         var a = d.answer, extra = null;
         if (a.type === 'care_request') {
           extra = el('div', { class: 'opts' }, a.care_request.pathways.map(function (p) { return optionCard(a.care_request, p); }));
-        } else if (a.type === 'coverage' && a.benefits) {
+        }
+        if (a.proposal) {
+          var pw = D.workflow_catalog.filter(function (x) { return x.key === a.proposal.template; })[0];
+          var doIt = el('button', { type: 'button', class: 'btn sm', text: 'Do it, PJ' });
+          doIt.addEventListener('click', function () { closeAsk(); dlgWorkflow(pw, a.proposal.inputs); });
+          var pc = el('div', { class: 'opt best' }, [el('div', { class: 'oh' }, [el('b', { text: a.proposal.title })]),
+            a.proposal.why ? el('div', { class: 'why', text: a.proposal.why }) : null,
+            el('div', { class: 'acts' }, [doIt, el('span', { class: 'fine', text: 'Nothing starts until you tap.' })])]);
+          extra = extra ? (extra.appendChild(pc), extra) : el('div', { class: 'opts' }, [pc]);
+        }
+        if (a.engine && engName(a.engine)) {
+          var tag = el('p', { class: 'fine' }, [engChip(a.engine), ' answered from your plan and records']);
+          extra = extra ? (extra.appendChild(tag), extra) : el('div', { class: 'opts' }, [tag]);
+        }
+        if (a.type === 'coverage' && a.benefits) {
           extra = el('div', { class: 'opts' }, [el('div', { class: 'opt' }, a.benefits.slice(0, 6).map(function (bn) {
             return el('div', { class: 'ben' }, [el('b', { text: bn.label }), el('span', { class: 'pay' + (bn.covered === 'no' ? ' no' : ''), text: bn.covered === 'no' ? 'Not covered' : (bn.you_pay || 'Covered') })]);
           }))]);
@@ -963,6 +1003,10 @@ footer.foot b{color:var(--ink-2)}
   $('#name').addEventListener('input', function () { this.setCustomValidity(''); });
   $('#demoBtn').addEventListener('click', function () { busy(this, api('POST', '/api/p/demo')).then(render).catch(oops); });
   $('#outBtn').addEventListener('click', function () { api('POST', '/api/p/signout').then(function () { location.reload(); }); });
+  $('#delBtn').addEventListener('click', function () {
+    if (!confirm('Delete everything: your account, everyone in your care circle, and every job PJ ran? This can\'t be undone.')) return;
+    api('DELETE', '/api/p/me').then(function () { location.reload(); }).catch(oops);
+  });
   $('#exportBtn').addEventListener('click', function () { window.open('/api/p/me/export', '_blank'); });
   document.addEventListener('click', function (e) { var m = $('#menu'); if (m.open && !m.contains(e.target)) m.open = false; });
   $('#covForm').addEventListener('submit', function (e) {
@@ -1066,6 +1110,8 @@ footer.foot b{color:var(--ink-2)}
     var crew = $('#crew'); crew.textContent = '';
     if (d.limited) return;
     var acting = d.viewing.permissions.indexOf('act') >= 0;
+    if (d.ai && d.ai.enabled) crew.appendChild(el('p', { class: 'models' }, ['Live on Meta\'s models: ', el('span', { class: 'eng', text: 'Muse Spark' }), ' calls offices, reads letters and bills, and writes; ',
+      el('span', { class: 'eng', text: 'Muse Wonder' }), ' builds the appeal strategy. Code checks everything they produce.']));
     GROUPS.forEach(function (g) {
       var jobs = d.workflow_catalog.filter(function (w) { return w.group === g[0]; });
       if (!jobs.length) return;
@@ -1097,6 +1143,59 @@ footer.foot b{color:var(--ink-2)}
     }
   }
 
+  function engName(e) { return !e || e === 'rules' ? null : (e.indexOf('wonder') >= 0 ? 'Muse Wonder' : 'Muse Spark'); }
+  function engChip(e) { var n = engName(e); return n ? el('span', { class: 'eng', title: e, text: n }) : null; }
+  function keepOpen(node, key, dflt) {
+    if (expanded[key] === undefined ? dflt : expanded[key]) node.setAttribute('open', '');
+    node.addEventListener('toggle', function () { expanded[key] = node.open; });
+    return node;
+  }
+  var pollT = null;
+  function schedulePoll(on) {
+    clearTimeout(pollT);
+    if (!on) return;
+    pollT = setTimeout(function () {
+      var a = document.activeElement;  // don't redraw under someone typing
+      if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA') && a.closest('#wfs')) return schedulePoll(true);
+      api('GET', '/api/p/me').then(render).catch(function () { schedulePoll(true); });
+    }, 1500);
+  }
+  var FIELD_NAMES = { service: 'What was denied', denied_on: 'Denied on', appeal_by: 'Appeal by', appeal_days: 'Days to appeal', case_number: 'Case number',
+    appeals_fax: 'Appeals fax', reason_quote: 'Their reason', biller: 'Billed by', service_date: 'Date of service', amount_due: 'Amount due',
+    total_you_owe: 'You owe (EOB)', account: 'Account', claim: 'Claim', member_name: 'Member', patient_name: 'Patient' };
+  function docPanel(doc, key) {
+    var f = doc.fields, rows = [];
+    Object.keys(FIELD_NAMES).forEach(function (k) {
+      var v = f[k]; if (v === undefined || v === '' || v === null || v === 0 && k === 'appeal_days') return;
+      if (typeof v === 'number') v = k === 'appeal_days' ? String(v) : '$' + v.toFixed(2);
+      rows.push(el('dt', { text: FIELD_NAMES[k] })); rows.push(el('dd', { text: String(v) }));
+    });
+    if (f.lines) { rows.push(el('dt', { text: 'Line items' })); rows.push(el('dd', { text: f.lines.map(function (l) { return l.code + ' ' + l.description + ' $' + (l.amount != null ? l.amount : l.you_owe).toFixed(2); }).join('; ') })); }
+    if (f.criteria && f.criteria.length) { rows.push(el('dt', { text: 'Rules it cites' })); rows.push(el('dd', { text: f.criteria.length + ' (answered one by one below)' })); }
+    return keepOpen(el('details', { class: 'panel' }, [el('summary', {}, ['Read from the ' + doc.label + ' (' + doc.from + ')', engChip(doc.engine)]),
+      el('dl', {}, rows), doc.dropped && doc.dropped.length ? el('p', { class: 'fine', text: 'Left out because it didn\'t check out: ' + doc.dropped.join(', ') + '.' }) : null]), key, false);
+  }
+  var CRIT = { met: ['Met', 'ok'], partly: ['Partly', 'watch'], missing: ['Needs evidence', 'miss'] };
+  function critPanel(w) {
+    return keepOpen(el('details', { class: 'panel' }, [el('summary', {}, ['The plan\'s rules, answered one by one', engChip((w.steps.filter(function (s) { return s.key === 'criteria'; })[0] || {}).engine)]),
+      el('div', { class: 'crit' }, w.criteria.map(function (r) {
+        return el('div', { class: 'r' }, [el('div', {}, [el('span', { class: 'chip ' + CRIT[r.status][1], text: CRIT[r.status][0] }), ' ', el('b', { text: r.criterion })]),
+          r.explanation ? el('span', { text: r.explanation }) : null,
+          r.evidence.length ? el('small', { text: 'Evidence: ' + r.evidence.join('; ') }) : null]);
+      }))]), 'crit-' + w.id, true);
+  }
+  var CALL_CHECKS = { disclosed_ai_to_each_person: 'Said it\'s an AI to each person it reached', no_extra_data_shared: 'Shared nothing beyond name, birthday, member ID and plan',
+    no_human_claim: 'Never claimed to be a person', reference_heard_on_call: 'Reference number really said by the office' };
+  function guardPanel(w) {
+    var items = [];
+    w.checks.forEach(function (g) { g.items.forEach(function (i) { items.push([g.what + ': ' + i.check + (i.detail ? ' (' + i.detail + ')' : ''), i.ok]); }); });
+    w.calls.forEach(function (c) { if (c.checks) Object.keys(CALL_CHECKS).forEach(function (k) { if (k in c.checks) items.push(['Call: ' + CALL_CHECKS[k], c.checks[k]]); }); });
+    if (!items.length) return null;
+    var bad = items.filter(function (i) { return !i[1]; }).length;
+    return keepOpen(el('details', { class: 'panel' }, [el('summary', { text: 'Guardrails: ' + (items.length - bad) + ' of ' + items.length + ' checks passed' + (bad ? ' (PJ caught and fixed the rest)' : '') }),
+      el('ul', { class: 'guard' }, items.map(function (i) { return el('li', { class: i[1] ? 'ok' : 'no', text: i[0] }); }))]), 'guard-' + w.id, false);
+  }
+
   function renderWorkflows(d) {
     var sec = $('#wfSec'), box = $('#wfs'); box.textContent = '';
     sec.hidden = d.limited || !d.workflows.length;
@@ -1110,19 +1209,27 @@ footer.foot b{color:var(--ink-2)}
       w.steps.forEach(function (st, i) {
         ol.appendChild(el('li', { class: st.status }, [
           el('span', { class: 'n' }, [st.status === 'done' ? icon('check') : String(i + 1)]),
-          el('span', { class: 'st-t' }, [st.title, el('small', { text: st.agent })]),
+          el('span', { class: 'st-t' }, [st.title, el('small', { text: st.agent }), engChip(st.engine)]),
           st.detail ? el('span', { class: 'st-d', text: st.detail + (st.due ? '' : '') }) : null
         ]));
       });
       card.appendChild(ol);
+      w.documents.forEach(function (doc, i) { card.appendChild(docPanel(doc, 'doc-' + w.id + i)); });
       if (w.findings.length) card.appendChild(el('ul', { class: 'finds' }, w.findings.map(function (f) { return el('li', { text: f }); })));
-      w.calls.forEach(function (c) {
-        card.appendChild(el('details', { class: 'call' }, [
-          el('summary', {}, [icon('phone'), ' Call to ' + c.practice + ': ' + c.menu_path + ' · ' + c.hold_minutes + ' min on hold (PJ waited, not you) · reached ' + c.reached + ' · ref ' + c.reference]),
-          el('p', { class: 'fine', text: 'Shared on the call: ' + c.shared.map(function (k) { return { dob: 'date of birth', member_id: 'member ID' }[k] || k; }).join(', ') + '. Nothing else.' }),
-          el('div', { class: 'transcript' }, c.transcript.map(function (t) { return el('p', { class: t.speaker }, [el('b', { text: t.speaker === 'pj' ? 'PJ: ' : 'Office: ' }), t.text]); }))
-        ]));
+      w.calls.forEach(function (c, i) {
+        var lines = c.transcript.map(function (t, j) {
+          var who = { pj: 'PJ: ', office: 'Office: ', hold: '' }[t.speaker];
+          return el('p', { class: t.speaker + (c.live && j === c.transcript.length - 1 ? ' live-dot' : '') }, [who ? el('b', { text: who }) : null, t.text]);
+        });
+        var head = c.live ? [icon('phone'), ' On the phone with ' + c.practice + ' now', engChip(c.engine)]
+          : [icon('phone'), ' Call to ' + c.practice + ': ' + c.menu_path + ' · ' + c.hold_minutes + ' min on hold (PJ waited, not you) · reached ' + (c.reached || 'nobody') + ' · ref ' + c.reference, engChip(c.engine)];
+        card.appendChild(keepOpen(el('details', { class: 'call' }, [el('summary', {}, head),
+          c.shared ? el('p', { class: 'fine', text: 'Shared on the call: ' + (c.shared.length ? c.shared.map(function (k) { return { dob: 'date of birth', member_id: 'member ID' }[k] || k; }).join(', ') : 'nothing') + '. Nothing else.' }) : null,
+          c.fallback ? el('p', { class: 'fine', text: 'Scripted call: the live caller wasn\'t available (' + c.fallback + ').' }) : null,
+          el('div', { class: 'transcript', 'aria-live': c.live ? 'polite' : null }, lines)]), 'call-' + w.id + i, !!c.live));
       });
+      if (w.criteria.length) card.appendChild(critPanel(w));
+      var g = guardPanel(w); if (g) card.appendChild(g);
       if (w.deadline) card.appendChild(el('p', { class: 'deadline' }, [el('b', { text: 'Deadline PJ is watching: ' + w.deadline + '. ' }), w.deadline_note || '']));
       if (w.outcome) card.appendChild(el('div', { class: 'result-box ' + (w.status === 'lost' ? 'lost' : 'won'), text: w.outcome + (w.saved ? ' Saved: ' + w.saved + '.' : '') }));
       if (w.status === 'needs_you') {
@@ -1146,6 +1253,7 @@ footer.foot b{color:var(--ink-2)}
       }
       box.appendChild(card);
     });
+    schedulePoll(d.busy);
   }
 
   function renderSupport(d) {
@@ -1193,18 +1301,53 @@ footer.foot b{color:var(--ink-2)}
   function select(name, options) { return el('select', { name: name }, options.map(function (o) { return el('option', { value: o[0], text: o[1] }); })); }
   function val(f, n) { var x = f.elements[n]; return x ? (x.type === 'checkbox' ? x.checked : x.value) : null; }
 
-  function dlgWorkflow(w) {
-    var who = D.viewing.relation === 'you' ? '' : ' for ' + D.viewing.name.split(/\s+/)[0];
+  function readImage(file) {  // shrink big phone photos before they leave the device
+    return new Promise(function (ok, bad) {
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function () {
+        var k = Math.min(1, 1800 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+        ok(c.toDataURL('image/jpeg', 0.88));
+      };
+      img.onerror = function () { bad(new Error('That file isn\'t an image PJ can read.')); };
+      img.src = url;
+    });
+  }
+  function docField(fd, docs) {
+    var sample = (D.samples || []).filter(function (s) { return s.kind === fd.doc; })[0];
+    var state = { v: null }, preview = el('div'), file = el('input', { type: 'file', accept: 'image/*', 'aria-label': fd.label });
+    var text = el('textarea', { 'aria-label': 'Or paste the text', placeholder: 'Or paste the text here' });
+    function show(src, note) { preview.textContent = ''; if (src) preview.appendChild(el('img', { src: src, alt: 'The document PJ will read' })); if (note) preview.appendChild(el('p', { class: 'fine', text: note })); }
+    file.addEventListener('change', function () {
+      if (!file.files[0]) return;
+      readImage(file.files[0]).then(function (u) { state.v = { image: u }; show(u, 'PJ reads it with Muse Spark vision; the photo isn\'t kept.'); }).catch(function (e) { toast(e.message); });
+    });
+    var kids = [el('b', { text: fd.label }), el('div', { class: 'row2' }, [file])];
+    if (sample) {
+      var useS = el('button', { type: 'button', class: 'chip-btn', text: 'Use the sample (fictional)' });
+      useS.addEventListener('click', function () { state.v = { sample: fd.doc }; file.value = ''; show(sample.url, sample.title + ': a fictional document for the demo.'); });
+      kids[1].appendChild(useS);
+    }
+    kids.push(text, preview);
+    docs[fd.name] = function () { return state.v || (text.value.trim() ? { text: text.value.trim() } : null); };
+    return el('div', { class: 'docf' }, kids);
+  }
+  function dlgWorkflow(w, prefill) {
+    var who = D.viewing.relation === 'you' ? '' : ' for ' + D.viewing.name.split(/\s+/)[0], docs = {};
+    var hasDoc = w.fields.some(function (fd) { return fd.kind === 'document'; });
     var body = w.fields.map(function (fd) {
-      if (fd.kind === 'select') return field(fd.label, select(fd.name, fd.options));
-      if (fd.kind === 'bool') return el('label', { class: 'c' }, [el('input', { type: 'checkbox', name: fd.name }), fd.label]);
-      return field(fd.label, input(fd.name, { type: fd.kind === 'number' ? 'number' : fd.kind === 'date' ? 'date' : 'text', placeholder: fd.placeholder || '', min: fd.kind === 'number' ? '0' : null }));
+      var pv = prefill && prefill[fd.name] != null ? prefill[fd.name] : null, n;
+      if (fd.kind === 'document') return docField(fd, docs);
+      if (fd.kind === 'select') { n = select(fd.name, fd.options); if (pv != null) n.value = pv; return field(fd.label, n); }
+      if (fd.kind === 'bool') return el('label', { class: 'c' }, [el('input', Object.assign({ type: 'checkbox', name: fd.name }, pv ? { checked: '' } : {})), fd.label]);
+      return field(fd.label + (hasDoc ? ' (optional with a photo)' : ''), input(fd.name, { type: fd.kind === 'number' ? 'number' : fd.kind === 'date' ? 'date' : 'text', placeholder: fd.placeholder || '', min: fd.kind === 'number' ? '0' : null, value: pv }));
     });
     body.push(el('p', { class: 'crewline', text: 'Crew: ' + w.crew.join(', ') + '. Nothing is sent until it is signed.' }));
     dlg(w.title + who, w.blurb, body, 'Start', function (f) {
-      var inputs = {}; w.fields.forEach(function (fd) { inputs[fd.name] = val(f, fd.name); });
+      var inputs = {}; w.fields.forEach(function (fd) { inputs[fd.name] = fd.kind === 'document' ? docs[fd.name]() : val(f, fd.name); });
       return api('POST', '/api/p/workflows', { template: w.key, inputs: inputs }).then(function (x) {
-        render(x); toast('PJ\'s crew started: ' + x.workflows[0].title);
+        render(x); toast(x.busy ? 'PJ\'s crew is on it. Watch it work below.' : 'PJ\'s crew started: ' + x.workflows[0].title);
         setTimeout(function () { $('#wfSec').scrollIntoView({ behavior: 'smooth' }); }, 150);
       });
     });

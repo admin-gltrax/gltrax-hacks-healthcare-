@@ -31,7 +31,8 @@ from ..sim.payers import eap_for
 from ..sim.providers import PROVIDERS
 
 CRISIS = re.compile(
-    r"\b(kill myself|suicid\w*|end my life|want to die|hurt myself|self[- ]harm|overdos\w*|"
+    r"\b(kill myself|suicid\w*|end my life|want to die|hurt(?:ing)? myself|self[- ]harm|overdos\w*|"
+    r"(?:no|don'?t see the|not any) point (?:of|in) (?:living|going on|life)|better off without me|don'?t want to (?:live|be here)|"
     r"can'?t breathe|chest pain|heart attack|stroke|unconscious|bleeding a lot)\b",
     re.I,
 )

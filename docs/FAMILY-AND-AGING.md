@@ -1,6 +1,6 @@
 # Family care and the aging population
 
-**Status (Oct 29, 2026):** built and tested offline: care circle, support plan, seven agent workflows, including a caller that phones the doctor's office, and the action-menu home screen. Everything runs on simulated insurers, offices and agencies. No Meta model is called in this layer yet.
+**Status (Oct 29, 2026):** built and tested offline: care circle, support plan, seven agent workflows, including a caller that phones the doctor's office, and the action-menu home screen. Everything runs on simulated insurers, offices and agencies. Since Oct 29 the crew runs live on Meta's models: Muse Spark calls the doctor's office and reads letters, bills and EOBs from photos; Muse Wonder maps the evidence to the plan's rules; Spark writes the letters and is PJ's chat. Rules are the guardrails and fallback.
 
 ## The idea in one paragraph
 
@@ -108,8 +108,8 @@ Workflows in progress, the support plan, the Ask PJ chat, the four buckets, cove
 ## Next steps (in order)
 
 1. Wire the scheduling swarm to "Do it, PJ" from the support plan and the counselor workflow (CLAUDE.md next step 2).
-2. Muse Spark vision reads an uploaded bill, EOB or denial letter (fictional images) into workflow inputs.
-3. Muse Wonder plans the appeal argument; Spark drafts letters; the rules stay the guardrails.
+2. ✅ Done Oct 29: Spark vision reads bills, EOBs and denial letters; Wonder maps evidence; Spark drafts letters with code checks.
+3. An adversarial plan reviewer (Muse Spark Open on Baseten) that tries to deny each appeal before it's sent, and a call gym of hundreds of simulated receptionists (Fireworks).
 4. Voice-first Ask PJ for older users (`src/voice.py`), plus a large-text mode.
 5. Real-world path: identity verification, document checks for power of attorney, HIPAA authorization forms, e-signature, a fax API under a BAA, and state-by-state appeal rules. See `docs/COMPLIANCE.md` (to be written).
 

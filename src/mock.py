@@ -25,12 +25,30 @@ def _slots_in(text: str) -> list[str]:
     return out
 
 
+def _text(m: dict) -> str:
+    c = m.get("content") or ""
+    return c if isinstance(c, str) else " ".join(x.get("text", "") for x in c if isinstance(x, dict))
+
+
 class MockLLM:
     def __init__(self, role: str):
         self.role = role
         self._n = 0
 
     async def chat(self, messages, tools=None, response_format=None, max_tokens=None) -> ChatResult:
+        first = _text(messages[0])
+        if "[PJ OFFICE CALLER]" in first:
+            return self._office_caller(messages)
+        if "PCP_FACTS_JSON" in first:
+            return self._pcp_receptionist(messages)
+        if "[PJ READER]" in first:
+            return self._reader(messages)
+        if "[PJ STRATEGIST]" in first:
+            return self._strategist(first)
+        if "[PJ WRITER]" in first:
+            return self._writer(first)
+        if "[PJ CHAT]" in first:
+            return self._pj(messages, tools)
         if tools:
             return self._worker(messages)
         if response_format and response_format.get("json_schema", {}).get("name") == "constraints":
@@ -189,3 +207,124 @@ class MockLLM:
                 if key in label:
                     return d
         return pairs[0][0] if pairs else "0"
+
+    # ---------------- patient layer: PJ's crew (src/agents/) ----------------
+    def _office_caller(self, messages) -> ChatResult:
+        sys = messages[0]["content"]
+        name = re.search(r"- name: (.+)", sys).group(1)
+        dob = re.search(r"- date of birth: (.+)", sys).group(1)
+        need = re.search(r"THE REQUEST \(the patient asked you to say this\): (.+)", sys).group(1)
+        last = messages[-1]
+        said = [m["content"] for m in messages if m["role"] == "assistant" and m.get("content")]
+        tools_used = [t["function"]["name"] for m in messages if m["role"] == "assistant" for t in (m.get("tool_calls") or [])]
+        heard = " ".join(_text(m) for m in messages[1:] if m["role"] in ("user", "tool"))
+
+        def tc(n: str, **a) -> ChatResult:
+            return ChatResult(tool_calls=[ToolCall(id=f"pc{len(messages)}", name=n, arguments=a)])
+
+        if "end_call" in tools_used:
+            return ChatResult()
+        if last["role"] == "user" and "[Call connected]" in last["content"]:
+            menu = dict((label.strip(), d) for d, label in re.findall(r"press (\d) for ([^;.]+)", last["content"].lower()))
+            want = next((k for k in ("referral", "refill", "records", "billing", "nurse", "appointment") if k in need.lower()), "front desk")
+            if re.search(r"order|equipment", need.lower()):
+                want = "referral"
+            digit = next((d for label, d in menu.items() if want.split()[0] in label), menu.get("the front desk", "0"))
+            return tc("press_dtmf", digits=digit)
+        if "record_result" in tools_used:
+            return tc("end_call", summary="Request made; reference recorded.")
+        low = (json.loads(last["content"]).get("heard", "") if last["role"] == "tool" else _text(last)).lower()
+        refs = re.findall(r"R-\d{5}", heard)
+        if refs and any(refs[-1] in x for x in said) and re.search(r"right|correct|yes", low):
+            days = re.findall(r"(\d+) business day", heard)
+            return tc("record_result", reference=refs[-1], handled_by="the office", business_days=int(days[-1]) if days else 3,
+                      next="The office is taking care of it.")
+        if refs and not any(refs[-1] in x for x in said):
+            return ChatResult(f"Thank you. Just to confirm, the reference is {refs[-1]}?")
+        if "address" in low:
+            return ChatResult("I'm sorry, I can only give the patient's name, date of birth, member ID and plan.")
+        if "date of birth" in low or "name" in low and "chart" in low:
+            return ChatResult(f"Of course. It's {name}, date of birth {dob}.")
+        if "how can i help" in low:
+            return ChatResult(f"Hi, I'm PJ, an AI assistant calling on behalf of your patient {name}, with their permission. "
+                              f"I'm calling about {need}.")
+        return ChatResult("Thanks so much for your help. Goodbye!")
+
+    def _pcp_receptionist(self, messages) -> ChatResult:
+        facts = json.loads(re.search(r"PCP_FACTS_JSON: (\{.*\})", messages[0]["content"]).group(1))
+        callers = [m["content"].lower() for m in messages[1:] if m["role"] == "user"]
+        mine = [m["content"].lower() for m in messages[1:] if m["role"] == "assistant"]
+        last = callers[-1]
+        got_dob = any(re.search(r"\b(19|20)\d\d\b", c) for c in callers)
+        if "goodbye" in last or "bye" in last:
+            return ChatResult("You're welcome. Goodbye! [END_CALL]")
+        if "address" in messages[0]["content"] and not any("address" in m for m in mine) and not got_dob:
+            return ChatResult("Before I look anything up, can I get the patient's home address to verify?")
+        if not got_dob:
+            return ChatResult("Sure. Can I get the patient's name and date of birth to pull the chart?")
+        if not facts["handles_this"]:
+            t = facts["transfer_to"]
+            return ChatResult(f"Got the chart. That's handled by {t['name']}, {t['role']}. Let me transfer you. [TRANSFER]")
+        if any(facts["reference"].lower() in m for m in mine):
+            return ChatResult("Yes, that's right.")
+        return ChatResult(f"Okay, done. {facts['done']} Your reference is {facts['reference']}. "
+                          f"Give it about {facts['business_days']} business days.")
+
+    def _reader(self, messages) -> ChatResult:
+        from .sim.documents import SAMPLES
+        parts = messages[0]["content"]
+        kind = re.search(r"\((denial_letter|bill|eob)\)", _text(messages[0])).group(1)
+        truth = dict(SAMPLES[kind]["truth"])
+        has_image = any(isinstance(x, dict) and x.get("type") == "image_url" for x in parts)
+        if not has_image:  # pasted text: pretend to read only what's literally there
+            text = _text(messages[0])
+            truth = {k: v for k, v in truth.items() if not isinstance(v, str) or v.lower()[:12] in text.lower()}
+        return ChatResult(content=json.dumps(truth))
+
+    def _strategist(self, prompt: str) -> ChatResult:
+        data = json.loads(prompt[prompt.index("{"):])
+        rows = []
+        for rule in data["coverage_rules"]:
+            words = {w for w in re.findall(r"[a-z]{5,}", rule.lower())} | {"doctor"} if "doctor" in rule.lower() else {w for w in re.findall(r"[a-z]{5,}", rule.lower())}
+            hits = [e["id"] for e in data["EVIDENCE"] if words & set(re.findall(r"[a-z]{5,}", e["what"].lower()))]
+            if "homebound" in rule.lower():
+                hits = [e["id"] for e in data["EVIDENCE"] if re.search(r"driv|alone|fall", e["what"].lower())]
+            rows.append({"criterion": rule, "status": "met" if len(hits) > 1 else "partly" if hits else "missing",
+                         "evidence_ids": hits[:3] + (["rec-999"] if not rows else []), "explanation": "Mock mapping by shared words."})
+        return ChatResult(content=json.dumps({"criteria": rows, "gaps": ["Ask the doctor to state in writing why therapy at home is needed."],
+                                              "argument": "The records and the doctor's letter answer the plan's rules."}))
+
+    def _writer(self, prompt: str) -> ChatResult:
+        f = json.loads(prompt[prompt.index("FACTS:") + 6:])
+        what = f.get("service") or f.get("subject_of") or "this"
+        body = (f"To whom it may concern,\n\nI am writing about {what} for member ID {f.get('member_id')}. "
+                f"I am asking you to review it again using the enclosed documents and the points below.\n\n"
+                + "\n".join(f"- {r['rule']}" for r in f.get("coverage_rules_and_evidence", []))
+                + "\n".join(f"- {x}" for x in f.get("problems_found", []))
+                + "\n\nPlease send me your decision in writing, and a copy of anything you relied on. "
+                  "Thank you for your prompt attention to this request.")
+        return ChatResult(content=json.dumps({"subject": f"Request for review: {what}", "body": body}))
+
+    def _pj(self, messages, tools) -> ChatResult:
+        last = messages[-1]
+        if last["role"] == "tool":
+            r = json.loads(last["content"])
+            if r.get("options"):
+                return ChatResult(f"I found {len(r['options'])} ways. The best fit: {r['options'][0]['title']}.")
+            return ChatResult("I can have my crew do that. Tap the card to start it; nothing happens until you do.")
+        text = last["content"].lower()
+
+        def tc(name: str, **a) -> ChatResult:
+            return ChatResult(tool_calls=[ToolCall(id=f"pj{len(messages)}", name=name, arguments=a)])
+        if re.search(r"\bbill|charged", text):
+            return tc("propose_job", template="bill_dispute", inputs={"issue": "not_sure"}, why="That bill may not match what the plan says you owe.")
+        if re.search(r"denied|denial", text):
+            return tc("propose_job", template="pa_appeal", inputs={}, why="A denial can be appealed; the crew builds the case.")
+        if re.search(r"refill|referral|call (the|my|her) doctor", text):
+            return tc("propose_job", template="office_request", inputs={"purpose": "refill" if "refill" in text else "referral"},
+                      why="PJ calls the office, waits on hold and gets the right person.")
+        if re.search(r"need|find|see a|therap|counsel", text):
+            return tc("find_care", need=last["content"])
+        if "covered" in text or "cost" in text:
+            return ChatResult("Your plan's benefits are listed under Coverage; tell me the service and I'll check it.")
+        return ChatResult("I'm here. Tell me what you need, and my crew will do the calls and paperwork.")

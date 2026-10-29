@@ -1,6 +1,6 @@
 # Demo day: 3-minute pitch and app overview
 
-> **Keep this current.** Update this file in the same pull request as any user-visible feature, and re-time it out loud before submission (due **Nov 4, 9:00 PM ET**). The checklist at the bottom says what each beat depends on. Last updated: Oct 29, 2026.
+> **Keep this current.** Update this file in the same pull request as any user-visible feature, and re-time it out loud before submission (due **Nov 4, 9:00 PM ET**). The checklist at the bottom says what each beat depends on. Last updated: Oct 29, 2026 (crew on Muse Spark and Muse Wonder).
 
 **Live app:** https://swarm-scheduler.72q91gp7bkhmc.us-west-2.cs.amazonlightsail.com/ (click "Or explore a demo patient"). All people, plans, offices and agencies on screen are fictional.
 
@@ -34,11 +34,11 @@
 
 **Click:** "Find benefits Rosa isn't using", then **Do it, PJ** on the rides.
 
-### 1:25 – 1:55 · The crew fights back
+### 1:25 – 1:55 · The crew fights back, live on Meta's models
 **Say:**
-"PJ's crew already won one: a bill charged the same visit twice. PJ pulled the itemized bill, matched it to the plan's EOB, and saved $433. Now, a denial. Her plan refused home physical therapy after the fall. Six agents read the denial and the deadline, pulled her records, got her doctor's letter, and wrote the appeal. Nothing leaves until Alex reads it and signs."
+"Her plan denied home physical therapy after the fall. Alex just snaps a photo of the letter. Muse Spark reads it: the reason, word for word, the plan's four rules, and the real deadline. Spark calls her doctor's office for a letter. Muse Wonder lines up her records against each rule and is honest about the gaps. Spark writes the appeal, and code checks every number before Alex can sign. Nothing leaves until Alex signs."
 
-**Click:** scroll to **PJ's crew is working on**. Show the steps and agent names, type "Alex Rivera", then **Sign and send**.
+**Click:** **Appeal a prior-authorization denial** → **Use the sample (fictional)** → **Start**. Steps light up with **Muse Spark** / **Muse Wonder** badges; open **The plan's rules, answered one by one**, then **Guardrails**. Type "Alex Rivera", **Sign and send**. (Takes about 45 s live; cut the wait in the edit.)
 
 ### 1:55 – 2:15 · A no is not the end
 **Say:**
@@ -48,9 +48,9 @@
 
 ### 2:15 – 2:25 · PJ calls the doctor's office
 **Say:**
-"The appeal needed a letter from Rosa's doctor, so PJ called the office: pressed 0, waited on hold, got transferred to the doctor's medical assistant, said up front it's an AI calling with Rosa's permission, shared only her name, birthday and member ID, and came back with a reference number. Alex never sat on hold."
+"That letter? Spark phoned the office: worked the menu, waited on hold, got transferred to the medical assistant, said up front it's an AI, refused when the front desk asked for her home address, and came back with a reference number that code checks was really said on the call. Alex never sat on hold."
 
-**Click:** open **Calls PJ made** on the appeal and expand the transcript.
+**Click:** expand the call on the appeal (it streams live while it happens).
 
 ### 2:25 – 2:40 · The swarm
 **Say:**
@@ -60,7 +60,7 @@
 
 ### 2:40 – 3:00 · Why us, why now
 **Say:**
-"Same crew for disputing a bill, renewing oxygen, getting rides or an aide, appealing cut home care hours, and finding a counselor who can actually see you. Built on the Meta Model API, with real provider directories, consent gates and 84 tests. PJ Health: your healthcare, owned by you."
+"Same crew for a wrong bill (Spark reads the bill and the EOB, code does the math: $493 overcharge), rides, oxygen, cut home care hours, and a counselor who can actually see you. Ask PJ anything; crisis words get 988 before any model sees them. Muse Spark and Muse Wonder, real provider directories, consent gates, a 20-case red team at 100% live, and 125 tests. PJ Health: your healthcare, owned by you."
 
 **Screen:** the action menu, then PJ.
 
@@ -71,11 +71,12 @@
 | Question | Answer |
 |---|---|
 | Does it call real offices? | Not in the demo: the offices, plans and agencies are simulated and labeled, and there's no phone line attached on purpose. The swarm's caller is a real Muse Spark agent with phone tools (keypad, hold, transfer); a telephony channel plugs in behind the same interface the fax uses. The provider directory data is real public data, and nobody is ever called with it. |
-| What's AI vs rules today? | The swarm's calls run on Muse Spark live, and voice intake on Muse Voice Transcribe. The patient-side crew runs on deterministic rules today; Spark vision for bills and denial letters, and Wonder for appeal plans, are next. |
+| What's AI vs rules today? | Live on Meta: the swarm's calls and the doctor's-office caller (Spark), reading letters, bills and EOBs (Spark vision, 25/25 fields on our eval), the appeal strategy (Wonder), the letters and PJ's chat (Spark). Rules are the guardrails and the fallback: deadlines, money math, consent, crisis routing. The screen badges every step with the engine that did it. |
+| Does it call real phones? | No: live Spark agents talk to simulated offices on purpose (TCPA, recording consent, and Meta has no text-to-speech). A phone channel plugs in behind the same interface as the fax. See `docs/COMPLIANCE.md`. |
 | Safety? | PJ never diagnoses or doses. Crisis words get 988/911 first. Nothing is sent without a signature from someone allowed to sign. Every fact shows its source. Tests enforce all of these. |
 | Who pays? | Families first (the caregiver pays, the parent uses it), then Medicare Advantage plans and employers, who want members using preventive benefits and fewer wasted appeals. |
 | How is this different from Wellthy or Transcarent? | They give you a human coordinator or a benefits chatbot through your employer. PJ is a crew that acts for you, across every plan and agency, and you own the record. |
-| Is it HIPAA compliant? | It's a demo with fictional data. The real path is identity verification, signed authorizations, a fax provider under a BAA, and real authentication; see `docs/FAMILY-AND-AGING.md`. |
+| Is it HIPAA compliant? | No claims: fictional data only. `docs/COMPLIANCE.md` lists what code enforces today and the ordered path to a pilot (real auth, verified POA and CMS-1696, BAAs, encryption, TCPA review). |
 
 ## Feature checklist (keep in sync)
 
@@ -84,12 +85,13 @@
 | 0:20 | Action-menu home screen | `src/agents/actions.py`, `home.html` | ✅ |
 | 0:40 | Care circle with consent levels | `src/agents/circle.py` | ✅ |
 | 1:05 | Support plan from risk factors | `src/agents/outreach.py` | ✅ |
-| 1:25 | Bill dispute ($433 saved) and multi-agent prior-authorization appeal | `src/agents/workflows.py` | ✅ simulated counterparties |
+| 1:25 | Appeal from a photo: Spark reader → Spark caller → Wonder evidence map → Spark writer → checks → signature | `reader.py`, `office_caller.py`, `appeals.py`, `workflows.py` | ✅ live on Meta models |
 | 1:55 | Escalation to outside review | `workflows._escalate` | ✅ |
-| 2:15 | Doctor's-office call: phone menu, hold, transfer to the right person, reference number | `src/agents/office_calls.py`, `src/sim/pcp_office.py`, workflow `office_request` | ✅ simulated office |
+| 2:15 | Doctor's-office call on Spark: menu, hold, transfer, data-fishing refused, reference verified | `src/agents/office_caller.py`, `src/sim/pcp_office.py` | ✅ live agents, simulated office |
 | 2:25 | Real directory step, then the 15-call swarm on Muse Spark | `src/swarm/candidates.py`, `/swarm` | ✅ (the replay predates the directory step; re-record before demo day) |
 | 2:40 | Other crew jobs: equipment, rides and aide, home care hours, counselor | `src/agents/workflows.py` | ✅ |
-| any | Ask PJ chat and voice intake | `guide.py`, `src/voice.py` | ✅ chat (rules); voice on `/swarm` only |
+| 2:40 | Bill + EOB photos, code math, $493 overcharge | `reader.match_bill` | ✅ live |
+| any | Ask PJ on Spark (proposes jobs as cards) and voice intake | `guide.ask_live`, `src/voice.py` | ✅ chat live (red team 20/20); voice on `/swarm` only |
 
 **Before recording:**
 1. Re-record the public replay (`scripts/make_recording.py`) so it includes the directory step and the UHC plan.

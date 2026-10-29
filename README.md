@@ -4,7 +4,7 @@
 >
 > PJ is a friendly Gila monster. The home screen is a menu of things PJ can do: call the doctor's office and get the right person, find benefits you aren't using, contest a wrong bill, appeal a denial, renew medical equipment, get rides or an aide, appeal cut home care hours, or call 15 offices at once to hold an appointment. It works for you, for an older parent, or for your child.
 
-Built for the Meta Global AI Developer Hackathon (startup track) on the Meta Model API. **"PJ Health" is a working name** (see [Open questions](#16-open-questions)).
+Built for the Meta Global AI Developer Hackathon (startup track) on the Meta Model API. **PJ's crew runs live on Muse Spark and Muse Wonder:** Spark phones the doctor's office (menu, hold, transfer) and reads denial letters, bills and EOBs from a photo; Wonder maps the evidence to the plan's own rules; Spark writes the appeal and is PJ's chat voice. Code checks everything the models produce, and every step falls back to deterministic rules if a model is unavailable. **"PJ Health" is a working name** (see [Open questions](#16-open-questions)).
 
 **Demo only.** Every patient, insurer, provider, phone number, fax number and record in this repo is fictional. No real clinic, insurer or fax machine is ever contacted. There is no password because no real health information may ever enter this build.
 
@@ -61,7 +61,7 @@ The 3-minute demo-day script lives in [docs/DEMO-PITCH.md](docs/DEMO-PITCH.md) a
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 
-MOCK_LLM=1 pytest -q                                   # 63 tests, offline, no key
+MOCK_LLM=1 pytest -q                                   # 125 tests, offline, no key
 MOCK_LLM=1 uvicorn src.api.server:app --port 8000      # http://localhost:8000
 ```
 
@@ -87,6 +87,11 @@ MOCK_LLM=1 uvicorn src.api.server:app --port 8000      # http://localhost:8000
 1. Run `cp .env.example .env`.
 2. Add `MODEL_API_KEY` to `.env`.
 3. Run `python scripts/smoke_meta.py`. Every line should say PASS.
+4. Run the live evals: `python scripts/eval_reader.py` (Spark vision vs. ground truth on the sample documents; 25/25 fields on Oct 29) and `python scripts/redteam_pj.py` (PJ's chat red team; 20/20 on Oct 29).
+
+**Try the crew live:** explore the demo patient, switch to **Rosa**, choose **Appeal a prior-authorization denial**, tap **Use the sample (fictional)** and **Start**. Watch Spark read the letter, call the doctor's office, Wonder map the evidence, and Spark write the appeal (about 45 seconds). The sample documents are at `/samples/denial-letter.png`, `/samples/itemized-bill.png` and `/samples/eob.png`.
+
+**Model environment variables.** Each agent role can be pointed at any OpenAI-compatible endpoint: `<ROLE>_MODEL`, `<ROLE>_BASE_URL`, `<ROLE>_API_KEY_ENV` (roles: `CALLER`, `OFFICE`, `READER`, `STRATEGIST`, `WRITER`, `PJ`, plus the swarm's `WORKER`, `PLANNER`, `JUDGE`). For example, Muse Spark Open on Fireworks: `OFFICE_API_KEY_ENV=FIREWORKS_API_KEY`, `OFFICE_BASE_URL=https://api.fireworks.ai/inference/v1`, `OFFICE_MODEL=accounts/fireworks/models/muse-spark-open`. `PJ_AI=off` forces the rules; `PJ_AI_DAILY_REQUESTS` and `PJ_AI_ACCOUNT_REQUESTS` cap spend; `OPEN_LIVE_DEMO=0` puts swarm live runs back behind `APP_ACCESS_TOKEN` (open by default during judging, still rate-limited); `PATIENT_DB` turns on SQLite storage.
 
 Hosting is covered in [DEPLOY.md](DEPLOY.md). For swarm evals, see [docs/swarm-architecture.md](docs/swarm-architecture.md) and run `python -m src.eval.run_batch`.
 
@@ -157,13 +162,15 @@ PJ is the only voice the patient hears. PJ hands work to specialist agents. Each
 
 | Agent | File | Job |
 |---|---|---|
-| **PJ (guide)** | `src/agents/guide.py` | Says what's next, explains things, routes requests. Never diagnoses. |
+| **PJ (guide)** | `src/agents/guide.py` | Says what's next, explains things, proposes crew jobs (the person taps to start). Muse Spark, with a hash-pinned safety block. Never diagnoses. |
 | **Coverage** | `src/agents/coverage.py` | Reads the card, gets benefits, writes the plain summary, finds the EAP. |
 | **Care Team** | `src/agents/care_team.py` | Finds the PCP and others. Confirms phone, fax, network status and whether they're accepting new patients. |
 | **Records** | `src/agents/records.py` | Writes the right-of-access letter, collects the signature, faxes it, tracks the 30-day clock, follows up and files the results. |
 | **Care Navigator** | `src/agents/navigator.py` | Turns "I need X" into ranked pathways with costs. |
 | **Scheduling Swarm** | `src/swarm/`, `src/agents/worker.py` | Calls many offices at once to find and hold a real in-network slot. |
-| **Caller** | `src/agents/office_calls.py` | Calls the patient's doctor's office for anything: works the phone menu, waits on hold, gets transferred to the right person, and logs who it spoke with and the reference number. |
+| **Caller** | `src/agents/office_caller.py`, `office_calls.py` | Muse Spark calls the patient's doctor's office for anything: works the phone menu, waits on hold, gets transferred to the right person, and logs who it spoke with and the reference number (which must appear in what the office said). The offices' receptionists are Spark too (`src/sim/pcp_office.py`). |
+| **Reader** | `src/agents/reader.py` | Muse Spark vision reads a photo of a denial letter, itemized bill or EOB into validated fields. The image is not kept; the money math is code. |
+| **Strategist and Writer** | `src/agents/appeals.py` | Muse Wonder maps evidence on file to the plan's own coverage rules (invented citations are removed); Muse Spark drafts the letter, which must pass `check_letter` to reach the signature. |
 | **Outreach** | `src/agents/outreach.py` | Turns age, plan and risk factors into a support plan of covered next steps. Never diagnoses. |
 | **Care circle** | `src/agents/circle.py` | Consent and permissions for acting on behalf of an older parent, a child or a spouse. |
 | **Workflow crew** | `src/agents/workflows.py` | Runs multi-agent jobs end to end: bill dispute, prior-authorization appeal (and outside review), rides/aide/supplies, medical equipment, home care hours appeal, counselor request, doctor's-office requests. |
@@ -172,7 +179,7 @@ How each agent works today, and what it becomes:
 
 | Agent | Hackathon build | Real product |
 |---|---|---|
-| **PJ (guide)** | Deterministic routing and copy. | Muse Spark grounded on the patient's own record, with an immutable safety block like the one in `src/safety.py`. |
+| **PJ (guide)** | ✅ Muse Spark with tools (`find_care`, `propose_job`), crisis and medical pre-filters, a reply scanner and a 20-case red team at 100% live; rules fallback. | Retrieval over the full record; voice in and out. |
 | **Coverage** | Simulated insurer portal (`src/sim/payers.py`). | The payer Patient Access API (FHIR) through an aggregator, plus X12 270/271 eligibility checks. Computer-use on the insurer portal only as a fallback. |
 | **Care Team** | Simulated directory with planted errors (`src/sim/providers.py`). | The NPPES NPI registry and payer FHIR provider directories, followed by a verification call. The swarm already uses real NPPES and Plan-Net data (`src/directory/`). |
 | **Records** | `SimulatedFax` and a simulated records office. | A HIPAA-eligible fax API covered by a business associate agreement (BAA), e-signature, and OCR plus Muse Spark extraction of returned records into `HealthItem`s. |
@@ -233,7 +240,7 @@ The same machinery handles other requests:
 │ channels/fax.py (SimulatedFax) · sim/records_office.py · sim/ offices (swarm calls)   │
 └───────────────────────────────────────────────────────────────────────────────────────┘
 ┌───────────────────────────────────────────────────────────────────────────────────────┐
-│ Store: src/patient/store.py (in memory; optional JSON files via PATIENT_STORE_DIR)    │
+│ Store: src/patient/store.py (in memory + SQLite via PATIENT_DB; delete-my-data)       │
 └───────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -281,6 +288,7 @@ All patient routes are under `/api/p`. The session is the `pj_session` cookie (H
 | `POST /start` | `{name, email?}` | Create a record (name only, demo). |
 | `POST /demo` | | Load a fully set-up fictional patient. |
 | `POST /signout` | | Clear the cookie. |
+| `DELETE /me` | | Delete my data: the account, the care circle and every workflow, in memory and in the database. |
 | `GET /me` | | Return the dashboard. |
 | `GET /me/export` | | Return everything as JSON. |
 | `POST /coverage` | `{card, employer?}` | Run the Coverage agent. Returns 404 if the plan isn't found. |
@@ -289,7 +297,7 @@ All patient routes are under `/api/p`. The session is the `pj_session` cookie (H
 | `POST /records` | | Draft the records request. Returns `request_id`. |
 | `POST /records/{id}/sign` | `{typed_name}` | Sign (the name must match the patient's) and fax. |
 | `POST /records/{id}/simulate-response` | | Demo control: the office answers. |
-| `POST /ask` | `{text}` | Ask PJ. Returns `answer` of type `care_request`, `coverage` or `chat`. |
+| `POST /ask` | `{text}` | Ask PJ (Muse Spark). Returns `answer` of type `care_request`, `proposal` (a crew job to tap), `coverage` or `chat`, with `engine`. |
 | `POST /care/{care_id}/go?kind=` | | The patient picks a pathway, and PJ starts it. |
 | `POST /circle` | `{name, relation, dob?}` | Add someone to the care circle (a minor: parent access; an adult: nothing until they say yes). |
 | `POST /circle/{id}/consent` | `{typed_name, permissions}` | The person says yes, typing their own name, and picks view and/or act. |
@@ -298,7 +306,7 @@ All patient routes are under `/api/p`. The session is the `pj_session` cookie (H
 | `POST /active` | `{person_id}` | Switch whose care the dashboard shows (`null` = yourself). |
 | `POST /about` | `{factors, dob?, employer?}` | What the person told PJ (risk factors). |
 | `POST /support/{key}/go`, `/dismiss` | | Start or dismiss a support-plan suggestion. |
-| `POST /workflows` | `{template, inputs}` | Start a crew job. Runs every agent step up to the consent gate. |
+| `POST /workflows` | `{template, inputs}` | Start a crew job. Document fields take `{"image": dataURL}`, `{"text": ...}` or `{"sample": kind}`. Model steps run in the background; the dashboard's `busy` flag says to poll `GET /me`, and calls stream their transcript. |
 | `POST /workflows/{id}/approve` | `{typed_name}` | Sign; then PJ sends and starts the clock. |
 | `POST /workflows/{id}/simulate-response?outcome=` | | Demo control: the other side answers (`approved` or `denied`; a denial escalates). |
 
@@ -310,8 +318,12 @@ The swarm keeps its existing routes: `POST /api/swarm/start`, `POST /api/approve
 
 | Job | Model | Notes |
 |---|---|---|
-| PJ's voice: explanations and answers grounded on the patient's record | `muse-spark-1.3` | Uses an immutable safety block and retrieval over `HealthItem`s and `Coverage`. |
-| Reading an insurance card photo, a lab report or a returned records PDF | `muse-spark-1.3` (vision) | Produces structured output into `Coverage` and `HealthItem`. |
+| PJ's voice: answers grounded on the person's plan, care team and jobs; proposes crew jobs | `muse-spark-1.3` | ✅ Built (`guide.ask_live`). Immutable, hash-pinned `PJ_SAFETY`; tool calls; red team 20/20 live. |
+| Calling the doctor's office, and playing its receptionists | `muse-spark-1.3` | ✅ Built (`office_caller.py`, `pcp_office.OfficeLine`). About 11–17 requests a call. |
+| Reading denial letters, itemized bills and EOBs from a photo | `muse-spark-1.3` (vision, JSON schema) | ✅ Built (`reader.py`). 25/25 fields on the samples (`scripts/eval_reader.py`). |
+| Mapping evidence to the plan's coverage rules | `muse-wonder-1.0` | ✅ Built (`appeals.map_criteria`). |
+| Drafting appeal and dispute letters | `muse-spark-1.3` | ✅ Built (`appeals.draft_letter` + `check_letter`). |
+| Reading an insurance card photo or a returned records PDF | `muse-spark-1.3` (vision) | Next: same reader pattern into `Coverage` and `HealthItem`. |
 | Planning care pathways, multi-step coordination, chasing late records | `muse-wonder-1.0` | Agentic and long horizon. Use sparingly because of cost. |
 | Logging into a simulated insurer portal to read benefits | Meta computer-use | **Simulated portal only** in the hackathon. Real portals use APIs, and passwords are never stored. |
 | Scheduling Swarm calls | `muse-spark-1.3` workers, with Wonder as planner and critic | The existing build. |
@@ -328,7 +340,7 @@ Hard rule: **no real PHI goes to any model in this build, and nothing ever goes 
 | Insurance | Fictional insurers, keyed by member-ID prefix. | The payer **Patient Access API** (FHIR; CMS rules require it for many public-program payers) through an aggregator, plus **X12 270/271** eligibility checks through a clearinghouse. The patient authorizes with the insurer's own login (OAuth). **PJ never stores portal passwords.** |
 | Finding the doctor | A fictional directory with planted errors. | The **NPPES** NPI registry and payer **Plan-Net** FHIR directories, followed by a verification call. Keep a "directory vs reality" dataset. |
 | Records | A signed letter, `SimulatedFax`, and an instant demo response. | HIPAA right of access (45 CFR 164.524: 30 days, with one 30-day extension) [from memory: verify]. A fax API that signs a **BAA**, patient e-signature, TEFCA and health information exchange queries where available, and OCR plus extraction. |
-| Calls | Simulated offices (the swarm). | Real telephony for a pilot. PJ discloses that it is an AI assistant, and calls are recorded only with consent. |
+| Calls | Live Muse Spark agents talking to simulated offices (the swarm and the doctor's-office caller). | A telephony channel behind the same interface (`FaxChannel` style), with speech in and out. PJ discloses that it is an AI assistant, and calls are recorded only with consent. See [docs/COMPLIANCE.md](docs/COMPLIANCE.md). |
 | Hosting | One Docker container, a single instance. | A HIPAA-eligible cloud under a BAA, with audit logs, PHI-safe logging and backups. |
 
 Do not claim HIPAA compliance. The honest claim is "designed to be compatible with HIPAA requirements; the demo uses fictional data only".
@@ -347,18 +359,20 @@ These rules apply to code, prompts and copy. Tests enforce the ones marked ✓.
 6. **Data minimization.** Each agent gets only what its job needs. For example, the swarm worker gets name, DOB, member ID, plan, reason and constraints, and nothing more.
 7. **Only fictional data goes in this repo.** No real names, employers, insurers, providers, or phone or fax numbers. Anything simulated is labeled as simulated.
 8. **No real PHI goes to any model** in this build, and nothing ever goes to contributor models.
-9. **The patient owns the record.** They can export it at any time, and deleting must really delete it (planned).
+9. **The patient owns the record.** They can export it at any time, and "Delete my data" really deletes it, even if an agent finishes later. ✓
 10. **Acting for someone else needs their yes.** A child under 18: the parent manages it, until 18. Another adult: nothing but their name until they say yes, and they choose view and/or act. Only the person, a parent of a minor, or an attested legal representative can sign. ✓
 11. **Every crew workflow stops at a consent gate** and shows the full letter before anything is sent. A "no" escalates instead of stopping. Deadlines name their source; the person's own letter wins. ✓
 12. **The support plan never gives medical advice,** and every suggestion cites the risk factor or benefit behind it. ✓
 13. **The caller always says it's an AI calling with the patient's permission** and shares only name, date of birth, member ID and plan. ✓
-14. **The swarm's existing invariants still hold:** immutable `SAFETY_BLOCK` / `SAFETY_SHA`, honest leverage only, and never tuning on the holdout split. See [CLAUDE.md](CLAUDE.md).
+14. **Models are checked, never trusted.** A reference number must appear in what the office said; a letter's numbers must come from the facts; evidence citations must exist; money math is code; uploaded images are not stored. Every model step falls back to the rules and says which engine ran. ✓
+15. **Crisis words and medical questions never reach a model** in PJ's chat. ✓
+16. **The swarm's existing invariants still hold:** immutable `SAFETY_BLOCK` / `SAFETY_SHA`, honest leverage only, and never tuning on the holdout split. See [CLAUDE.md](CLAUDE.md).
 
 ## 14. Repo layout
 
 | Path | What it is |
 |---|---|
-| `src/patient/` | **The patient record**: `models.py` (data model), `buckets.py` (the four buckets and the panels), `store.py` (in-memory store and export), `demo.py` (demo patient) |
+| `src/patient/` | **The patient record**: `models.py` (data model), `buckets.py` (the four buckets and the panels), `store.py` (in memory, written through to SQLite with `PATIENT_DB`; delete-my-data), `demo.py` (demo patient) |
 | `src/agents/guide.py` | PJ: next step, ask routing, safety rules |
 | `src/agents/coverage.py` | Coverage agent |
 | `src/agents/care_team.py` | Care Team agent (directory and verification call) |
@@ -381,20 +395,22 @@ These rules apply to code, prompts and copy. Tests enforce the ones marked ✓.
 | `src/safety.py` | Swarm safety block and checks |
 | `src/eval/` | Swarm judge and batch evals |
 | `src/agents/circle.py`, `outreach.py`, `workflows.py`, `office_calls.py`, `actions.py` | Care circle, support plan, crew workflows, doctor's-office caller, action menu |
-| `src/sim/counterparties.py`, `src/sim/pcp_office.py` | Fictional billing offices, plan appeal units, suppliers, state agency; a doctor's office phone menu with hold and transfers |
-| `tests/` | `test_patient.py` (patient flow, navigator, safety), `test_family.py` (care circle, support plan, workflows, calls) and the swarm tests |
-| `docs/` | `DEMO-PITCH.md` (3-minute script, kept current), `FAMILY-AND-AGING.md` (aging, families, market, frontier), `PLAN.md` (original swarm plan), `swarm-architecture.md`, `DATA-SOURCES.md`, `demo-script.md` (older swarm-only script) |
+| `src/sim/counterparties.py`, `src/sim/pcp_office.py` | Fictional billing offices, plan appeal units, suppliers, state agency; a doctor's office phone menu with hold, transfers and Spark receptionists |
+| `src/agents/ai.py` | The patient layer's metered gateway to the Meta Model API (budget, fallbacks, JSON validation) |
+| `src/agents/office_caller.py`, `reader.py`, `appeals.py` | Spark caller; Spark vision reader and bill math; Wonder strategist and Spark writer with letter checks |
+| `src/sim/documents.py`, `scripts/make_sample_docs.py` | Fictional denial letter, bill and EOB, with ground truth; rendered to `src/api/static/samples/` |
+| `src/eval/pj_redteam.py`, `scripts/redteam_pj.py`, `scripts/eval_reader.py` | PJ's red team and the reader eval (live) |
+| `tests/` | `test_patient.py` (patient flow, navigator, safety), `test_family.py` (care circle, support plan, workflows, calls), `test_spark_crew.py` (caller, reader, strategist, writer, PJ chat, fallbacks, storage) and the swarm tests |
+| `docs/` | `DEMO-PITCH.md` (3-minute script, kept current), `COMPLIANCE.md` (honest posture), `FAMILY-AND-AGING.md` (aging, families, market, frontier), `PLAN.md` (original swarm plan), `swarm-architecture.md`, `DATA-SOURCES.md`, `demo-script.md` (older swarm-only script) |
 
 Planned additions:
 
 - `src/channels/payer.py`, `directory.py` and `phone.py`: adapter interfaces modeled on `FaxChannel`.
 - `src/agents/referrals.py` (referral requests already go through the Caller).
-- `src/patient/db.py` (SQLite).
-- `docs/COMPLIANCE.md`.
 
 ## 15. Build status and next steps
 
-### Done (84 tests pass offline)
+### Done (125 tests pass offline)
 
 | Area | Status | Proof |
 |---|---|---|
@@ -415,7 +431,14 @@ Planned additions:
 | Support plan from risk factors (older adult, child, teen), never advice | ✅ rules | `test_support_plan_*` |
 | Crew workflows: bill dispute, prior-auth appeal → outside review, rides/aide/supplies, medical equipment, home care hours appeal, counselor request | ✅ simulated counterparties | `test_every_workflow_stops_for_consent_before_sending`, `test_a_denied_appeal_escalates_to_outside_review`, `test_bill_dispute_reports_the_money_saved` |
 | Doctor's-office caller: phone menu, hold, transfer to the right person, reference number | ✅ simulated office | `test_office_call_works_the_menu_holds_and_gets_the_right_person` |
-| Any Meta model call in the patient layer | ❌ | Everything in the patient layer is deterministic |
+| Live doctor's-office caller on Muse Spark (vs. Spark receptionists): menu, hold, transfer, address-fishing refused, reference verified | ✅ live | `test_live_caller_works_the_menu…`, `test_a_reference_number_the_office_never_said_is_not_trusted`; live runs Oct 29: 12–22 s, 11–17 requests, every check passed |
+| Reader: denial letter, bill and EOB from a photo (Spark vision) | ✅ live | `scripts/eval_reader.py`: 25/25 fields; `test_reader_validates_what_the_model_returns` |
+| Prior-auth appeal end to end on Meta models (read → call → Wonder evidence map → Spark letter → signature) | ✅ live | `test_appeal_from_a_photo_of_the_denial_letter`; live run Oct 29 about 45 s |
+| Bill dispute from photos (Spark reads, code does the math) | ✅ live | `test_bill_dispute_from_photos_saves_what_the_math_says`; live run Oct 29 about 10 s, $493 overcharge found |
+| PJ's chat on Muse Spark with tools and guards | ✅ live | `test_pj_red_team` (20 cases); `scripts/redteam_pj.py` 20/20 live |
+| Fallbacks, budget caps, background jobs, live streaming | ✅ | `test_every_model_step_falls_back_to_the_rules`, `test_background_mode_streams_then_finishes_and_saves`, `test_budget_caps…` |
+| SQLite store and delete-my-data | ✅ | `test_sqlite_store_survives_a_restart_and_delete_means_delete` |
+| Compliance posture | ✅ | [docs/COMPLIANCE.md](docs/COMPLIANCE.md) |
 
 ### Next, in priority order
 
@@ -425,16 +448,17 @@ Submission is due Nov 4, 9:00 PM ET. Aim to submit on Nov 3.
 |---|---|---|
 | 1 | **Point the Care Team agent at the real directory.** Use `src/directory/` for doctor search when the patient's insurer is UHC, Cigna or Humana, and keep the simulated directory for the demo cards. | Searching for a real Phoenix cardiologist shows the networks that insurer's directory lists, marked `unverified` until confirmed. |
 | 2 | **Hook "Do it, PJ" (in-network) up to the swarm.** `POST /care/{id}/go?kind=in_network` starts a swarm run with the patient's plan and need. The task shows progress and the held slot. The patient confirms. | A held slot appears on the patient dashboard. Nothing is booked without the patient's yes. |
-| 3 | **Give PJ its voice on Muse Spark** (`guide.ask` for chat answers), grounded on the record, with the safety block hashed like `SAFETY_SHA`. | Safety tests still pass with the live model. A 30-question red-team set (dosing, diagnosis, crisis) passes 100%. |
+| 3 | ✅ **Done Oct 29:** PJ on Muse Spark, `PJ_SAFETY_SHA` pinned, red team 20/20 live. Next: grow the set to 50+. | |
 | 4 | **Read an insurance card photo into `Coverage`** with Muse Spark vision (fictional card images). | Upload a fake card photo, and the member ID and payer are read correctly. |
 | 5 | **Build a simulated insurer portal and use computer-use on it.** The portal is a small fake page served by the app. | The Coverage agent logs into the fake portal with a fake demo login and reads benefits off the screen. |
 | 6 | **Have Wonder plan the navigator's explanations.** Keep the rules for the facts; Wonder writes the plan and chases the steps. | Same ranked pathways as the rules, with plainer copy. |
 | 7 | **Extract records:** a fictional PDF or fax image → `HealthItem`s via Spark vision. | A sample PDF fills Clinicals and Family & Genes with the correct flags. |
 | 8 | **Build the Referrals agent** for `pcp_first`: draft the referral request to the PCP and track it. | The HMO dermatology flow ends with a referral task. |
-| 9 | **Add a SQLite store** (`PATIENT_STORE_DIR` → a real database) and delete-my-data. | Data survives a restart, and delete removes everything. |
+| 9 | ✅ **Done Oct 29:** SQLite (`PATIENT_DB`) and delete-my-data. | |
 | 10 | **Reuse the swarm's voice intake for Ask PJ.** Call `src/voice.py` and reuse the browser WAV conversion from `index.html`. | The patient can speak the Ask PJ question. |
 | 11 | **Record the demo video from `docs/DEMO-PITCH.md`** (keep that script current with every user-visible feature), with the swarm as the climax. | A 3-minute video is recorded. |
-| 12 | **Write `docs/COMPLIANCE.md` and the pilot path.** | An honest posture, with no compliance claims. |
+| 12 | ✅ **Done Oct 29:** [docs/COMPLIANCE.md](docs/COMPLIANCE.md). | |
+| 13 | **Adversarial plan reviewer and call gym on the partner credits** (Muse Spark Open on Baseten and Fireworks): a reviewer agent tries to deny each appeal before it's sent; hundreds of simulated receptionist personas stress-test the caller. | A pass-rate report over 500+ simulated calls, and appeals revised until the reviewer finds nothing. |
 
 If behind schedule, cut in this order: 10, 9, 7, 5. Protect 2, 3 and 11.
 

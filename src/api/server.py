@@ -4,8 +4,10 @@
 
 Hosting model (single process, in-memory state, so run exactly ONE instance):
 - Anyone can open the dashboard and watch a recorded run (POST /api/replay). Free, safe, no keys used.
-- Live runs spend model credits, so they require APP_ACCESS_TOKEN (header X-Access-Token).
-  With no token configured, live runs are disabled unless MOCK_LLM=1 (offline demo mode).
+- Live runs spend model credits. During the hackathon judging window they are OPEN to anyone
+  (OPEN_LIVE_DEMO=1, the default), still capped by MAX_LIVE_RUNS_PER_DAY and
+  MIN_SECONDS_BETWEEN_RUNS. Set OPEN_LIVE_DEMO=0 to require APP_ACCESS_TOKEN (header
+  X-Access-Token) again; with no token configured, live runs are then disabled unless MOCK_LLM=1.
 """
 from __future__ import annotations
 
@@ -40,8 +42,17 @@ app = FastAPI(title="PJ Health: healthcare built for the patient")
 app.include_router(patient_router)
 
 
+MAX_BODY = 12_000_000  # a downscaled document photo is far smaller; this keeps one upload from exhausting memory
+
+
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
+    try:
+        size = int(request.headers.get("content-length") or 0)
+    except ValueError:
+        size = 0
+    if size > MAX_BODY or (request.method in ("POST", "PUT") and "chunked" in request.headers.get("transfer-encoding", "")):
+        return JSONResponse({"detail": "That upload is too large (12 MB max)."}, status_code=413)
     resp = await call_next(request)
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
     resp.headers.setdefault("X-Frame-Options", "DENY")
@@ -79,12 +90,25 @@ def _int_env(name: str, default: int) -> int:
         return default
 
 
+def open_demo() -> bool:
+    """Hackathon judging: anyone may start a live run (rate limits still apply)."""
+    return os.getenv("OPEN_LIVE_DEMO", "1") == "1"
+
+
+def _has_model_key() -> bool:
+    return bool(os.getenv("MODEL_API_KEY"))
+
+
 def live_enabled() -> bool:
-    return mock_enabled() or bool(_token())
+    return mock_enabled() or bool(_token()) or (open_demo() and _has_model_key())
 
 
 def require_live(x_access_token: str | None = Header(default=None)) -> None:
     """Live runs and approvals spend credits / act for the patient: gate them."""
+    if open_demo():
+        if mock_enabled() or _has_model_key():
+            return  # open for judging; the run caps in start() still apply
+        raise HTTPException(403, "Live runs are disabled on this server (MODEL_API_KEY is not set).")
     token = _token()
     if not token:
         if mock_enabled():
@@ -133,6 +157,16 @@ def pj_image():
     return FileResponse(STATIC / "pj.webp", media_type="image/webp")
 
 
+@app.get("/samples/{name}")
+def sample_document(name: str):
+    """The fictional sample letter, bill and EOB the reader agent can read (src/sim/documents.py)."""
+    from ..sim.documents import SAMPLES
+    files = {v["file"] for v in SAMPLES.values()}
+    if name not in files:
+        raise HTTPException(404, "No such sample")
+    return FileResponse(STATIC / "samples" / name, media_type="image/png", headers={"Cache-Control": "public, max-age=3600"})
+
+
 @app.get("/healthz")
 def healthz():
     return {"ok": True}
@@ -142,7 +176,7 @@ def healthz():
 def config():
     return {
         "live_enabled": live_enabled(),
-        "token_required": bool(_token()),
+        "token_required": bool(_token()) and not open_demo(),
         "mock": mock_enabled(),
         "replay_available": _replay_file().exists(),
     }

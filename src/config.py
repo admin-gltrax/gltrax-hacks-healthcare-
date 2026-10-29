@@ -18,6 +18,12 @@ ROLE_DEFAULTS: dict[str, tuple[str, str | None]] = {
     "office": ("muse-spark-1.3", "minimal"),  # simulated receptionists
     "judge": ("muse-spark-1.3", "medium"),
     "critic": ("muse-wonder-1.0", "high"),  # proposes prompt patches
+    # patient layer (src/agents/ai.py meters every request)
+    "caller": ("muse-spark-1.3", "low"),  # phones the doctor's office for the patient
+    "reader": ("muse-spark-1.3", "low"),  # vision: denial letters, bills, EOBs
+    "strategist": ("muse-wonder-1.0", "medium"),  # maps evidence to a plan's criteria
+    "writer": ("muse-spark-1.3", "low"),  # drafts appeal and dispute letters
+    "pj": ("muse-spark-1.3", "low"),  # PJ's chat voice
 }
 
 

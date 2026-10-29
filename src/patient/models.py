@@ -309,6 +309,7 @@ class WorkflowStep(BaseModel):
     status: StepStatus = "pending"
     detail: str | None = None
     due: str | None = None  # YYYY-MM-DD, for waits and filing windows
+    engine: str | None = None  # the model that did the step ("muse-spark-1.3"), or "rules"
 
 
 WorkflowStatus = Literal["working", "needs_you", "waiting_on_them", "won", "partly_won", "lost", "closed"]
@@ -328,6 +329,9 @@ class Workflow(BaseModel):
     letter: str | None = None  # what will be sent, shown in full before approval
     findings: list[str] = Field(default_factory=list)  # what the agents found, in plain words
     calls: list[dict] = Field(default_factory=list)  # phone calls the caller agent made (src/agents/office_calls.py)
+    documents: list[dict] = Field(default_factory=list)  # what the reader agent read: kind, model, fields (never the image)
+    criteria: list[dict] = Field(default_factory=list)  # the plan's criteria mapped to evidence (strategist agent)
+    checks: list[dict] = Field(default_factory=list)  # guardrail results on what the models produced
     outcome: str | None = None
     saved: str | None = None  # money or hours recovered, when there is a number
     deadline: str | None = None  # the filing or decision window PJ is watching

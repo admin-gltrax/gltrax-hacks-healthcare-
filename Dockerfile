@@ -11,11 +11,12 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-# Run as a non-root user; data/runs is where each live run's audit log is written.
+# Run as a non-root user; data/runs holds each live run's audit log, data/patients.db the (fictional) patient records.
 RUN useradd --create-home app && mkdir -p data/runs && chown -R app:app /app
 USER app
 
-ENV PORT=8000
+ENV PORT=8000 \
+    PATIENT_DB=/app/data/patients.db
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \

@@ -82,6 +82,9 @@ def respond(template: str, inputs: dict, outcome: str = "approved") -> tuple[str
         case = BILL_CASES.get(inputs.get("issue") or "not_sure", BILL_CASES["not_sure"])
         if not won:
             return "lost", "The billing office says the bill is correct. PJ can take it to the plan's member services next.", None
+        billed, owed = inputs.get("billed"), inputs.get("owed")
+        if isinstance(billed, (int, float)) and isinstance(owed, (int, float)):  # read from the real bill and EOB
+            return "won", f"Corrected bill received: you owe ${owed:,.2f}, not ${billed:,.2f}.", f"${billed - owed:,.0f}"
         saved = case["billed"] - case["owed"]
         return "won", f"Corrected bill received: you owe ${case['owed']}, not ${case['billed']}.", f"${saved}"
     if template in ("pa_appeal", "external_review"):

@@ -49,7 +49,28 @@ async def test_health_config_and_security_headers():
         assert cfg["mock"] is True and cfg["live_enabled"] is True and cfg["replay_available"] is False
 
 
+async def test_open_demo_runs_live_without_a_token_but_keeps_the_caps(monkeypatch):
+    monkeypatch.setenv("APP_ACCESS_TOKEN", "s3cret")  # ignored while the judging window is open
+    monkeypatch.setenv("MIN_SECONDS_BETWEEN_RUNS", "3600")
+    async with client() as c:
+        cfg = (await c.get("/api/config")).json()
+        assert cfg["live_enabled"] is True and cfg["token_required"] is False
+        assert (await c.post("/api/swarm/start", json={})).status_code == 200
+        await wait_done(c)
+        assert (await c.post("/api/swarm/start", json={})).status_code == 429  # the caps still hold
+
+
+async def test_open_demo_needs_a_model_key(monkeypatch):
+    monkeypatch.setenv("MOCK_LLM", "0")
+    monkeypatch.delenv("MODEL_API_KEY", raising=False)
+    async with client() as c:
+        assert (await c.get("/api/config")).json()["live_enabled"] is False
+        assert (await c.post("/api/swarm/start", json={})).status_code == 403
+        assert server.STATE["task"] is None
+
+
 async def test_live_runs_disabled_without_token_when_not_mock(monkeypatch):
+    monkeypatch.setenv("OPEN_LIVE_DEMO", "0")
     monkeypatch.setenv("MOCK_LLM", "0")  # real models would be used, so there MUST be a token
     async with client() as c:
         assert (await c.get("/api/config")).json()["live_enabled"] is False
@@ -59,6 +80,7 @@ async def test_live_runs_disabled_without_token_when_not_mock(monkeypatch):
 
 
 async def test_token_gates_live_runs(monkeypatch):
+    monkeypatch.setenv("OPEN_LIVE_DEMO", "0")
     monkeypatch.setenv("APP_ACCESS_TOKEN", "s3cret")
     async with client() as c:
         assert (await c.get("/api/config")).json()["token_required"] is True
@@ -74,6 +96,7 @@ async def test_token_gates_live_runs(monkeypatch):
 
 
 async def test_approve_requires_token(monkeypatch):
+    monkeypatch.setenv("OPEN_LIVE_DEMO", "0")
     monkeypatch.setenv("APP_ACCESS_TOKEN", "s3cret")
     async with client() as c:
         r = await c.post("/api/approve", json={"office_id": "off_01", "slot_start": "2026-11-02T10:00"})
@@ -126,6 +149,7 @@ def _wav(n_samples: int = 1600) -> bytes:
 
 
 async def test_voice_intake_is_token_gated_and_validates_audio(monkeypatch):
+    monkeypatch.setenv("OPEN_LIVE_DEMO", "0")
     monkeypatch.setenv("APP_ACCESS_TOKEN", "s3cret")
     async with client() as c:
         assert (await c.post("/api/intake/transcribe", content=_wav())).status_code == 401  # spends credits: token required

@@ -9,9 +9,10 @@ route works on the person currently being viewed, and checks what the account
 holder may do for them: view, act (have PJ do the work) or approve (sign and
 say yes). See src/agents/circle.py.
 
-All routes are under /api/p. Every route works offline (MOCK_LLM=1 or not):
-the agents run deterministically over the simulated insurers, directory,
-records office and counterparties.
+All routes are under /api/p. With the Meta Model API on, PJ's crew runs on
+Muse Spark and Muse Wonder (src/agents/ai.py meters every request); with it off,
+over budget or failing, every route still works on the deterministic rules
+over the simulated insurers, directory, records office and counterparties.
 """
 from __future__ import annotations
 
@@ -19,11 +20,12 @@ from fastapi import APIRouter, Cookie, HTTPException, Response
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
-from ..agents import actions, care_team, circle, coverage, guide, outreach, records, workflows
+from ..agents import actions, ai, care_team, circle, coverage, guide, outreach, records, workflows
 from ..patient.buckets import PANELS, bucket_meta
 from ..patient.demo import DEMO_NAME, build_demo
 from ..patient.models import AgentTask, Bucket, CareRecipient, HealthRecord, TaskStatus
 from ..patient.store import export_json, store
+from ..sim import documents
 from ..sim.payers import DEMO_CARDS
 
 router = APIRouter(prefix="/api/p")
@@ -100,6 +102,10 @@ class Ctx:
     def save(self) -> None:
         store().put(self.token, self.account)
 
+    @property
+    def account_id(self) -> str:
+        return self.account.patient.id
+
 
 def _ctx(session: str | None) -> Ctx:
     acc = store().get(session)
@@ -119,7 +125,20 @@ def _viewing(account: HealthRecord, rec: HealthRecord, cr: CareRecipient | None)
             "signer": circle.signer(account, cr)[0] if circle.can(cr, "approve") else None}
 
 
+def ai_status(account: HealthRecord) -> dict:
+    roles = {"caller": "Calls offices", "reader": "Reads letters and bills", "strategist": "Maps evidence to the plan's rules",
+             "writer": "Writes letters", "pj": "PJ's chat"}
+    on = ai.enabled()
+    return {"enabled": on, "budget": ai.BUDGET.status(account.patient.id),
+            "models": [{"role": r, "does": d, "model": ai.engine_label(r) if on else "rules"} for r, d in roles.items()]}
+
+
 def dashboard(account: HealthRecord) -> dict:
+    with workflows.LOCK:  # background agents write to the same records
+        return _dashboard(account)
+
+
+def _dashboard(account: HealthRecord) -> dict:
     rec, cr = circle.resolve(account)
     base = {
         "account": {"name": account.patient.display_name},
@@ -130,6 +149,8 @@ def dashboard(account: HealthRecord) -> dict:
         "about_catalog": [{"key": k, "label": v} for k, v in outreach.TOLD.items()],
         "panels": PANELS,
         "demo_cards": list(DEMO_CARDS),
+        "samples": documents.catalog(),
+        "ai": ai_status(account),
     }
     if not circle.can(cr, "view"):  # nothing but the name until they say yes
         first = rec.patient.display_name.split()[0]
@@ -154,6 +175,7 @@ def dashboard(account: HealthRecord) -> dict:
         "support_plan": [a.model_dump(mode="json") for a in outreach.support_plan(rec)],
         "about": [f.model_dump(mode="json") for f in outreach.all_factors(rec)],
         "workflows": [w.model_dump(mode="json") for w in rec.workflows],
+        "busy": workflows.busy(rec),
     }
 
 
@@ -182,6 +204,15 @@ async def demo(response: Response):
 def signout(response: Response):
     response.delete_cookie(COOKIE)
     return {"ok": True}
+
+
+@router.delete("/me")
+def delete_me(response: Response, pj_session: str | None = Cookie(default=None)):
+    """Delete my data: the whole account, everyone in the care circle, every workflow. No undo."""
+    if not pj_session or not store().delete(pj_session):
+        raise HTTPException(401, "Nothing to delete.")
+    response.delete_cookie(COOKIE)
+    return {"deleted": True}
 
 
 @router.get("/me")
@@ -301,9 +332,11 @@ def support_dismiss(key: str, pj_session: str | None = Cookie(default=None)):
 def start_workflow(body: WorkflowBody, pj_session: str | None = Cookie(default=None)):
     c = _ctx(pj_session).need("act")
     try:
-        wf = workflows.start(c.rec, body.template, body.inputs)
+        wf = workflows.start(c.rec, body.template, body.inputs, account=c.account_id, save=c.save)
     except KeyError:
         raise HTTPException(404, "Unknown workflow")
+    except workflows.WorkflowError as e:
+        raise HTTPException(400, str(e))
     c.save()
     return {**dashboard(c.account), "workflow_id": wf.id}
 
@@ -313,7 +346,7 @@ def approve_workflow(wf_id: str, body: SignBody, pj_session: str | None = Cookie
     c = _ctx(pj_session).need("approve")
     who, capacity = circle.signer(c.account, c.cr)
     try:
-        workflows.approve(c.rec, wf_id, body.typed_name, who, capacity)
+        workflows.approve(c.rec, wf_id, body.typed_name, who, capacity, save=c.save)
     except KeyError:
         raise HTTPException(404, "Unknown workflow")
     except workflows.WorkflowError as e:
@@ -406,9 +439,9 @@ def simulate_response(req_id: str, pj_session: str | None = Cookie(default=None)
 
 
 @router.post("/ask")
-def ask(body: AskBody, pj_session: str | None = Cookie(default=None)):
+async def ask(body: AskBody, pj_session: str | None = Cookie(default=None)):
     c = _ctx(pj_session).need("view")
-    answer = guide.ask(c.rec, body.text[:500])
+    answer = await guide.ask_live(c.rec, body.text[:500], account=c.account_id, viewer=c.account.patient.display_name)
     c.save()
     return {**dashboard(c.account), "answer": answer}
 

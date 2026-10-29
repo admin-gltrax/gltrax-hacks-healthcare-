@@ -69,11 +69,11 @@ async def _mom(account: HealthRecord) -> None:
     rec.patient.onboarding_step = "done"
     # A bill PJ already fixed, and an appeal waiting for Alex's signature.
     bill = workflows.start(rec, "bill_dispute", {"biller": "Harbor Light Internal Medicine", "issue": "duplicate",
-                                                 "service_date": "2026-08-14"})
+                                                 "service_date": "2026-08-14"}, live=False)
     workflows.approve(rec, bill.id, DEMO_NAME, *circle.signer(account, cr))
     workflows.respond(rec, bill.id)
     workflows.start(rec, "pa_appeal", {"service": "Physical therapy at home after her fall",
-                                       "reason": "not_medically_necessary", "denied_on": "2026-10-20"})
+                                       "reason": "not_medically_necessary", "denied_on": "2026-10-20"}, live=False)
 
 
 async def _kid(account: HealthRecord) -> None:
