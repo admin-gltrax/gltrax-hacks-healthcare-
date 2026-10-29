@@ -35,7 +35,7 @@ ROLE_DEFAULTS: dict[str, tuple[str, str | None]] = {
     "pj": ("muse-spark-1.3", "low"),  # PJ's chat voice
     # partner credits (Muse Spark Open): adversaries and judges, never patient-facing
     "reviewer": (PROVIDERS["baseten"][2], "low"),  # plays the insurer's medical reviewer
-    "judge_open": (PROVIDERS["fireworks"][2], "low"),  # the cross-family judge
+    "judge_open": (PROVIDERS["fireworks"][2], "medium"),  # the cross-family judge (same effort as "judge")
 }
 # Roles whose default provider isn't Meta. Override per role with <ROLE>_PROVIDER
 # (meta | baseten | fireworks), or fully with <ROLE>_BASE_URL / _API_KEY_ENV / _MODEL.

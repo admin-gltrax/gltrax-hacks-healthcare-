@@ -22,6 +22,9 @@ Each line is enforced in code and covered by a test (`tests/`), not just written
 | No `-contributor` models (Meta trains on those) | `ai.model_for` | `test_budget_caps_and_contributor_models_are_refused` |
 | Model spend is capped per server and per account per day | `ai.Budget` | same |
 | Session tokens are stored only as SHA-256 hashes; sessions expire after 7 days; "Delete my data" removes everything and can't be undone by a late background job | `src/patient/store.py` | `test_sqlite_store_survives_a_restart_and_delete_means_delete` |
+| The patient-facing crew (caller, reader, strategist, writer, PJ's chat) can only run on Meta's Model API; partner credits run simulators, the adversary and judges | `ai.model_for` | `test_patient_facing_crew_stays_on_meta_and_partner_roles_use_their_own_keys` |
+| Caller safety holds at scale: 600 simulated hostile offices (data fishers, fake "HIPAA verification", AI refusers, voicemail, Spanish-first), every call scored in code | `src/sim/gym.py`, `scripts/call_gym.py` | `test_the_gym_catches_*`; latest run in `docs/evals.md` |
+| The adversarial reviewer can only cite the plan's real rules and never writes letter text; revisions must pass the letter checks | `src/agents/reviewer.py` | `test_objections_must_cite_real_rules_and_the_reviewer_never_writes_the_letter`, `test_a_revision_that_fails_the_letter_checks_is_never_used` |
 | No passwords, ever: not for PJ, not for insurer portals | sign-in is name-only (demo); PJ's chat refuses logins | `test_pj_red_team` |
 
 ## 2. Which laws would apply to a real launch
@@ -55,7 +58,8 @@ PJ treats all of these as **typical** windows and says so. When the reader agent
 | Vendor | Used for | Real-PHI status |
 |---|---|---|
 | Meta Model API (Muse Spark, Muse Wonder) | Caller, receptionist simulator, reader, strategist, writer, PJ's chat | **Unknown whether Meta signs a BAA.** Until one is in place, no real PHI goes to it. |
-| Fireworks / Baseten (Muse Spark Open, open weights) | Planned: simulators, adversarial reviewer, evals | Check each vendor's BAA and data-retention terms before any real data. A self-hosted open-weights deployment is the likely path for PHI. |
+| Fireworks / Baseten (Muse Spark Open, open weights) | Built: call gym receptionists, the insurer-side appeal reviewer, the second judge. Never patient-facing (enforced in `ai.model_for`). Fictional data only. | Check each vendor's BAA and data-retention terms before any real data. A self-hosted open-weights deployment is the likely path for PHI. |
+| Open text-to-speech (Kokoro-82M, open weights; Baseten deployment planned) | The simulated voice call and the speech-to-text eval only. **Off by default** (`VOICE_TTS=off`): whether the hackathon allows non-Meta TTS is unconfirmed. | Synthetic voices, fictional people; no real audio is ever recorded. |
 | AWS Lightsail | Hosting the demo | AWS offers a BAA for HIPAA-eligible services. Check that Lightsail containers are covered, or move to ECS or Fargate. |
 
 The `-contributor` model variants are never used: Meta trains on those prompts.
@@ -67,7 +71,7 @@ The `-contributor` model variants are never used: Meta trains on those prompts.
 3. **Data layer:** encryption at rest (managed Postgres with KMS), field-level encryption for identifiers, a 90-day append-only audit log, a retention policy, and tested deletion.
 4. **Vendor BAAs:** model provider (or self-hosted Muse Spark Open), fax, hosting, email.
 5. **Calls:** a counsel-reviewed TCPA posture, a recording-consent announcement, opt-out handling, and a human escalation line.
-6. **Safety evals in CI on every prompt change:** the PJ red team at 100%, caller safety at 100% over a large simulated call set, and reader accuracy above an agreed threshold on a labeled set.
+6. **Safety evals in CI on every prompt change:** the PJ red team at 100%, caller safety at 100% over a large simulated call set (the call gym exists: `scripts/call_gym.py`), and reader accuracy above an agreed threshold on a labeled set (`scripts/eval_reader.py`, 33 documents x 4 photo qualities).
 7. **A human-in-the-loop review** of appeals before sending, until the outcome data supports trusting the crew.
 8. **Policies:** privacy notice, terms, incident response, and an FTC breach-notification runbook.
 

@@ -16,6 +16,7 @@ Guardrails beyond the prompt:
 """
 from __future__ import annotations
 
+import inspect
 import json
 import re
 from pathlib import Path
@@ -88,7 +89,8 @@ class OfficeCall:
             self.on_line(speaker, text)
 
     async def run(self) -> dict:
-        opening = self.line.opening()
+        hear = getattr(self.line, "hear_opening", None)  # a voice line speaks the menu and transcribes it
+        opening = await hear() if hear else self.line.opening()
         self._log("office", opening)
         self.msgs.append({"role": "user", "content": f"[Call connected] {opening}"})
         silences = 0
@@ -104,7 +106,7 @@ class OfficeCall:
                     self._new_person = False
                 self._log("pj", said)
             for tc in res.tool_calls:
-                self.msgs.append({"role": "tool", "tool_call_id": tc.id, "content": json.dumps(self._tool(tc))})
+                self.msgs.append({"role": "tool", "tool_call_id": tc.id, "content": json.dumps(await self._tool(tc))})
             if self.finished or self.line.state == "ended" and not res.tool_calls:
                 break
             if res.tool_calls:
@@ -139,7 +141,7 @@ class OfficeCall:
             self.msgs.append({"role": "user", "content": content})
         return content
 
-    def _tool(self, tc: ToolCall) -> dict:
+    async def _tool(self, tc: ToolCall) -> dict:
         a = tc.arguments
         if tc.parse_error:
             return {"ok": False, "error": f"Could not parse arguments: {tc.parse_error}"}
@@ -147,7 +149,8 @@ class OfficeCall:
             if self.line.state != "ivr":
                 return {"ok": False, "error": "No phone menu is active. Speak instead."}
             self._log("pj", f"[pressed {str(a.get('digits', ''))[:1]}]")
-            text, hold = self.line.press(str(a.get("digits", "")))
+            pressed = self.line.press(str(a.get("digits", "")))
+            text, hold = (await pressed) if inspect.isawaitable(pressed) else pressed  # a voice line transcribes the menu
             return {"ok": True, "heard": self._heard(text, hold, as_tool=True), "line_state": self.line.state}
         if tc.name == "record_result":
             ref = str(a.get("reference", "")).strip().upper()

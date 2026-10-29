@@ -55,6 +55,23 @@ Meta Global AI Developer Hackathon (Meta + Cerebral Valley).
 
 `MOCK_LLM=1 HOLD_SCALE=0 pytest -q` passes **125 tests**.
 
+**Partner credits: scale and adversaries (Oct 29, late).** THE RULE: the patient-facing crew stays on Meta's Model API (enforced in `ai.model_for`); Muse Spark Open on partner credits runs simulators, adversaries, judges. Results and the running spend log: `docs/evals.md` (rebuilt by every eval script from `docs/evals/*.json` + `spend.jsonl`); the page is `/gym`.
+
+| Piece | Files | Live result |
+|---|---|---|
+| Adversarial plan reviewer: Muse Spark Open plays the insurer's reviewer, tries to deny the draft appeal against the plan's own rules; Spark writer revises (≤3 rounds); leftover objections become to-dos. Step "Stress-test the appeal" between draft and approve | `src/agents/reviewer.py`, `workflows._pa_review`, `scripts/stress_test_appeal.py` | strong file + generic letter: 4 objections → 1 revision → no reason to deny; thin file: 4 evidence gaps → to-dos |
+| Call gym: 16 kinds of hard fictional offices (data fishers, fake HIPAA verification, AI refusers, transfer loops, menu maze, voicemail, hold drop, Spanish-first, mishearing, hostile…), deterministic from a seed; scored in code | `src/sim/gym.py`, `src/eval/gym.py`, `scripts/call_gym.py` | 600 calls (seed 8): **100% safe**, 99.8% right outcome, p50 18 s, $0.031/call |
+| Cross-family judges (Meta Spark vs Muse Spark Open), fixed rubric, Cohen's kappa | `src/eval/judges.py`, `scripts/judge_evals.py` | see `docs/evals.md` |
+| Reader eval: 33 fictional docs × 4 photo qualities (clean, phone, messy, harsh) | `src/sim/documents.py` (`eval_documents`), `src/eval/messy.py`, `scripts/eval_reader.py` | 99.6 / 99.6 / 99.3 / 90.9% fields |
+| Voice loop: office lines synthesized, transcribed by Muse Voice Transcribe, caller hears only the transcript; browser player with waveform + captions on `/gym` | `src/voice_loop.py`, `src/voice_tts.py`, `src/voice.py` (`transcribe_pcm24k`), `scripts/voice_call.py`, `scripts/eval_asr.py` | ASR: DOB 100%, reference 100%, names 35% exact |
+
+- **Providers per role:** `<ROLE>_PROVIDER=meta|baseten|fireworks` (`src/config.py` `PROVIDERS`). Defaults: `reviewer` → Baseten, `judge_open` → Fireworks, `office` → Meta unless `OFFICE_PROVIDER=fireworks` (the gym sets it). Open-weights hosts get JSON mode with the schema in the prompt (`ai.chat_json`).
+- **Baseten key is rejected** (403 "please check the api-key") as of Oct 29, so the reviewer ran on Fireworks (`REVIEWER_PROVIDER=fireworks`). `api.baseten.co` (deployments) was also blocked by the build sandbox's network policy.
+- **TTS is off by default** (`VOICE_TTS=off`): non-Meta TTS isn't confirmed allowed by the Official Rules. `/voice/*` returns 404 and `/gym` shows captions only while it's off. The demo recording was made with Kokoro-82M (open weights) run locally, because Baseten deploys weren't reachable.
+- **Meta realtime ASR** (`wss://…/asr/realtime`) answered HTTP 400 from the sandbox; `transcribe_pcm24k` falls back to file transcription (same model) and records which route ran.
+- Every eval script logs spend; the gate is $25 per run and 70% of a partner credit (`evals_md.over_limit`, `--per-call-usd`).
+- Tests: `tests/test_partner_credits.py`.
+
 **Family care and agent workflows (Oct 29). Offline, deterministic, simulated counterparties.**
 
 | Area | Files |
@@ -261,6 +278,10 @@ See the layout table in README section 14. Key files:
 13. **`PJ_SAFETY` is immutable;** `PJ_SAFETY_SHA` is pinned in `tests/test_spark_crew.py`. The PJ red team stays at 100%, offline and live.
 14. **Models are checked, never trusted:** a reference must appear in what the office said; letter numbers must come from the facts; citations must exist; money math is code; uploaded images are never stored.
 15. **Crisis words and medical questions never reach a model** in PJ's chat. PJ only proposes work; a person taps to start it.
+16. **Partner credits never face the patient.** The caller, reader, strategist, writer and PJ's chat run only on Meta's API (`ai.model_for` refuses other endpoints). Muse Spark Open runs simulators, the reviewer and judges.
+17. **The reviewer is an adversary, not an author.** Its objections must cite rules that exist; it never writes letter text; revisions must pass `check_letter` against the original facts. If it's unavailable, the step is skipped with a note.
+18. **Caller safety is 100% in the call gym.** If a gym safety check fails, fix `prompts/office_caller_v0.txt` (never `SAFETY_BLOCK`) and re-run on a fresh seed.
+19. **No real phone numbers or voices, ever.** Voice calls are labeled "simulated call, synthetic voices"; TTS stays off unless the rules allow it.
 
 **Swarm**
 

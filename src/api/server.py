@@ -163,8 +163,23 @@ EVALS = Path(__file__).resolve().parents[2] / "docs" / "evals"
 @app.get("/api/evals")
 def evals():
     """The latest committed eval reports (fictional data only), plus one sample call per gym persona."""
+    from .. import voice_tts
     from ..eval.reports import latest
-    return latest(EVALS)
+    out = latest(EVALS)
+    if out.get("voice") and out["voice"].get("call"):
+        out["voice"] = {**out["voice"], "call": {**out["voice"]["call"], "playback": voice_tts.mode() != "off"}}
+    return out
+
+
+@app.get("/voice/{name}")
+def voice_recording(name: str):
+    """The simulated voice call (synthetic voices). Served only when the server has VOICE_TTS on:
+    whether the hackathon allows a non-Meta TTS is unconfirmed."""
+    from .. import voice_tts
+    types = {"call.ogg": "audio/ogg", "call.wav": "audio/wav"}
+    if name not in types or voice_tts.mode() == "off" or not (STATIC / "voice" / name).exists():
+        raise HTTPException(404, "Voice playback is off on this server.")
+    return FileResponse(STATIC / "voice" / name, media_type=types[name], headers={"Cache-Control": "public, max-age=600"})
 
 
 @app.get("/pj.webp")

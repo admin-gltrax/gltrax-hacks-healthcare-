@@ -171,6 +171,7 @@ PJ is the only voice the patient hears. PJ hands work to specialist agents. Each
 | **Caller** | `src/agents/office_caller.py`, `office_calls.py` | Muse Spark calls the patient's doctor's office for anything: works the phone menu, waits on hold, gets transferred to the right person, and logs who it spoke with and the reference number (which must appear in what the office said). The offices' receptionists are Spark too (`src/sim/pcp_office.py`). |
 | **Reader** | `src/agents/reader.py` | Muse Spark vision reads a photo of a denial letter, itemized bill or EOB into validated fields. The image is not kept; the money math is code. |
 | **Strategist and Writer** | `src/agents/appeals.py` | Muse Wonder maps evidence on file to the plan's own coverage rules (invented citations are removed); Muse Spark drafts the letter, which must pass `check_letter` to reach the signature. |
+| **Reviewer (adversary)** | `src/agents/reviewer.py` | Plays the insurer's medical reviewer on **Muse Spark Open** (partner credits) and tries to deny each appeal using only the plan's own rules; the Spark writer revises, up to 3 rounds. Whatever it can't be talked out of becomes plain to-dos for the family. Never writes the letter; objections must cite real rules. |
 | **Outreach** | `src/agents/outreach.py` | Turns age, plan and risk factors into a support plan of covered next steps. Never diagnoses. |
 | **Care circle** | `src/agents/circle.py` | Consent and permissions for acting on behalf of an older parent, a child or a spouse. |
 | **Workflow crew** | `src/agents/workflows.py` | Runs multi-agent jobs end to end: bill dispute, prior-authorization appeal (and outside review), rides/aide/supplies, medical equipment, home care hours appeal, counselor request, doctor's-office requests. |
@@ -328,6 +329,10 @@ The swarm keeps its existing routes: `POST /api/swarm/start`, `POST /api/approve
 | Logging into a simulated insurer portal to read benefits | Meta computer-use | **Simulated portal only** in the hackathon. Real portals use APIs, and passwords are never stored. |
 | Scheduling Swarm calls | `muse-spark-1.3` workers, with Wonder as planner and critic | The existing build. |
 | Patient talks instead of typing | `muse-voice-transcribe-1.0` | Already used for the swarm's voice intake (`src/voice.py`, file transcription). Meta has no text-to-speech, so PJ replies on screen. |
+| Insurer-side reviewer that tries to deny each appeal first | Muse Spark Open (Baseten `meta-models/muse-spark-open`, or Fireworks `accounts/fireworks/models/muse-spark-open`) | ✅ Built (`reviewer.py`), partner credits. Never patient-facing; code refuses to put the patient-facing crew on any non-Meta endpoint. |
+| Call gym receptionists (hundreds of hard simulated offices) | Muse Spark Open on Fireworks (`OFFICE_PROVIDER=fireworks`) | ✅ Built (`src/sim/gym.py`, `scripts/call_gym.py`). The caller stays on Meta's Spark. |
+| Cross-family judges | `muse-spark-1.3` (Meta) + Muse Spark Open (Fireworks) | ✅ Built (`src/eval/judges.py`): same rubric, Cohen's kappa, disagreements to a person. |
+| Simulated voice call (the caller hears the office through speech-to-text) | `muse-voice-transcribe-1.0` + an open TTS (off by default) | ✅ Built (`src/voice_loop.py`), `VOICE_TTS=off` until the rules on non-Meta TTS are confirmed. |
 | PJ illustrations and plain-language visuals | `muse-image-1.0` | Fixed character art for PJ. No patient data goes into prompts. |
 
 Hard rule: **no real PHI goes to any model in this build, and nothing ever goes to `-contributor` models** (Meta trains on those prompts). All demo data is fictional.
@@ -366,7 +371,10 @@ These rules apply to code, prompts and copy. Tests enforce the ones marked ✓.
 13. **The caller always says it's an AI calling with the patient's permission** and shares only name, date of birth, member ID and plan. ✓
 14. **Models are checked, never trusted.** A reference number must appear in what the office said; a letter's numbers must come from the facts; evidence citations must exist; money math is code; uploaded images are not stored. Every model step falls back to the rules and says which engine ran. ✓
 15. **Crisis words and medical questions never reach a model** in PJ's chat. ✓
-16. **The swarm's existing invariants still hold:** immutable `SAFETY_BLOCK` / `SAFETY_SHA`, honest leverage only, and never tuning on the holdout split. See [CLAUDE.md](CLAUDE.md).
+16. **Partner credits never face the patient.** Muse Spark Open on Baseten or Fireworks runs simulators, the adversarial reviewer and judges only; `ai.model_for` refuses any non-Meta endpoint for the caller, reader, strategist, writer and PJ's chat. ✓
+17. **The adversary is checked too.** The reviewer's objections must cite rules the plan really has, it never writes letter text, and every revision must pass `check_letter` against the original facts. ✓
+18. **Caller safety stays at 100% at scale.** The call gym scores every simulated call in code (AI disclosed to each person, no extra data, no human claim, AI confirmed when asked, nothing on voicemail, no made-up reference); a failure is fixed in `prompts/office_caller_v0.txt`, never in `SAFETY_BLOCK`. ✓
+19. **The swarm's existing invariants still hold:** immutable `SAFETY_BLOCK` / `SAFETY_SHA`, honest leverage only, and never tuning on the holdout split. See [CLAUDE.md](CLAUDE.md).
 
 ## 14. Repo layout
 

@@ -525,12 +525,21 @@ def _pa_draft_rules(wf: Workflow, rec: HealthRecord) -> str:
         f"To: Appeals Unit, {_payer(rec)}\nFax: {wf.inputs.get('appeals_fax') or cp.APPEALS_FAX.get(_prefix(rec), 'on the denial letter')}\n\n"
         f"Re: Appeal of prior authorization denial for {svc}. Member: {_who(rec)}, plan {_plan(rec)}\n\n"
         f"I'm appealing the denial of {svc}, which was denied because {reason}.{fast}\n"
-        f"My doctor, {_doctor(rec)}, has written the enclosed letter of medical necessity. The enclosed records show "
+        f"{_doctor_letter(wf, rec)} The enclosed records show "
         "the history behind the request. Each of the plan's coverage criteria is answered in the enclosed table.\n\n"
         "Please send me the plan's decision in writing, and a copy of the criteria used.\n\n"
         f"Prepared with my assistant, PJ, at my direction.\n\n{SIGNATURE}\n"
     )
     return "Appeal letter drafted, with the doctor's letter, records and a criteria table attached."
+
+
+def _doctor_letter(wf: Workflow, rec: HealthRecord) -> str:
+    """Say only what's true about the doctor's letter: requested (with the call's reference), not 'enclosed'."""
+    call = next((c for c in reversed(wf.calls) if c.get("purpose") == "letter" and c.get("ok", True)), None)
+    if call:
+        return (f"I have asked my doctor, {_doctor(rec)}, for a letter of medical necessity (office reference {call['reference']}); "
+                "the office will send it to you directly.")
+    return f"My doctor, {_doctor(rec)}, ordered this service."
 
 
 def _pa_send(wf: Workflow, rec: HealthRecord) -> str:

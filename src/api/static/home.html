@@ -1202,7 +1202,7 @@ footer.foot b{color:var(--ink-2)}
         return el('div', { class: 'r' }, [el('div', {}, [el('span', { class: 'chip ' + (o.fix === 'letter' ? 'watch' : 'miss'), text: o.fix === 'letter' ? 'Letter can answer' : 'Needs evidence' }), ' ', el('b', { text: o.rule_id + ': ' + o.rule })]),
           el('span', { text: o.reason }), o.needs ? el('small', { text: 'Would answer it: ' + o.needs }) : null]);
       });
-      var verdict = r.verdict === 'approve' ? ['No reason to deny', 'ok'] : ['Would deny', 'act'];
+      var verdict = r.verdict === 'approve' ? ['No reason to deny', 'ok'] : ['Would deny', 'miss'];
       body.push(el('div', { class: 'round' }, [el('p', { class: 'rh' }, [el('b', { text: 'Round ' + r.round + ' ' }), el('span', { class: 'chip ' + verdict[1], text: verdict[0] }),
         r.invented_rules_dropped ? el('small', { text: ' · ' + r.invented_rules_dropped + ' made-up rule' + (r.invented_rules_dropped === 1 ? '' : 's') + ' removed' }) : null]),
         items.length ? el('div', { class: 'crit' }, items) : null,

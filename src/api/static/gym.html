@@ -58,6 +58,12 @@
   .empty { color:var(--mute); font-style:italic; }
   ul.obj { padding-left:18px; margin:6px 0; }
   code { font-size:12px; }
+  canvas.wave { width:100%; height:70px; display:block; margin:8px 0; cursor:pointer; }
+  audio.player { width:100%; margin:4px 0 8px; }
+  .caps p.now { background:color-mix(in srgb,var(--blue) 14%,transparent); border-radius:6px; }
+  .caps .heard { color:var(--warn); }
+  .caps .menu b { color:var(--mute); }
+  p.sim { display:inline-block; margin:0 0 6px; }
 </style>
 </head>
 <body>
@@ -194,7 +200,49 @@
     var v = d.voice, box = document.getElementById('voiceBody');
     if (!v) return;
     box.textContent = '';
-    box.appendChild(el('div', { class: 'tiles' }, Object.keys(v.wer || {}).map(function (k) { return tile(pct(v.wer[k]), 'word error rate: ' + words(k)); })));
+    var names = { name: 'names', dob: 'dates of birth', reference: 'reference numbers' };
+    if (v.asr) {
+      box.appendChild(el('div', { class: 'tiles' }, Object.keys(v.asr.entity_accuracy).map(function (k) {
+        return tile(pct(v.asr.entity_accuracy[k]), names[k] + ' heard exactly (WER ' + pct(v.wer[k]) + ')', v.asr.entity_accuracy[k] === 1); })));
+      box.appendChild(el('p', { class: 'fine', text: v.asr.lines + ' synthesized office lines (' + Math.round(v.asr.audio_seconds) + ' s), four voices, some fast, transcribed by ' + v.asr.stt + '. Voices: ' + v.asr.tts + '.' }));
+    }
+    var c = v.call;
+    if (!c) return;
+    box.appendChild(el('h3', { text: 'A simulated voice call: ' + words(c.persona.kind) + ' office' }));
+    box.appendChild(el('p', { class: 'sim', text: 'Simulated call, synthetic voices' }));
+    var cv = el('canvas', { class: 'wave', height: '70', 'aria-hidden': 'true' });
+    var caps = el('div', { class: 'tx caps', 'aria-live': 'polite' });
+    var rows = c.captions.filter(function (x) { return x.speaker !== 'hold' || true; }).map(function (x) {
+      var who = { pj: 'PJ: ', office: 'Office: ', menu: 'Menu: ', hold: '' }[x.speaker];
+      var kids = [el('b', { text: who }), x.said];
+      if (x.heard && x.heard.trim().toLowerCase() !== x.said.trim().toLowerCase()) kids.push(el('small', { class: 'heard', text: ' PJ heard: "' + x.heard + '"' }));
+      var p = el('p', { class: x.speaker }, kids); p.dataset.s = x.start; p.dataset.e = x.end; return p;
+    });
+    rows.forEach(function (r) { caps.appendChild(r); });
+    function draw(t) {
+      var w = cv.clientWidth || 600, h = 70, ctx = cv.getContext('2d'); cv.width = w;
+      var pk = c.peaks, n = pk.length, styles = getComputedStyle(document.body);
+      for (var i = 0; i < n; i++) {
+        var x = Math.floor(i / n * w), bh = Math.max(1, pk[i] * (h - 6));
+        ctx.fillStyle = (t != null && i / n <= t / c.seconds) ? styles.getPropertyValue('--blue') : styles.getPropertyValue('--line');
+        ctx.fillRect(x, (h - bh) / 2, Math.max(1, w / n - 1), bh);
+      }
+    }
+    box.appendChild(cv);
+    if (c.playback) {
+      var au = el('audio', { controls: '', preload: 'metadata', class: 'player' }, [el('source', { src: c.audio[0], type: 'audio/ogg' }), el('source', { src: c.audio[1], type: 'audio/wav' })]);
+      au.addEventListener('timeupdate', function () {
+        draw(au.currentTime);
+        rows.forEach(function (r) { var on = au.currentTime >= +r.dataset.s && au.currentTime < +r.dataset.e + 0.3; if (on && !r.classList.contains('now')) { r.classList.add('now'); r.scrollIntoView({ block: 'nearest' }); } else if (!on) r.classList.remove('now'); });
+      });
+      cv.addEventListener('click', function (e) { var r = cv.getBoundingClientRect(); au.currentTime = (e.clientX - r.left) / r.width * c.seconds; au.play(); });
+      box.appendChild(au);
+    } else box.appendChild(el('p', { class: 'fine', text: 'Audio playback is off on this server (VOICE_TTS=off) until the hackathon rules on non-Meta text-to-speech are confirmed. The captions below are the call.' }));
+    box.appendChild(caps);
+    setTimeout(function () { draw(null); }, 0);
+    window.addEventListener('resize', function () { draw(null); });
+    var ok = Object.keys(c.safety).every(function (k) { return c.safety[k]; });
+    box.appendChild(el('p', { class: 'fine', text: Math.round(c.seconds) + ' s · ' + c.misheard_lines + ' office line' + (c.misheard_lines === 1 ? '' : 's') + ' heard differently by speech-to-text · reference ' + c.result.reference + ' (truth ' + c.truth_reference + ') · safety ' + (ok ? 'all checks passed' : 'FAILED') + ' · caller ' + c.caller + ', office ' + c.office + '.' }));
     if (v.note) box.appendChild(el('p', { class: 'fine', text: v.note }));
   }
 
