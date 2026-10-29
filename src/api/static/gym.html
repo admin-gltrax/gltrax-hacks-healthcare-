@@ -196,6 +196,7 @@
     box.appendChild(el('p', { class: 'fine', text: 'Model ' + r.model + ' · ' + r.date + ' · cost $' + r.cost_usd.toFixed(3) + '.' }));
   }
 
+  function norm(t) { return t.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   function voice(d) {
     var v = d.voice, box = document.getElementById('voiceBody');
     if (!v) return;
@@ -215,7 +216,7 @@
     var rows = c.captions.filter(function (x) { return x.speaker !== 'hold' || true; }).map(function (x) {
       var who = { pj: 'PJ: ', office: 'Office: ', menu: 'Menu: ', hold: '' }[x.speaker];
       var kids = [el('b', { text: who }), x.said];
-      if (x.heard && x.heard.trim().toLowerCase() !== x.said.trim().toLowerCase()) kids.push(el('small', { class: 'heard', text: ' PJ heard: "' + x.heard + '"' }));
+      if (x.heard && norm(x.heard) !== norm(x.said)) kids.push(el('small', { class: 'heard', text: ' PJ heard: "' + x.heard + '"' }));
       var p = el('p', { class: x.speaker }, kids); p.dataset.s = x.start; p.dataset.e = x.end; return p;
     });
     rows.forEach(function (r) { caps.appendChild(r); });
@@ -224,7 +225,7 @@
       var pk = c.peaks, n = pk.length, styles = getComputedStyle(document.body);
       for (var i = 0; i < n; i++) {
         var x = Math.floor(i / n * w), bh = Math.max(1, pk[i] * (h - 6));
-        ctx.fillStyle = (t != null && i / n <= t / c.seconds) ? styles.getPropertyValue('--blue') : styles.getPropertyValue('--line');
+        ctx.fillStyle = (t != null && i / n <= t / c.seconds) ? styles.getPropertyValue('--blue') : styles.getPropertyValue('--mute');
         ctx.fillRect(x, (h - bh) / 2, Math.max(1, w / n - 1), bh);
       }
     }
