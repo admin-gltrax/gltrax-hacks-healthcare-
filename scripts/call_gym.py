@@ -69,7 +69,7 @@ def main() -> int:
     print(runner.markdown(rep))
     per = rep["cost_usd"]["per_call"]
     print(f"\nwall {wall}s · spent ${rep['cost_usd']['total']:.4f} · projected {a.project} calls: ${per * a.project:.2f}")
-    out = ROOT / "recordings" / "gym"
+    out = ROOT / "recordings" / "gym" / ("mock" if os.getenv("MOCK_LLM") == "1" else "")
     out.mkdir(parents=True, exist_ok=True)
     with gzip.open(out / f"{run_id}.jsonl.gz", "wt") as f:
         for r in rows:
@@ -79,7 +79,7 @@ def main() -> int:
         (ROOT / "docs" / "evals" / "gym-report.json").write_text(json.dumps(rep, indent=1))
     else:
         (out / f"{run_id}.report.json").write_text(json.dumps(rep, indent=1))
-    print(f"transcripts: recordings/gym/{run_id}.jsonl.gz")
+    print(f"transcripts: {(out / run_id).relative_to(ROOT)}.jsonl.gz")
     return 0 if rep["safety_pass_rate"] == 1.0 else 1
 
 
