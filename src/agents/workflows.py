@@ -29,6 +29,8 @@ Meta models do the hard parts, each behind code that checks it:
   Reader agent      Muse Spark vision reads the denial letter, bill or EOB (reader.py)
   Strategist        Muse Wonder maps the evidence to the plan's own rules (appeals.py)
   Writer agent      Muse Spark drafts the letter; check_letter() must pass
+  Reviewer agent    Muse Spark Open (partner credits) plays the insurer's reviewer
+                    and tries to deny the appeal; the writer revises (reviewer.py)
 A model step returns Pending: it runs in the background while the page shows it
 live, and falls back to the rules if the model is off, over budget or fails.
 Each step records its engine, so the screen says which model did what.
@@ -44,7 +46,7 @@ from typing import Any, Awaitable, Callable
 from ..config import mock_enabled
 from ..patient.models import AgentTask, HealthRecord, TaskStatus, Workflow, WorkflowStep, _now
 from ..sim import counterparties as cp
-from . import ai, appeals, office_calls, reader
+from . import ai, appeals, office_calls, reader, reviewer
 
 # ---------------------------------------------------------------- templates
 
@@ -109,6 +111,11 @@ class Pending:
     work: Callable[[], Awaitable[Any]]
     done: Callable[[Any], str]
     fallback: Callable[[str], str]
+    skip_on_fallback: bool = False  # an optional step: if its model is unavailable, skip it (with a note)
+
+
+class Skip(str):
+    """A step's detail line when the step didn't run (shown as skipped, with the reason)."""
 
 
 LOCK = threading.RLock()  # one in-memory store, background jobs: mutate records under this
@@ -420,9 +427,8 @@ def _pa_criteria(wf: Workflow, rec: HealthRecord):
                    lambda why: rules() + f" (strategist unavailable: {why})")
 
 
-def _pa_draft(wf: Workflow, rec: HealthRecord):
-    if not _live(wf):
-        return _pa_draft_rules(wf, rec)
+def _pa_facts(wf: Workflow, rec: HealthRecord) -> tuple[dict, str]:
+    """What the writer may use (and check_letter enforces), and the To/Re header code adds."""
     call = next((c for c in reversed(wf.calls) if c.get("purpose") == "letter" and c.get("ok", True)), None)
     fax = wf.inputs.get("appeals_fax") or cp.APPEALS_FAX.get(_prefix(rec), "")
     facts = {"to": f"the Appeals Unit at {_payer(rec)}", "member_name": rec.patient.display_name, "date_of_birth": rec.patient.dob,
@@ -438,7 +444,77 @@ def _pa_draft(wf: Workflow, rec: HealthRecord):
     header = (f"To: Appeals Unit, {_payer(rec)}\nFax: {fax or 'on the denial letter'}\n"
               f"Re: Appeal of prior authorization denial{' (case ' + wf.inputs['case_number'] + ')' if wf.inputs.get('case_number') else ''}. "
               f"Member: {_who(rec)}, plan {_plan(rec)}")
+    return facts, header
+
+
+def _pa_draft(wf: Workflow, rec: HealthRecord):
+    if not _live(wf):
+        return _pa_draft_rules(wf, rec)
+    facts, header = _pa_facts(wf, rec)
     return _write(wf, "appeal", facts, header, lambda: _pa_draft_rules(wf, rec))
+
+
+FOOTER = "Prepared with my assistant, PJ, at my direction."
+
+
+def _letter_body(letter: str) -> str:
+    """The part of a drafted letter between the To/Re header and the footer."""
+    head, _, rest = letter.partition("\n\n")
+    if rest.startswith("Re:"):  # the standard letter puts Re: in its own paragraph
+        rest = rest.partition("\n\n")[2]
+    return rest.split(FOOTER)[0].replace(SIGNATURE, "").strip()
+
+
+def _pa_review(wf: Workflow, rec: HealthRecord):
+    """The insurer-side reviewer (Muse Spark Open) tries to deny the draft; the writer revises."""
+    if not wf.letter:
+        return Skip("Nothing to stress-test yet.")
+    if not _live(wf) or not ai.role_ready("reviewer"):
+        return Skip("Skipped: the insurer-side reviewer (Muse Spark Open on partner credits) isn't switched on here. "
+                    "The appeal is unchanged.")
+    facts, header = _pa_facts(wf, rec)
+    rules = [r["criterion"] for r in wf.criteria] or wf.inputs.get("criteria") or \
+        appeals.DEFAULT_CRITERIA.get(wf.inputs.get("reason") or "not_sure", appeals.DEFAULT_CRITERIA["not_sure"])
+    evidence = [e["what"] for e in appeals.evidence_for(rec, wf.calls)]
+    body = _letter_body(wf.letter)
+    wf.review = {"engine": ai.engine_label("reviewer"), "writer": ai.engine_label("writer"), "rules": reviewer.numbered(rules),
+                 "original": body, "rounds": [], "live": True}
+
+    def on_round(entry: dict) -> None:
+        with LOCK:
+            wf.review["rounds"].append(entry)
+
+    def done(r: dict) -> str:
+        wf.review.update(rounds=r["rounds"], passed=r["passed"], todos=r["todos"], note=r["note"], live=False, final=r["body"])
+        if r["revised"]:
+            wf.letter = f"{header}\n\n{r['body']}\n\n{FOOTER}\n\n{SIGNATURE}\n"
+        revisions = [x["revision"] for x in r["rounds"] if x.get("revision")]
+        wf.checks.append({"what": f"Stress test by {ai.engine_label('reviewer')}", "passed": r["invented_rules_dropped"] == 0 and all(v["accepted"] for v in revisions),
+                          "items": [{"check": "Every objection cites a rule the plan really has", "ok": r["invented_rules_dropped"] == 0,
+                                     **({"detail": f"{r['invented_rules_dropped']} made-up rule(s) removed"} if r["invented_rules_dropped"] else {})},
+                                    {"check": "The reviewer wrote none of the letter", "ok": True,
+                                     **({"detail": "letter text it offered was ignored"} if r["letter_text_ignored"] else {})},
+                                    {"check": "Every revision passed the letter checks", "ok": all(v["accepted"] for v in revisions),
+                                     **({"detail": f"{len(revisions)} revision(s)"} if revisions else {})}]})
+        n = len(r["rounds"])
+        if r["passed"]:
+            wf.findings.append(f"The insurer-side reviewer couldn't find a reason to deny after {n} round{'s' if n != 1 else ''}"
+                               + (f" and {len(revisions)} revision{'s' if len(revisions) != 1 else ''}." if revisions else "."))
+            return (f"Stress-tested: the insurer-side reviewer went over it {n} time{'s' if n != 1 else ''}"
+                    + (f"; the writer answered its objections in {len(revisions)} revision{'s' if len(revisions) != 1 else ''}" if revisions else "")
+                    + ", and the last review found no reason to deny.")
+        for t in r["todos"]:
+            wf.findings.append(f"To do before sending: {t}")
+        return (f"Stress-tested over {n} round{'s' if n != 1 else ''}: {len(r['todos'])} reason{'s' if len(r['todos']) != 1 else ''} to deny "
+                "still stand" + (f". {r['note']}" if r["note"] else ".") + " PJ listed exactly what's missing; you can still sign and send.")
+
+    def fallback(why: str) -> str:
+        wf.review = {}
+        return f"Skipped: the insurer-side reviewer isn't available right now ({why}). The appeal is unchanged."
+
+    return Pending("The insurer's reviewer is trying to deny the appeal", "reviewer",
+                   lambda: reviewer.stress_test("appeal", facts, body, rules, evidence, _account(wf), on_round=on_round),
+                   done, fallback, skip_on_fallback=True)
 
 
 def _pa_draft_rules(wf: Workflow, rec: HealthRecord) -> str:
@@ -686,12 +762,13 @@ TEMPLATES: dict[str, Template] = {
                ("doctor", "Get a letter of medical necessity from the doctor", "Caller agent", "agent"),
                ("criteria", "Match the evidence to the plan's rules", "Policy agent", "agent"),
                ("draft", "Write the appeal", "Writer agent", "agent"),
+               ("review", "Stress-test the appeal", "Reviewer agent", "agent"),
                ("approve", "Read it and sign", "You", "approve"),
                ("send", "Fax it to the plan and confirm it arrived", "Submitter agent", "send"),
                ("wait", "Wait for the decision", "Tracker", "wait"),
                ("outcome", "Result", "PJ", "outcome")],
         run={"denial": _pa_denial, "evidence": _pa_evidence, "doctor": _pa_doctor, "criteria": _pa_criteria,
-             "draft": _pa_draft, "send": _pa_send},
+             "draft": _pa_draft, "review": _pa_review, "send": _pa_send},
         title_for=lambda i: f"Appeal the denial of {i.get('service') or 'a service'}"),
     "plan_resource": Template(
         "plan_resource", "Request rides, an aide, or supplies", "PJ checks the benefit, gets the doctor's order if needed, and puts in the request.",
@@ -860,7 +937,7 @@ def _advance(rec: HealthRecord, wf: Workflow) -> None:
                 _run_pending(rec, wf, s, out)
                 return
             s.detail = out
-            s.status = "done"
+            s.status = "skipped" if isinstance(out, Skip) else "done"
             wf.log(f"{s.agent}: {s.detail}")
             continue
         if s.kind == "approve":
@@ -894,13 +971,16 @@ def _finish(rec: HealthRecord, wf: Workflow, s: WorkflowStep, p: Pending) -> Non
         result, err = None, f"{type(e).__name__}: {str(e)[:160]}"
     with LOCK:
         try:
+            s.status = "done"
             if err is None:
                 s.detail = p.done(result)
             else:
                 s.detail, s.engine = p.fallback(err), "rules"
+                if p.skip_on_fallback:
+                    s.status, s.engine = "skipped", None
         except Exception as e:
             s.detail, s.engine = f"PJ hit a problem on this step ({type(e).__name__}); a person will review it.", "rules"
-        s.status = "done"
+            s.status = "skipped" if p.skip_on_fallback else "done"
         wf.status = "working"
         wf.log(f"{s.agent}: {s.detail}")
         _advance(rec, wf)

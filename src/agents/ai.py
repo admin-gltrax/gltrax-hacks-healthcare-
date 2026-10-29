@@ -26,7 +26,8 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
-from ..config import mock_enabled, role_cfg
+from ..config import META_BASE_URL_DEFAULT, PATIENT_FACING, mock_enabled, provider_for, role_cfg
+from ..eval.spend import USAGE, price
 from ..llm import ChatResult, MetaLLM
 
 
@@ -41,10 +42,21 @@ def enabled() -> bool:
 
 
 def model_for(role: str) -> str:
-    model = role_cfg(role).model
+    cfg = role_cfg(role)
+    model = cfg.model
     if "contributor" in model:  # Meta trains on these; never send them patient data, even fictional
         raise AIUnavailable(f"{model} is a -contributor model; the patient layer never uses those.")
+    meta = os.getenv("META_BASE_URL", META_BASE_URL_DEFAULT).rstrip("/")
+    if role in PATIENT_FACING and cfg.base_url.rstrip("/") != meta:  # THE RULE: partner credits never face the patient
+        raise AIUnavailable(f"The {role} faces the patient, so it stays on Meta's Model API.")
     return model
+
+
+def role_ready(role: str) -> bool:
+    """This role can be called: the API is on and the role's own provider key is set."""
+    if not enabled():
+        return False
+    return mock_enabled() or bool(os.getenv(role_cfg(role).api_key_env))
 
 
 def engine_label(role: str) -> str:
@@ -108,17 +120,26 @@ class Metered:
             self._llm = MockLLM(role)
         else:  # a fresh client per job: each job runs on its own event loop (see run())
             self._llm = MetaLLM(role_cfg(role))
-        self.requests = 0
+        self.requests = self.prompt_tokens = self.completion_tokens = 0
 
     async def chat(self, messages, tools=None, response_format=None, max_tokens=None) -> ChatResult:
         BUDGET.spend(self.account)
         self.requests += 1
         try:
-            return await self._llm.chat(messages, tools=tools, response_format=response_format, max_tokens=max_tokens)
+            res = await self._llm.chat(messages, tools=tools, response_format=response_format, max_tokens=max_tokens)
         except AIUnavailable:
             raise
         except Exception as e:  # network, 4xx/5xx, timeouts: the rules path takes over
             raise AIUnavailable(f"{type(e).__name__}: {str(e)[:200]}") from e
+        self.prompt_tokens += res.usage.get("prompt_tokens", 0)
+        self.completion_tokens += res.usage.get("completion_tokens", 0)
+        if not mock_enabled():
+            USAGE.add(self.model, res.usage)
+        return res
+
+    def cost(self) -> float:
+        p_in, p_out = price(self.model)
+        return round(self.prompt_tokens / 1e6 * p_in + self.completion_tokens / 1e6 * p_out, 6)
 
 
 def llm(role: str, account: str | None = None) -> Metered:
@@ -134,6 +155,12 @@ async def chat_json(role: str, messages: list[dict], response_format: dict, acco
                     max_tokens: int = 4000) -> dict:
     """One structured request. Raises AIUnavailable if the model is off or its JSON doesn't parse."""
     m = llm(role, account)
+    if provider_for(role) != "meta" and response_format.get("type") == "json_schema":
+        # open-weights hosts take JSON mode, not strict schemas: put the schema in the prompt, validate after
+        spec = json.dumps(response_format["json_schema"]["schema"])
+        messages = messages[:-1] + [{**messages[-1], "content": _append(messages[-1]["content"],
+                                     "\n\nReply with one JSON object matching this JSON Schema, and nothing else:\n" + spec)}]
+        response_format = {"type": "json_object"}
     res = await m.chat(messages, response_format=response_format, max_tokens=max_tokens)
     text = (res.content or "").strip()
     if text.startswith("```"):
@@ -145,6 +172,12 @@ async def chat_json(role: str, messages: list[dict], response_format: dict, acco
     if not isinstance(out, dict):
         raise AIUnavailable(f"{m.model} returned {type(out).__name__}, not an object")
     return out
+
+
+def _append(content: Any, text: str) -> Any:
+    if isinstance(content, str):
+        return content + text
+    return list(content) + [{"type": "text", "text": text}]
 
 
 # ---------------------------------------------------------------- sync bridge

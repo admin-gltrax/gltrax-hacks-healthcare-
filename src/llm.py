@@ -30,6 +30,7 @@ class ToolCall:
 class ChatResult:
     content: str = ""
     tool_calls: list[ToolCall] = field(default_factory=list)
+    usage: dict = field(default_factory=dict)  # prompt_tokens, completion_tokens (reasoning included), when the API says
 
     def assistant_message(self) -> dict:
         msg: dict[str, Any] = {"role": "assistant", "content": self.content or ""}
@@ -73,7 +74,7 @@ class MetaLLM:
         key = os.environ.get(cfg.api_key_env)
         if not key:
             raise RuntimeError(
-                f"{cfg.api_key_env} is not set. Add your Meta Model API key to .env "
+                f"{cfg.api_key_env} is not set. Add the {cfg.role} role's API key to .env "
                 "or run with MOCK_LLM=1."
             )
         self.cfg = cfg
@@ -111,7 +112,9 @@ def parse_completion(resp: Any) -> ChatResult:
         except (json.JSONDecodeError, ValueError) as e:
             args, err = {}, str(e)
         calls.append(ToolCall(id=tc.id, name=tc.function.name, arguments=args, parse_error=err))
-    return ChatResult(content=msg.content or "", tool_calls=calls)
+    u = getattr(resp, "usage", None)
+    usage = {"prompt_tokens": getattr(u, "prompt_tokens", 0) or 0, "completion_tokens": getattr(u, "completion_tokens", 0) or 0} if u else {}
+    return ChatResult(content=msg.content or "", tool_calls=calls, usage=usage)
 
 
 _CACHE: dict[str, LLM] = {}

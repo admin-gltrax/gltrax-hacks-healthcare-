@@ -8,7 +8,7 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 
-from src.agents import ai, appeals, care_team, guide, office_calls, reader, workflows
+from src.agents import ai, appeals, care_team, guide, office_calls, reader, reviewer, workflows
 from src.agents.office_caller import OfficeCall
 from src.api.server import app
 from src.eval.pj_redteam import CASES, check
@@ -150,7 +150,8 @@ def test_appeal_from_a_photo_of_the_denial_letter():
     assert all("rec-999" not in r["evidence_ids"] for r in wf.criteria)
     assert wf.checks[0]["passed"] is False and "made-up" in wf.checks[0]["items"][0]["detail"]
     assert all(r["status"] == "missing" or r["evidence_ids"] for r in wf.criteria)
-    assert wf.checks[-1]["passed"] and "BWM-77031882" in wf.letter and "Signature: ____" in wf.letter
+    letter_check = next(c for c in wf.checks if c["what"].startswith("Appeal letter"))
+    assert letter_check["passed"] and "BWM-77031882" in wf.letter and "Signature: ____" in wf.letter
     assert "base64" not in wf.model_dump_json()  # the image is read, never stored
 
 
@@ -159,7 +160,7 @@ def test_a_letter_that_invents_a_number_never_reaches_the_signature(monkeypatch)
         return f"I am member {facts['member_id']}. The plan owes me $9,999 and I need 400 visits. " * 6
     monkeypatch.setattr(appeals, "draft_letter", bad)
     wf = workflows.start(_rosa(), "pa_appeal", {"document": {"sample": "denial_letter"}})
-    check_ = wf.checks[-1]
+    check_ = next(c for c in wf.checks if c["what"].startswith("Appeal letter"))
     assert check_["passed"] is False and "9999" not in wf.letter and "$9,999" not in wf.letter
     assert next(s for s in wf.steps if s.key == "draft").detail.endswith("PJ used the standard letter.)")
 
@@ -180,7 +181,9 @@ def test_every_model_step_falls_back_to_the_rules(monkeypatch):
     monkeypatch.setattr(reader, "read", down)
     monkeypatch.setattr(appeals, "map_criteria", down)
     monkeypatch.setattr(appeals, "draft_letter", down)
+    monkeypatch.setattr(reviewer, "stress_test", down)
     wf = workflows.start(_rosa(), "pa_appeal", {"document": {"sample": "denial_letter"}, "service": "MRI"})
+    assert wf.step("review").status == "skipped" and "unchanged" in wf.step("review").detail
     assert wf.status == "needs_you" and wf.letter and wf.calls[0]["engine"] == "rules" and wf.calls[0]["fallback"] == "API down"
     assert {s.engine for s in wf.steps if s.kind == "agent"} <= {None, "rules"}
     monkeypatch.setenv("PJ_AI", "off")

@@ -11,6 +11,15 @@ load_dotenv()
 
 META_BASE_URL_DEFAULT = "https://api.meta.ai/v1"
 
+# Partner credits run Muse Spark Open (open weights) for simulators, adversaries
+# and judges. THE RULE: the patient-facing crew stays on Meta's Model API.
+PROVIDERS: dict[str, tuple[str, str, str]] = {  # name -> (base URL, key env var, Muse Spark Open model id)
+    "meta": (META_BASE_URL_DEFAULT, "MODEL_API_KEY", "muse-spark-1.3"),
+    "baseten": ("https://inference.baseten.co/v1", "BASETEN_API_KEY", "meta-models/muse-spark-open"),
+    "fireworks": ("https://api.fireworks.ai/inference/v1", "FIREWORKS_API_KEY", "accounts/fireworks/models/muse-spark-open"),
+}
+PATIENT_FACING = ("worker", "caller", "reader", "strategist", "writer", "pj")
+
 # role -> (default model, default reasoning effort)
 ROLE_DEFAULTS: dict[str, tuple[str, str | None]] = {
     "planner": ("muse-wonder-1.0", "medium"),  # long-horizon agentic work
@@ -24,7 +33,13 @@ ROLE_DEFAULTS: dict[str, tuple[str, str | None]] = {
     "strategist": ("muse-wonder-1.0", "medium"),  # maps evidence to a plan's criteria
     "writer": ("muse-spark-1.3", "low"),  # drafts appeal and dispute letters
     "pj": ("muse-spark-1.3", "low"),  # PJ's chat voice
+    # partner credits (Muse Spark Open): adversaries and judges, never patient-facing
+    "reviewer": (PROVIDERS["baseten"][2], "low"),  # plays the insurer's medical reviewer
+    "judge_open": (PROVIDERS["fireworks"][2], "low"),  # the cross-family judge
 }
+# Roles whose default provider isn't Meta. Override per role with <ROLE>_PROVIDER
+# (meta | baseten | fireworks), or fully with <ROLE>_BASE_URL / _API_KEY_ENV / _MODEL.
+ROLE_PROVIDER: dict[str, str] = {"reviewer": "baseten", "judge_open": "fireworks"}
 
 
 @dataclass(frozen=True)
@@ -36,19 +51,31 @@ class RoleCfg:
     reasoning_effort: str | None
 
 
+def provider_for(role: str) -> str:
+    return os.getenv(f"{role.upper()}_PROVIDER", ROLE_PROVIDER.get(role, "meta")).strip().lower()
+
+
 def role_cfg(role: str) -> RoleCfg:
     model, effort = ROLE_DEFAULTS[role]
     p = role.upper()
-    raw_effort = os.getenv(f"{p}_REASONING", effort or "")
-    if raw_effort.strip().lower() in ("", "off", "none", "default"):
-        raw_effort = None  # Meta rejects "none"; omit the field instead
+    prov = provider_for(role)
+    if prov != "meta" and prov in PROVIDERS:
+        base, key_env, open_model = PROVIDERS[prov]
+        return RoleCfg(role=role, model=os.getenv(f"{p}_MODEL", open_model), base_url=os.getenv(f"{p}_BASE_URL", base),
+                       api_key_env=os.getenv(f"{p}_API_KEY_ENV", key_env),
+                       reasoning_effort=_effort(os.getenv(f"{p}_REASONING", effort or "")))
+    raw_effort = _effort(os.getenv(f"{p}_REASONING", effort or ""))
     return RoleCfg(
         role=role,
-        model=os.getenv(f"{p}_MODEL", model),
+        model=os.getenv(f"{p}_MODEL", model if "/" not in model else PROVIDERS["meta"][2]),
         base_url=os.getenv(f"{p}_BASE_URL", os.getenv("META_BASE_URL", META_BASE_URL_DEFAULT)),
         api_key_env=os.getenv(f"{p}_API_KEY_ENV", "MODEL_API_KEY"),
         reasoning_effort=raw_effort,
     )
+
+
+def _effort(raw: str) -> str | None:
+    return None if raw.strip().lower() in ("", "off", "none", "default") else raw  # Meta rejects "none"; omit it
 
 
 def mock_enabled() -> bool:

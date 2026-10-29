@@ -47,6 +47,8 @@ class MockLLM:
             return self._strategist(first)
         if "[PJ WRITER]" in first:
             return self._writer(first)
+        if "[PJ REVIEWER]" in first:
+            return self._reviewer(first)
         if "[PJ CHAT]" in first:
             return self._pj(messages, tools)
         if tools:
@@ -295,15 +297,30 @@ class MockLLM:
                                               "argument": "The records and the doctor's letter answer the plan's rules."}))
 
     def _writer(self, prompt: str) -> ChatResult:
-        f = json.loads(prompt[prompt.index("FACTS:") + 6:])
+        f = json.loads(prompt[prompt.rindex("FACTS:") + 6:])
         what = f.get("service") or f.get("subject_of") or "this"
         body = (f"To whom it may concern,\n\nI am writing about {what} for member ID {f.get('member_id')}. "
                 f"I am asking you to review it again using the enclosed documents and the points below.\n\n"
                 + "\n".join(f"- {r['rule']}" for r in f.get("coverage_rules_and_evidence", []))
                 + "\n".join(f"- {x}" for x in f.get("problems_found", []))
+                + "".join(f"\n\nOn the plan's rule that {o['rule'].rstrip('.').lower()}: the records and my doctor's letter on file answer it."
+                          for o in (json.loads(prompt[prompt.index("REVIEWER OBJECTIONS TO ANSWER:") + 30:prompt.rindex("FACTS:")])
+                                    if "REVIEWER OBJECTIONS TO ANSWER:" in prompt else []))
                 + "\n\nPlease send me your decision in writing, and a copy of anything you relied on. "
                   "Thank you for your prompt attention to this request.")
         return ChatResult(content=json.dumps({"subject": f"Request for review: {what}", "body": body}))
+
+    def _reviewer(self, prompt: str) -> ChatResult:
+        """Round 1: one fair objection the letter can answer, plus a made-up rule (the guard drops it).
+        Once the letter answers rule 1 in so many words, no reason to deny is left."""
+        data = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])[0]  # JSON-mode hosts get the schema appended
+        rules = data["coverage_rules"]
+        if not rules or "On the plan's rule that" in data["appeal_letter"]:
+            return ChatResult(content=json.dumps({"verdict": "approve", "objections": []}))
+        return ChatResult(content=json.dumps({"verdict": "deny", "objections": [
+            {"rule_id": rules[0]["id"], "reason": "The appeal doesn't show how the records meet this rule.", "fix": "letter",
+             "needs": "Point to the record that meets this rule."},
+            {"rule_id": "R99", "reason": "Plan policy 12.4 requires a specialist review.", "fix": "evidence", "needs": "A specialist review."}]}))
 
     def _pj(self, messages, tools) -> ChatResult:
         last = messages[-1]

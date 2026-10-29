@@ -332,6 +332,7 @@ class Workflow(BaseModel):
     documents: list[dict] = Field(default_factory=list)  # what the reader agent read: kind, model, fields (never the image)
     criteria: list[dict] = Field(default_factory=list)  # the plan's criteria mapped to evidence (strategist agent)
     checks: list[dict] = Field(default_factory=list)  # guardrail results on what the models produced
+    review: dict = Field(default_factory=dict)  # the insurer-side reviewer's rounds, objections and revisions (reviewer.py)
     outcome: str | None = None
     saved: str | None = None  # money or hours recovered, when there is a number
     deadline: str | None = None  # the filing or decision window PJ is watching
