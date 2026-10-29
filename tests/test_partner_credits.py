@@ -45,7 +45,7 @@ def _j(d) -> ChatResult:
 def test_patient_facing_crew_stays_on_meta_and_partner_roles_use_their_own_keys(monkeypatch):
     rv = config.role_cfg("reviewer")
     assert rv.base_url == "https://inference.baseten.co/v1" and rv.api_key_env == "BASETEN_API_KEY"
-    assert rv.model == "meta-models/muse-spark-open"
+    assert rv.model == "meta-models/muse-spark-open-1026"
     monkeypatch.setenv("REVIEWER_PROVIDER", "fireworks")
     rv = config.role_cfg("reviewer")
     assert rv.base_url.startswith("https://api.fireworks.ai") and rv.model == "accounts/fireworks/models/muse-spark-open"

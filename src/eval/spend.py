@@ -15,7 +15,7 @@ import threading
 from collections import defaultdict
 
 PRICES = {"muse-spark-1.3": (1.25, 4.25), "muse-spark-1.2": (1.25, 4.25), "muse-wonder-1.0": (4.0, 20.0),
-          "meta-models/muse-spark-open": (1.25, 4.25), "accounts/fireworks/models/muse-spark-open": (1.25, 4.25)}
+          "meta-models/muse-spark-open": (1.25, 4.25), "meta-models/muse-spark-open-1026": (1.25, 4.25), "accounts/fireworks/models/muse-spark-open": (1.25, 4.25)}
 
 
 def price(model: str) -> tuple[float, float]:

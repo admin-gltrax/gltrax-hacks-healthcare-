@@ -329,7 +329,7 @@ The swarm keeps its existing routes: `POST /api/swarm/start`, `POST /api/approve
 | Logging into a simulated insurer portal to read benefits | Meta computer-use | **Simulated portal only** in the hackathon. Real portals use APIs, and passwords are never stored. |
 | Scheduling Swarm calls | `muse-spark-1.3` workers, with Wonder as planner and critic | The existing build. |
 | Patient talks instead of typing | `muse-voice-transcribe-1.0` | Already used for the swarm's voice intake (`src/voice.py`, file transcription). Meta has no text-to-speech, so PJ replies on screen. |
-| Insurer-side reviewer that tries to deny each appeal first | Muse Spark Open (Baseten `meta-models/muse-spark-open`, or Fireworks `accounts/fireworks/models/muse-spark-open`) | ✅ Built (`reviewer.py`), partner credits. Never patient-facing; code refuses to put the patient-facing crew on any non-Meta endpoint. |
+| Insurer-side reviewer that tries to deny each appeal first | Muse Spark Open (Baseten `meta-models/muse-spark-open-1026`, the hackathon build, or Fireworks `accounts/fireworks/models/muse-spark-open`) | ✅ Built (`reviewer.py`), partner credits. Never patient-facing; code refuses to put the patient-facing crew on any non-Meta endpoint. |
 | Call gym receptionists (hundreds of hard simulated offices) | Muse Spark Open on Fireworks (`OFFICE_PROVIDER=fireworks`) | ✅ Built (`src/sim/gym.py`, `scripts/call_gym.py`). The caller stays on Meta's Spark. |
 | Cross-family judges | `muse-spark-1.3` (Meta) + Muse Spark Open (Fireworks) | ✅ Built (`src/eval/judges.py`): same rubric, Cohen's kappa, disagreements to a person. |
 | Simulated voice call (the caller hears the office through speech-to-text) | `muse-voice-transcribe-1.0` + an open TTS (off by default) | ✅ Built (`src/voice_loop.py`), `VOICE_TTS=off` until the rules on non-Meta TTS are confirmed. |
@@ -471,7 +471,7 @@ Submission is due Nov 4, 9:00 PM ET. Aim to submit on Nov 3.
 | 10 | **Reuse the swarm's voice intake for Ask PJ.** Call `src/voice.py` and reuse the browser WAV conversion from `index.html`. | The patient can speak the Ask PJ question. |
 | 11 | **Record the demo video from `docs/DEMO-PITCH.md`** (keep that script current with every user-visible feature), with the swarm as the climax. | A 3-minute video is recorded. |
 | 12 | ✅ **Done Oct 29:** [docs/COMPLIANCE.md](docs/COMPLIANCE.md). | |
-| 13 | ✅ **Done Oct 29:** adversarial plan reviewer, call gym (600 calls, 100% safe), cross-family judges, reader eval (33 docs × 4 qualities), voice loop. Next: fix the Baseten key and move the reviewer there; confirm the rules on non-Meta TTS; a claim-level check on letters (the judges caught an unsupported "taxing effort" claim that `check_letter` can't see). | |
+| 13 | ✅ **Done Oct 29:** adversarial plan reviewer, call gym (600 calls, 100% safe), cross-family judges, reader eval (33 docs × 4 qualities), voice loop. Next: confirm the rules on non-Meta TTS; a claim-level check on letters (the judges caught an unsupported "taxing effort" claim that `check_letter` can't see). | |
 
 If behind schedule, cut in this order: 10, 9, 7, 5. Protect 2, 3 and 11.
 

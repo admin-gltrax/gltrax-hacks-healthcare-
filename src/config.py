@@ -15,7 +15,7 @@ META_BASE_URL_DEFAULT = "https://api.meta.ai/v1"
 # and judges. THE RULE: the patient-facing crew stays on Meta's Model API.
 PROVIDERS: dict[str, tuple[str, str, str]] = {  # name -> (base URL, key env var, Muse Spark Open model id)
     "meta": (META_BASE_URL_DEFAULT, "MODEL_API_KEY", "muse-spark-1.3"),
-    "baseten": ("https://inference.baseten.co/v1", "BASETEN_API_KEY", "meta-models/muse-spark-open"),
+    "baseten": ("https://inference.baseten.co/v1", "BASETEN_API_KEY", "meta-models/muse-spark-open-1026"),  # the hackathon key is scoped to this dated build
     "fireworks": ("https://api.fireworks.ai/inference/v1", "FIREWORKS_API_KEY", "accounts/fireworks/models/muse-spark-open"),
 }
 PATIENT_FACING = ("worker", "caller", "reader", "strategist", "writer", "pj")

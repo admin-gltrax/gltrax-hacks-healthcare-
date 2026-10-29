@@ -1,8 +1,8 @@
 {
  "scenario": "strong-standard",
- "seconds": 126.8,
- "reviewer": "accounts/fireworks/models/muse-spark-open",
- "provider": "https://api.fireworks.ai/inference/v1",
+ "seconds": 51.6,
+ "reviewer": "meta-models/muse-spark-open-1026",
+ "provider": "https://inference.baseten.co/v1",
  "steps": [
   {
    "key": "denial",
@@ -62,7 +62,7 @@
    "status": "done",
    "detail": "Stress-tested: the insurer-side reviewer went over it 2 times; the writer answered its objections in 1 revision, and the last review found no reason to deny.",
    "due": null,
-   "engine": "accounts/fireworks/models/muse-spark-open"
+   "engine": "meta-models/muse-spark-open-1026"
   },
   {
    "key": "approve",
@@ -106,7 +106,7 @@
   }
  ],
  "review": {
-  "engine": "accounts/fireworks/models/muse-spark-open",
+  "engine": "meta-models/muse-spark-open-1026",
   "writer": "muse-spark-1.3",
   "rules": [
    {
@@ -135,36 +135,36 @@
      {
       "rule_id": "R1",
       "rule": "The member is homebound: leaving home takes a considerable and taxing effort.",
-      "reason": "The letter does not make the case that leaving home takes a considerable and taxing effort and does not name any supporting evidence for homebound status.",
+      "reason": "The appeal letter does not make the case for homebound status or name the PT evaluation showing leaving home requires a walker, help, and is a taxing effort.",
       "fix": "letter",
-      "needs": "A point in the letter that the member is homebound and a citation to the Physical therapy evaluation (2026-10-10) showing walker, one-person assist and taxing effort to leave home"
+      "needs": "Point in the letter that leaving home takes a considerable and taxing effort, naming the 2026-10-10 physical therapy evaluation"
      },
      {
       "rule_id": "R2",
       "rule": "A doctor has certified a plan of care for the therapy.",
-      "reason": "The letter does not identify a certified plan of care and only references a future letter from Dr. Okafor (R-17296) that has not been sent.",
+      "reason": "The appeal letter does not assert a doctor certified a plan of care or name the signed plan of care, only that a future letter was requested.",
       "fix": "letter",
-      "needs": "A citation in the letter to the Home health plan of care certified and signed by Dr. Samuel Okafor for physical therapy 12 visits (2026-10-14) on file"
+      "needs": "Point in the letter that Dr. Samuel Okafor certified a plan of care, naming the 2026-10-14 home health plan of care for 12 visits"
      },
      {
       "rule_id": "R3",
       "rule": "Skilled therapy is needed to restore or keep the member's function.",
-      "reason": "The letter does not explain that skilled therapy is needed to restore or keep function and does not cite evidence showing that need.",
+      "reason": "The appeal letter does not make the case that skilled therapy is needed to restore or keep function or name the PT evaluation stating therapy can restore balance and walking.",
       "fix": "letter",
-      "needs": "A point that skilled therapy can restore declined balance and walking and a citation to the Physical therapy evaluation (2026-10-10)"
+      "needs": "Point in the letter that skilled therapy is needed to restore function after decline since the fall, naming the 2026-10-10 physical therapy evaluation"
      },
      {
       "rule_id": "R4",
       "rule": "The services are reasonable and necessary for the member's condition.",
-      "reason": "The letter does not address why home services are reasonable and necessary for the condition versus outpatient therapy.",
+      "reason": "The appeal letter does not make the case that home services are reasonable and necessary or name the doctor's note that outpatient therapy is not safe due to fall risk.",
       "fix": "letter",
-      "needs": "A point that outpatient therapy is not safe due to fall risk and a citation to the Doctor's note (2026-10-14) and the PT evaluation showing need for skilled therapy"
+      "needs": "Point in the letter that home PT is reasonable and necessary and outpatient is not safe, naming the 2026-10-14 doctor's note"
      }
     ],
     "invented_rules_dropped": 0,
     "letter_text_ignored": false,
     "revision": {
-     "body": "Dear Appeals Unit at Bluewater Health:\n\nI am Rosa Rivera, member ID BWM-77031882, Bluewater Medicare Advantage HMO, and I am appealing the denial on 2026-10-20, case SIM-PA-20431, of home health physical therapy as not medically necessary.\n\nI meet each coverage rule:\n\n1. I am homebound and leaving home takes a considerable and taxing effort. I stopped driving last year. My physical therapy evaluation on 2026-10-10 states I need a walker and one person's help to leave home and that leaving home takes a taxing effort. My doctor's note on 2026-10-14 states outpatient therapy isn't safe for me right now because of fall risk on stairs and in transit.\n\n2. A doctor has certified a plan of care for the therapy. My home health plan of care was certified and signed by Dr. Samuel Okafor, Harbor Light Internal Medicine, for physical therapy, 12 visits, on 2026-10-14. I have also asked Dr. Okafor for a letter of medical necessity, office reference R-17296, and the office will send it to you directly.\n\n3. Skilled therapy is needed to restore or keep my function. I had an emergency visit after a fall at home on 2026-04-03. My physical therapy evaluation on 2026-10-10 states my balance and walking have declined since the fall and skilled therapy can restore them.\n\n4. The home services are reasonable and necessary for my condition. The certified plan of care from Dr. Okafor prescribes 12 visits of physical therapy in the home, the evaluation ties that therapy to restoring my declined balance and walking, and the doctor's note states outpatient therapy isn't safe right now because of fall risk on stairs and in transit.\n\nThe enclosed records show the history behind the request. Please send me your written decision on this appeal, and a copy of the criteria used.",
+     "body": "Dear Appeals Unit at Bluewater Health,\n\nI am appealing the denial of home health physical therapy, which was denied because the plan says it isn't medically necessary. My member ID is BWM-77031882.\n\nI have asked my doctor, Dr. Samuel Okafor (Harbor Light Internal Medicine), for a letter of medical necessity (office reference R-17296); the office will send it to you directly. The enclosed records show the history behind the request. Each of the plan's coverage criteria is answered in the enclosed table, and below rule by rule:\n\n1. I am homebound: leaving home takes a considerable and taxing effort. My physical therapy evaluation (2026-10-10) states I need a walker and one person's help to leave home, and leaving home takes a taxing effort.\n\n2. A doctor has certified a plan of care for the therapy. My home health plan of care for physical therapy, 12 visits, was certified and signed by Dr. Samuel Okafor (2026-10-14).\n\n3. Skilled therapy is needed to restore or keep my function. My physical therapy evaluation (2026-10-10) states my balance and walking have declined since the fall, and skilled therapy can restore them.\n\n4. The services are reasonable and necessary for my condition. My home health plan of care certified and signed by Dr. Samuel Okafor (2026-10-14), my physical therapy evaluation stating skilled therapy can restore my balance and walking (2026-10-10), and my doctor's note stating outpatient therapy isn't safe for me right now because of fall risk on stairs and in transit (2026-10-14) show home services are reasonable and necessary.\n\nPlease send me the plan's decision in writing, and a copy of the criteria used.",
      "checks": [
       {
        "check": "Names the member ID",
@@ -202,9 +202,9 @@
   "passed": true,
   "todos": [],
   "note": "",
-  "final": "Dear Appeals Unit at Bluewater Health:\n\nI am Rosa Rivera, member ID BWM-77031882, Bluewater Medicare Advantage HMO, and I am appealing the denial on 2026-10-20, case SIM-PA-20431, of home health physical therapy as not medically necessary.\n\nI meet each coverage rule:\n\n1. I am homebound and leaving home takes a considerable and taxing effort. I stopped driving last year. My physical therapy evaluation on 2026-10-10 states I need a walker and one person's help to leave home and that leaving home takes a taxing effort. My doctor's note on 2026-10-14 states outpatient therapy isn't safe for me right now because of fall risk on stairs and in transit.\n\n2. A doctor has certified a plan of care for the therapy. My home health plan of care was certified and signed by Dr. Samuel Okafor, Harbor Light Internal Medicine, for physical therapy, 12 visits, on 2026-10-14. I have also asked Dr. Okafor for a letter of medical necessity, office reference R-17296, and the office will send it to you directly.\n\n3. Skilled therapy is needed to restore or keep my function. I had an emergency visit after a fall at home on 2026-04-03. My physical therapy evaluation on 2026-10-10 states my balance and walking have declined since the fall and skilled therapy can restore them.\n\n4. The home services are reasonable and necessary for my condition. The certified plan of care from Dr. Okafor prescribes 12 visits of physical therapy in the home, the evaluation ties that therapy to restoring my declined balance and walking, and the doctor's note states outpatient therapy isn't safe right now because of fall risk on stairs and in transit.\n\nThe enclosed records show the history behind the request. Please send me your written decision on this appeal, and a copy of the criteria used."
+  "final": "Dear Appeals Unit at Bluewater Health,\n\nI am appealing the denial of home health physical therapy, which was denied because the plan says it isn't medically necessary. My member ID is BWM-77031882.\n\nI have asked my doctor, Dr. Samuel Okafor (Harbor Light Internal Medicine), for a letter of medical necessity (office reference R-17296); the office will send it to you directly. The enclosed records show the history behind the request. Each of the plan's coverage criteria is answered in the enclosed table, and below rule by rule:\n\n1. I am homebound: leaving home takes a considerable and taxing effort. My physical therapy evaluation (2026-10-10) states I need a walker and one person's help to leave home, and leaving home takes a taxing effort.\n\n2. A doctor has certified a plan of care for the therapy. My home health plan of care for physical therapy, 12 visits, was certified and signed by Dr. Samuel Okafor (2026-10-14).\n\n3. Skilled therapy is needed to restore or keep my function. My physical therapy evaluation (2026-10-10) states my balance and walking have declined since the fall, and skilled therapy can restore them.\n\n4. The services are reasonable and necessary for my condition. My home health plan of care certified and signed by Dr. Samuel Okafor (2026-10-14), my physical therapy evaluation stating skilled therapy can restore my balance and walking (2026-10-10), and my doctor's note stating outpatient therapy isn't safe for me right now because of fall risk on stairs and in transit (2026-10-14) show home services are reasonable and necessary.\n\nPlease send me the plan's decision in writing, and a copy of the criteria used."
  },
- "letter": "To: Appeals Unit, Bluewater Health\nFax: (555) 010-0153\nRe: Appeal of prior authorization denial (case SIM-PA-20431). Member: Rosa Rivera, date of birth 1948-02-11, member ID BWM-77031882, plan Bluewater Medicare Advantage HMO\n\nDear Appeals Unit at Bluewater Health:\n\nI am Rosa Rivera, member ID BWM-77031882, Bluewater Medicare Advantage HMO, and I am appealing the denial on 2026-10-20, case SIM-PA-20431, of home health physical therapy as not medically necessary.\n\nI meet each coverage rule:\n\n1. I am homebound and leaving home takes a considerable and taxing effort. I stopped driving last year. My physical therapy evaluation on 2026-10-10 states I need a walker and one person's help to leave home and that leaving home takes a taxing effort. My doctor's note on 2026-10-14 states outpatient therapy isn't safe for me right now because of fall risk on stairs and in transit.\n\n2. A doctor has certified a plan of care for the therapy. My home health plan of care was certified and signed by Dr. Samuel Okafor, Harbor Light Internal Medicine, for physical therapy, 12 visits, on 2026-10-14. I have also asked Dr. Okafor for a letter of medical necessity, office reference R-17296, and the office will send it to you directly.\n\n3. Skilled therapy is needed to restore or keep my function. I had an emergency visit after a fall at home on 2026-04-03. My physical therapy evaluation on 2026-10-10 states my balance and walking have declined since the fall and skilled therapy can restore them.\n\n4. The home services are reasonable and necessary for my condition. The certified plan of care from Dr. Okafor prescribes 12 visits of physical therapy in the home, the evaluation ties that therapy to restoring my declined balance and walking, and the doctor's note states outpatient therapy isn't safe right now because of fall risk on stairs and in transit.\n\nThe enclosed records show the history behind the request. Please send me your written decision on this appeal, and a copy of the criteria used.\n\nPrepared with my assistant, PJ, at my direction.\n\nSignature: ______________________   Date: __________\n",
+ "letter": "To: Appeals Unit, Bluewater Health\nFax: (555) 010-0153\nRe: Appeal of prior authorization denial (case SIM-PA-20431). Member: Rosa Rivera, date of birth 1948-02-11, member ID BWM-77031882, plan Bluewater Medicare Advantage HMO\n\nDear Appeals Unit at Bluewater Health,\n\nI am appealing the denial of home health physical therapy, which was denied because the plan says it isn't medically necessary. My member ID is BWM-77031882.\n\nI have asked my doctor, Dr. Samuel Okafor (Harbor Light Internal Medicine), for a letter of medical necessity (office reference R-17296); the office will send it to you directly. The enclosed records show the history behind the request. Each of the plan's coverage criteria is answered in the enclosed table, and below rule by rule:\n\n1. I am homebound: leaving home takes a considerable and taxing effort. My physical therapy evaluation (2026-10-10) states I need a walker and one person's help to leave home, and leaving home takes a taxing effort.\n\n2. A doctor has certified a plan of care for the therapy. My home health plan of care for physical therapy, 12 visits, was certified and signed by Dr. Samuel Okafor (2026-10-14).\n\n3. Skilled therapy is needed to restore or keep my function. My physical therapy evaluation (2026-10-10) states my balance and walking have declined since the fall, and skilled therapy can restore them.\n\n4. The services are reasonable and necessary for my condition. My home health plan of care certified and signed by Dr. Samuel Okafor (2026-10-14), my physical therapy evaluation stating skilled therapy can restore my balance and walking (2026-10-10), and my doctor's note stating outpatient therapy isn't safe for me right now because of fall risk on stairs and in transit (2026-10-14) show home services are reasonable and necessary.\n\nPlease send me the plan's decision in writing, and a copy of the criteria used.\n\nPrepared with my assistant, PJ, at my direction.\n\nSignature: ______________________   Date: __________\n",
  "facts": {
   "to": "the Appeals Unit at Bluewater Health",
   "member_name": "Rosa Rivera",
@@ -222,9 +222,7 @@
    {
     "rule": "The member is homebound: leaving home takes a considerable and taxing effort.",
     "evidence": [
-     "Stopped driving last year",
-     "Physical therapy evaluation: needs a walker and one person's help to leave home; leaving home takes a taxing effort (2026-10-10)",
-     "Doctor's note: outpatient therapy isn't safe for her right now because of fall risk on stairs and in transit (2026-10-14)"
+     "Physical therapy evaluation: needs a walker and one person's help to leave home; leaving home takes a taxing effort (2026-10-10)"
     ]
    },
    {
@@ -236,7 +234,6 @@
    {
     "rule": "Skilled therapy is needed to restore or keep the member's function.",
     "evidence": [
-     "Emergency visit after a fall at home (2026-04-03)",
      "Physical therapy evaluation: balance and walking have declined since the fall; skilled therapy can restore them (2026-10-10)"
     ]
    },
@@ -249,7 +246,7 @@
     ]
    }
   ],
-  "core_argument": "For home health physical therapy, the file has strong proof on three rules and a gap on the fourth. A therapy evaluation says leaving home takes a taxing effort and needs a walker and another person's help, and a doctor's note says therapy outside the home is not safe right now due to fall risk on stairs and in travel. A doctor signed a plan for 12 home visits, and the evaluation ties the need to worse balance and walking since a fall, with skilled therapy able to restore them. The weak spot is detail on why 12 visits is the right amount for her condition.",
+  "core_argument": "FOR",
   "urgent": false,
   "enclosures": [
    "doctor's letter of medical necessity",
@@ -278,23 +275,23 @@
  "usage": {
   "muse-spark-1.3": {
    "requests": 17,
-   "prompt_tokens": 25038,
-   "completion_tokens": 3728
+   "prompt_tokens": 24712,
+   "completion_tokens": 3867
   },
   "muse-wonder-1.0": {
    "requests": 1,
    "prompt_tokens": 789,
-   "completion_tokens": 2131
+   "completion_tokens": 1773
   },
-  "accounts/fireworks/models/muse-spark-open": {
+  "meta-models/muse-spark-open-1026": {
    "requests": 2,
-   "prompt_tokens": 2695,
-   "completion_tokens": 1151
+   "prompt_tokens": 2663,
+   "completion_tokens": 1092
   }
  },
- "cost_usd": 0.101178,
+ "cost_usd": 0.09391,
  "cost_by_provider": {
-  "meta": 0.0929,
-  "fireworks": 0.0083
+  "meta": 0.0859,
+  "baseten": 0.008
  }
 }

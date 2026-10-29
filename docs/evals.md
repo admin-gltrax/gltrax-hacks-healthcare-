@@ -51,7 +51,7 @@ Run 2 passed every check of its day; the cross-family judges then flagged an amb
 |---|---|---|---|---|
 | full | 1 | 1 reasons stand | 0 | $0.094 |
 | thin | 1 | 3 reasons stand | 0 | $0.091 |
-| strong-standard | 2 | no reason to deny | 1 | $0.101 |
+| strong-standard | 2 | no reason to deny | 1 | $0.094 |
 
 Reviewer: Muse Spark Open. Command: `python scripts/stress_test_appeal.py [--thin | --strong --standard]`.
 
@@ -121,9 +121,9 @@ Prices in `src/eval/spend.py` (USD per 1M tokens). Rule: stop and ask before any
 
 | Provider | Spent | Credit | Used |
 |---|---|---|---|
-| meta | $52.60 | $150 | 35.1% |
+| meta | $52.68 | $150 | 35.1% |
 | fireworks | $15.04 | $100 | 15.0% |
-| baseten | $0.00 | $100 | 0.0% |
+| baseten | $0.01 | $100 | 0.0% |
 
 | When | Run | Detail | Meta | Fireworks | Baseten |
 |---|---|---|---|---|---|
@@ -150,3 +150,4 @@ Prices in `src/eval/spend.py` (USD per 1M tokens). Rule: stop and ask before any
 | 2026-10-29 12:07 | voice call | 1 call (mishears), 136 s of audio | $0.025 | $0.010 | $0.000 |
 | 2026-10-29 12:13 | voice call | 1 call (mishears), 130 s of audio | $0.032 | $0.012 | $0.000 |
 | 2026-10-29 12:23 | pre-deploy smoke | estimate: PJ red team 20 cases + smoke_meta.py | $0.080 | $0.000 | $0.000 |
+| 2026-10-29 12:47 | reviewer live | stress test, scenario strong-standard | $0.086 | $0.000 | $0.008 |

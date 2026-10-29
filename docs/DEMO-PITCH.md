@@ -93,7 +93,7 @@
 | 2:25 | Real directory step, then the 15-call swarm on Muse Spark | `src/swarm/candidates.py`, `/swarm` | ✅ (the replay predates the directory step; re-record before demo day) |
 | 2:40 | Other crew jobs: equipment, rides and aide, home care hours, counselor | `src/agents/workflows.py` | ✅ |
 | 2:40 | Bill + EOB photos, code math, $493 overcharge | `reader.match_bill` | ✅ live |
-| 1:25 | Stress test: Muse Spark Open tries to deny the appeal; Spark revises; leftover gaps become to-dos | `src/agents/reviewer.py`, `workflows._pa_review` | ✅ live (reviewer on Fireworks while the Baseten key is fixed) |
+| 1:25 | Stress test: Muse Spark Open tries to deny the appeal; Spark revises; leftover gaps become to-dos | `src/agents/reviewer.py`, `workflows._pa_review` | ✅ live (reviewer on Baseten, `muse-spark-open-1026`) |
 | 2:15 | Call gym, judges, reader eval, voice loop at `/gym` | `src/sim/gym.py`, `src/eval/`, `gym.html` | ✅ live runs committed; voice audio plays only with `VOICE_TTS` on |
 | any | Ask PJ on Spark (proposes jobs as cards) and voice intake | `guide.ask_live`, `src/voice.py` | ✅ chat live (red team 20/20); voice on `/swarm` only |
 
