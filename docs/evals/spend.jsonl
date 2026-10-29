@@ -20,3 +20,4 @@
 {"date": "2026-10-29 12:02", "run": "voice call (lost)", "detail": "estimate: 1 call; the audio writer crashed before saving", "usd": {"meta": 0.03, "fireworks": 0.01}}
 {"date": "2026-10-29 12:07", "run": "voice call", "detail": "1 call (mishears), 136 s of audio", "usd": {"meta": 0.0246, "fireworks": 0.0102}}
 {"date": "2026-10-29 12:13", "run": "voice call", "detail": "1 call (mishears), 130 s of audio", "usd": {"meta": 0.0315, "fireworks": 0.0118}}
+{"date": "2026-10-29 12:23", "run": "pre-deploy smoke", "detail": "estimate: PJ red team 20 cases + smoke_meta.py", "usd": {"meta": 0.08}}

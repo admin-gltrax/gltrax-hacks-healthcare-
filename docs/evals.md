@@ -121,7 +121,7 @@ Prices in `src/eval/spend.py` (USD per 1M tokens). Rule: stop and ask before any
 
 | Provider | Spent | Credit | Used |
 |---|---|---|---|
-| meta | $52.52 | $150 | 35.0% |
+| meta | $52.60 | $150 | 35.1% |
 | fireworks | $15.04 | $100 | 15.0% |
 | baseten | $0.00 | $100 | 0.0% |
 
@@ -149,3 +149,4 @@ Prices in `src/eval/spend.py` (USD per 1M tokens). Rule: stop and ask before any
 | 2026-10-29 12:02 | voice call (lost) | estimate: 1 call; the audio writer crashed before saving | $0.030 | $0.010 | $0.000 |
 | 2026-10-29 12:07 | voice call | 1 call (mishears), 136 s of audio | $0.025 | $0.010 | $0.000 |
 | 2026-10-29 12:13 | voice call | 1 call (mishears), 130 s of audio | $0.032 | $0.012 | $0.000 |
+| 2026-10-29 12:23 | pre-deploy smoke | estimate: PJ red team 20 cases + smoke_meta.py | $0.080 | $0.000 | $0.000 |
