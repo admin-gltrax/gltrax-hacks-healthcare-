@@ -151,3 +151,10 @@ def test_reviewer_unavailable_skips_the_step_and_leaves_the_appeal_alone(monkeyp
 def test_the_prebuilt_demo_skips_the_stress_test_and_spends_nothing():
     wf = workflows.start(_rosa(), "pa_appeal", {"service": "MRI"}, live=False)
     assert wf.step("review").status == "skipped" and ai.BUDGET.status()["used_today"] == 0
+
+
+def test_list_numbering_is_layout_but_a_number_inside_a_sentence_is_still_checked():
+    body = BODY + "\n\n1. I am homebound.\n2) A doctor certified the plan of care.\n"
+    assert all(c["ok"] for c in appeals.check_letter(body, FACTS))
+    bad = appeals.check_letter(body + "\nI need 3. More visits than 12.", FACTS)
+    assert not next(c for c in bad if c["check"].startswith("Every number"))["ok"]

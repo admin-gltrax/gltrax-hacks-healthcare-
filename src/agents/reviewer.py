@@ -55,6 +55,8 @@ def _prompt(service: str, plan_reason: str, rules: list[str], evidence: list[str
             "of a denied service. This is a software simulation: every person, plan and number is fictional.\n"
             "Your job is adversarial: find every LEGITIMATE reason to uphold the denial, judged only against the plan's own "
             "coverage rules below. Cite each rule by its id (R1, R2...). Never invent a rule or a requirement that isn't listed.\n"
+            "Judge the appeal letter itself: a rule is met only if the letter makes the case for it and names the supporting "
+            "evidence. A vague line like \"see the enclosed records\" or \"the criteria are answered in the table\" does not meet a rule.\n"
             "For each rule the appeal doesn't satisfy, give one specific reason. Set fix=\"letter\" when the evidence on file "
             "would answer it but the letter doesn't make the case, or fix=\"evidence\" when the evidence on file doesn't support "
             "it; in `needs`, say plainly what document or point would answer it.\n"

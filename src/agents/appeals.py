@@ -116,13 +116,15 @@ async def draft_letter(kind: str, facts: dict, account: str | None) -> str:
 
 
 _ADVICE = re.compile(r"\b(\d+\s?mg|milligram|dosage|take \d|stop taking|start taking|increase (?:the|your) dose)\b", re.I)
+_LIST_NUMBER = re.compile(r"^[ \t]*\d{1,2}[.)][ \t]", re.M)
 _SIGN = re.compile(r"^\s*(signature|signed|sincerely|respectfully|regards)\b.*$", re.I | re.M)
 
 
 def check_letter(body: str, facts: dict) -> list[dict]:
     blob = json.dumps(facts).lower()
     allowed = set(re.findall(r"\d+", blob))
-    numbers = [n for n in re.findall(r"\d+", body) if n not in allowed]
+    claims = _LIST_NUMBER.sub("", body)  # "1." heading a list item is layout, not a fact
+    numbers = [n for n in re.findall(r"\d+", claims) if n not in allowed]
     checks = [
         {"check": "Names the member ID", "ok": bool(facts.get("member_id")) and facts["member_id"].lower() in body.lower()},
         {"check": "Names what was denied or billed", "ok": any(w in body.lower() for w in _keywords(facts.get("subject_of", "")))},

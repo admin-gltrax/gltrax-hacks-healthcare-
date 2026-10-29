@@ -127,10 +127,11 @@ def _viewing(account: HealthRecord, rec: HealthRecord, cr: CareRecipient | None)
 
 def ai_status(account: HealthRecord) -> dict:
     roles = {"caller": "Calls offices", "reader": "Reads letters and bills", "strategist": "Maps evidence to the plan's rules",
-             "writer": "Writes letters", "pj": "PJ's chat"}
+             "writer": "Writes letters", "pj": "PJ's chat", "reviewer": "Plays the insurer and tries to deny appeals (partner credits)"}
     on = ai.enabled()
     return {"enabled": on, "budget": ai.BUDGET.status(account.patient.id),
-            "models": [{"role": r, "does": d, "model": ai.engine_label(r) if on else "rules"} for r, d in roles.items()]}
+            "models": [{"role": r, "does": d, "model": ai.engine_label(r) if ai.role_ready(r) else "off" if r == "reviewer" else "rules"}
+                       for r, d in roles.items()]}
 
 
 def dashboard(account: HealthRecord) -> dict:

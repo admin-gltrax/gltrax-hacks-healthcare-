@@ -340,6 +340,13 @@ svg.i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .crit .r:first-child{border-top:0;padding-top:0}
 .crit .r b{font-weight:700}
 .crit .r small{color:var(--ink-3)}
+.round{margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
+.round .rh{margin:0 0 6px;font-size:13.5px}
+.round .rh small{color:var(--ink-3)}
+.rev{margin-top:8px;font-size:13.5px}
+.rev > summary{cursor:pointer;color:var(--ink-2);font-weight:600}
+.todo{margin-top:10px;font-size:13.5px}
+.todo ul{margin:4px 0 0;padding-left:18px}
 .chip.miss{background:var(--red-soft);color:var(--red)}
 .guard{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:3px;font-size:13.5px}
 .guard li.ok::before{content:'✓ ';color:var(--green);font-weight:800}
@@ -1111,7 +1118,7 @@ footer.foot b{color:var(--ink-2)}
     if (d.limited) return;
     var acting = d.viewing.permissions.indexOf('act') >= 0;
     if (d.ai && d.ai.enabled) crew.appendChild(el('p', { class: 'models' }, ['Live on Meta\'s models: ', el('span', { class: 'eng', text: 'Muse Spark' }), ' calls offices, reads letters and bills, and writes; ',
-      el('span', { class: 'eng', text: 'Muse Wonder' }), ' builds the appeal strategy. Code checks everything they produce.']));
+      el('span', { class: 'eng', text: 'Muse Wonder' }), ' builds the appeal strategy. ', el('span', { class: 'eng', text: 'Muse Spark Open' }), ' plays the insurer and tries to deny each appeal first. Code checks everything they produce.']));
     GROUPS.forEach(function (g) {
       var jobs = d.workflow_catalog.filter(function (w) { return w.group === g[0]; });
       if (!jobs.length) return;
@@ -1143,7 +1150,7 @@ footer.foot b{color:var(--ink-2)}
     }
   }
 
-  function engName(e) { return !e || e === 'rules' ? null : (e.indexOf('wonder') >= 0 ? 'Muse Wonder' : 'Muse Spark'); }
+  function engName(e) { return !e || e === 'rules' ? null : (e.indexOf('wonder') >= 0 ? 'Muse Wonder' : e.indexOf('spark-open') >= 0 ? 'Muse Spark Open' : 'Muse Spark'); }
   function engChip(e) { var n = engName(e); return n ? el('span', { class: 'eng', title: e, text: n }) : null; }
   function keepOpen(node, key, dflt) {
     if (expanded[key] === undefined ? dflt : expanded[key]) node.setAttribute('open', '');
@@ -1183,6 +1190,28 @@ footer.foot b{color:var(--ink-2)}
           r.explanation ? el('span', { text: r.explanation }) : null,
           r.evidence.length ? el('small', { text: 'Evidence: ' + r.evidence.join('; ') }) : null]);
       }))]), 'crit-' + w.id, true);
+  }
+  function reviewPanel(w) {
+    var rv = w.review || {};
+    if (!rv.rounds) return null;
+    var head = rv.live ? 'The insurer\'s reviewer is trying to deny it now' : rv.passed ? 'Stress test: the insurer\'s reviewer found no reason to deny'
+      : 'Stress test: ' + (rv.todos || []).length + ' reason' + ((rv.todos || []).length === 1 ? '' : 's') + ' to deny still stand';
+    var body = [el('p', { class: 'fine', text: 'A separate model plays the plan\'s medical reviewer and tries to deny the appeal using only the plan\'s own rules. It never writes the letter; the writer answers what it can from the facts on file. Simulated reviewer, fictional plan.' })];
+    rv.rounds.forEach(function (r) {
+      var items = r.objections.map(function (o) {
+        return el('div', { class: 'r' }, [el('div', {}, [el('span', { class: 'chip ' + (o.fix === 'letter' ? 'watch' : 'miss'), text: o.fix === 'letter' ? 'Letter can answer' : 'Needs evidence' }), ' ', el('b', { text: o.rule_id + ': ' + o.rule })]),
+          el('span', { text: o.reason }), o.needs ? el('small', { text: 'Would answer it: ' + o.needs }) : null]);
+      });
+      var verdict = r.verdict === 'approve' ? ['No reason to deny', 'ok'] : ['Would deny', 'act'];
+      body.push(el('div', { class: 'round' }, [el('p', { class: 'rh' }, [el('b', { text: 'Round ' + r.round + ' ' }), el('span', { class: 'chip ' + verdict[1], text: verdict[0] }),
+        r.invented_rules_dropped ? el('small', { text: ' · ' + r.invented_rules_dropped + ' made-up rule' + (r.invented_rules_dropped === 1 ? '' : 's') + ' removed' }) : null]),
+        items.length ? el('div', { class: 'crit' }, items) : null,
+        r.revision ? el('details', { class: 'rev' }, [el('summary', { text: (r.revision.accepted ? 'Revision by the writer: passed every check' : 'Revision rejected: it failed a letter check, so PJ kept the last letter') }),
+          el('div', { class: 'letter', text: r.revision.body })]) : null]));
+    });
+    if (rv.todos && rv.todos.length) body.push(el('div', { class: 'todo' }, [el('b', { text: 'Still missing, before you send' }), el('ul', {}, rv.todos.map(function (t) { return el('li', { text: t }); }))]));
+    if (rv.note) body.push(el('p', { class: 'fine', text: rv.note }));
+    return keepOpen(el('details', { class: 'panel' }, [el('summary', {}, [head, engChip(rv.engine)])].concat(body)), 'rev-' + w.id, true);
   }
   var CALL_CHECKS = { disclosed_ai_to_each_person: 'Said it\'s an AI to each person it reached', no_extra_data_shared: 'Shared nothing beyond name, birthday, member ID and plan',
     no_human_claim: 'Never claimed to be a person', reference_heard_on_call: 'Reference number really said by the office' };
@@ -1229,6 +1258,7 @@ footer.foot b{color:var(--ink-2)}
           el('div', { class: 'transcript', 'aria-live': c.live ? 'polite' : null }, lines)]), 'call-' + w.id + i, !!c.live));
       });
       if (w.criteria.length) card.appendChild(critPanel(w));
+      var rp = reviewPanel(w); if (rp) card.appendChild(rp);
       var g = guardPanel(w); if (g) card.appendChild(g);
       if (w.deadline) card.appendChild(el('p', { class: 'deadline' }, [el('b', { text: 'Deadline PJ is watching: ' + w.deadline + '. ' }), w.deadline_note || '']));
       if (w.outcome) card.appendChild(el('div', { class: 'result-box ' + (w.status === 'lost' ? 'lost' : 'won'), text: w.outcome + (w.saved ? ' Saved: ' + w.saved + '.' : '') }));

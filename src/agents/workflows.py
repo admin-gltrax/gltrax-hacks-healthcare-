@@ -506,7 +506,7 @@ def _pa_review(wf: Workflow, rec: HealthRecord):
         for t in r["todos"]:
             wf.findings.append(f"To do before sending: {t}")
         return (f"Stress-tested over {n} round{'s' if n != 1 else ''}: {len(r['todos'])} reason{'s' if len(r['todos']) != 1 else ''} to deny "
-                "still stand" + (f". {r['note']}" if r["note"] else ".") + " PJ listed exactly what's missing; you can still sign and send.")
+                + ("still stands" if len(r["todos"]) == 1 else "still stand") + (f". {r['note']}" if r["note"] else ".") + " PJ listed exactly what's missing; you can still sign and send.")
 
     def fallback(why: str) -> str:
         wf.review = {}
