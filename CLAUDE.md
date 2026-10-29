@@ -53,7 +53,7 @@ Meta Global AI Developer Hackathon (Meta + Cerebral Valley).
 
 ## Status (honest)
 
-`MOCK_LLM=1 HOLD_SCALE=0 pytest -q` passes **161 tests**.
+`MOCK_LLM=1 HOLD_SCALE=0 pytest -q` passes **160 tests**.
 
 **Partner credits: scale and adversaries (Oct 29, late).** THE RULE: the patient-facing crew stays on Meta's Model API (enforced in `ai.model_for`); Muse Spark Open on partner credits runs simulators, adversaries, judges. Results and the running spend log: `docs/evals.md` (rebuilt by every eval script from `docs/evals/*.json` + `spend.jsonl`); the page is `/gym`.
 

@@ -418,7 +418,7 @@ Planned additions:
 
 ## 15. Build status and next steps
 
-### Done (161 tests pass offline)
+### Done (160 tests pass offline)
 
 | Area | Status | Proof |
 |---|---|---|
