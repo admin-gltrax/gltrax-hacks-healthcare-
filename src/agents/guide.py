@@ -40,7 +40,7 @@ def next_step(record: HealthRecord) -> dict:
     waiting = [t for t in record.tasks if t.status.value == "waiting_on_you"]
     if waiting:
         return {"step": "done", "say": f"One thing needs you: {waiting[0].needs_you or waiting[0].title}"}
-    return {"step": "done", "say": f"You're all set, {name}. Ask me anything, like \"I think I need to see a therapist.\""}
+    return {"step": "done", "say": f"You're all set, {name}. Pick something below and my crew takes it from there: calls, forms, appeals and follow-ups."}
 
 
 _NEED = re.compile(r"\b(i (think i )?need|i want|find me|help me find|see a|get a|book)\b", re.I)

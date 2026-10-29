@@ -1,8 +1,12 @@
 # CLAUDE.md: project context for future sessions
 
-Read this first, then README.md (the full framework). Updated Oct 27, 2026. The repo is **public**: keep names, employers and other personal details out of it. All data is fictional.
+Read this first, then README.md (the full framework). Updated Oct 29, 2026. The repo is **public**: keep names, employers and other personal details out of it. All data is fictional.
 
-## What this is (direction changed Oct 27)
+## What this is (direction changed Oct 27, widened Oct 29)
+
+**Philosophy (Oct 29).** Put the power in the patient's hands to use every benefit and resource they already have. Healthcare is extremely complicated for the average person; AI does the complicated work so it's simple for them. PJ uses each person's risk factors to drive outreach and actions, and it works for a whole family: an older parent, a child, the person themself. The home screen is a **menu of actions** ("What should PJ do?"), not a dashboard or a chatbot; chat and the buckets sit lower on the page. See `docs/FAMILY-AND-AGING.md` (YC "AI for the Aging Population" fit and the market landscape).
+
+**Demo pitch:** `docs/DEMO-PITCH.md` is the 3-minute script. **Update it in the same change as any user-visible feature.**
 
 **PJ Health: healthcare built for the patient, not the doctor.** A patient dashboard where PJ (the GLTrax Gila monster, they/them) guides someone through their own healthcare.
 
@@ -49,7 +53,21 @@ Meta Global AI Developer Hackathon (Meta + Cerebral Valley).
 
 ## Status (honest)
 
-`MOCK_LLM=1 HOLD_SCALE=0 pytest -q` passes **63 tests**.
+`MOCK_LLM=1 HOLD_SCALE=0 pytest -q` passes **84 tests**.
+
+**Family care and agent workflows (Oct 29). Offline, deterministic, simulated counterparties.**
+
+| Area | Files |
+|---|---|
+| Care circle: parent of a minor (ends at 18), consented helper, legal representative, pending consent | `src/agents/circle.py` |
+| Risk factors → support plan (Wellness Visit, falls, med review, rides, cost help, caregiver support…) | `src/agents/outreach.py` |
+| Action-menu home screen | `src/agents/actions.py`, `home.html` |
+| Crew workflows: office request, bill dispute, prior-auth appeal (+ outside review), plan resources, DME, caregiving-hours appeal, counselor request | `src/agents/workflows.py`, `src/sim/counterparties.py` |
+| Caller: phones the PCP office (menu, hold, transfer, reference number, transcript) | `src/agents/office_calls.py`, `src/sim/pcp_office.py` |
+| Demo family: Alex, mom Rosa (78, Medicare Advantage, POA), son Leo (9, Medicaid) | `src/patient/demo.py` |
+| Tests | `tests/test_family.py` |
+
+There is **no telephony**: office calls are simulated. The live swarm worker (`src/agents/worker.py`) is the agent that would drive a real line.
 
 **Live demo:** https://swarm-scheduler.72q91gp7bkhmc.us-west-2.cs.amazonlightsail.com/ (AWS Lightsail, one container). It redeploys automatically on every merge to `main` once the `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` repo secrets exist; until then, use `python scripts/deploy_lightsail.py`. See DEPLOY.md and `docs/aws-hosting.md`.
 
@@ -104,6 +122,9 @@ What exists:
 **History note.** Everything from the live-API runs onward was built on branch `claude/pensive-hypatia-crv7nq` and folded into `main` on Oct 27, by replaying its commits on top of the patient-first work. `main`'s history had been squashed, so the two branches shared no commits. Develop from `main`.
 
 ## Next steps
+
+Family-layer next steps are in `docs/FAMILY-AND-AGING.md`. Highest value before judging: put Muse Spark into at least one crew workflow (reading a denial or bill, drafting the letter), and route the caller through the swarm worker against a simulated office.
+
 
 The ordered list, with acceptance criteria, is in README section 15. In short:
 
@@ -197,7 +218,7 @@ See the layout table in README section 14. Key files:
 | `scripts/deploy_lightsail.py`, `.github/workflows/deploy.yml` | Lightsail deploys (manual / on merge) |
 | `src/api/static/index.html` | Swarm dashboard, served at `/swarm` |
 
-**Docs:** `DEPLOY.md`, `docs/PLAN.md` (the original swarm plan; still valid for the swarm), `docs/DATA-SOURCES.md` (FHIR, Blue Button, sandboxes, public data).
+**Docs:** `docs/DEMO-PITCH.md` (keep current), `docs/FAMILY-AND-AGING.md`, `DEPLOY.md`, `docs/PLAN.md` (the original swarm plan; still valid for the swarm), `docs/DATA-SOURCES.md` (FHIR, Blue Button, sandboxes, public data).
 
 ## Invariants: do not break these
 
@@ -214,6 +235,10 @@ See the layout table in README section 14. Key files:
 6. **Fictional data only.** Any new insurer, provider, phone or fax number must be obviously fictional: use 555-01xx numbers and `SIM-` IDs.
 7. **No real PHI to any model, and never anything to `-contributor` models.**
 8. **Plain language on screen**, with the clinical term kept in `buckets.py` for mapping.
+9. **Care circle consent.** An adult is invisible until they consent (typing their own name). A helper may act but never sign for an adult; only a parent of a minor or an attested legal representative signs, and the signature names the capacity.
+10. **Workflow consent gate.** No `send` step runs before its `approve` step is signed by someone allowed to sign. A "no" escalates; it never silently ends.
+11. **Outreach never advises.** Support actions name covered services and resources only; a test scans them for diagnostic or dosing language.
+12. **The caller discloses it's an AI** calling with the patient's permission, and shares only name, DOB, member ID and plan.
 
 **Swarm**
 

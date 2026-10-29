@@ -268,6 +268,84 @@ svg.i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .track-l{display:grid;grid-template-columns:repeat(4,1fr);font-size:11.5px;color:var(--ink-3);font-weight:600}
 .req .s{font-size:13px;color:var(--ink-3);margin-top:6px}
 
+/* whose care: the person switcher */
+.people{display:flex;gap:8px;flex-wrap:wrap;margin:-6px 0 18px}
+.person{display:flex;align-items:center;gap:8px;border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:5px 14px 5px 5px;font-weight:700;font-size:14px;color:var(--ink)}
+.person .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:12px;background:var(--bg-2);color:var(--ink-2)}
+.person small{font-weight:600;color:var(--ink-3)}
+.person.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand)}
+.person.on .av{background:var(--brand);color:var(--brand-ink)}
+.person.add{border-style:dashed;color:var(--ink-2);padding-left:12px}
+.consent{display:flex;gap:14px;align-items:flex-start;margin-bottom:20px;padding:16px 18px}
+.consent .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--violet-soft);color:var(--violet);flex:none}
+.consent p{font-size:14.5px;color:var(--ink-2)}
+.consent b{color:var(--ink)}
+.consent .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+/* the action menu */
+.actions{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.act{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 12px;align-content:start;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);transition:border-color .15s,transform .15s;position:relative;color:var(--ink)}
+.act:hover{border-color:var(--brand);transform:translateY(-1px)}
+.act .ic{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--brand-soft);color:var(--brand);grid-row:span 3}
+.act b{font-size:15.5px;line-height:1.3;padding-right:24px}
+.act .d{font-size:13.5px;color:var(--ink-2);line-height:1.4}
+.act .who{font-size:12px;color:var(--ink-3);font-weight:600}
+.act .badge{position:absolute;top:12px;right:12px;background:var(--coral);color:#fff;border-radius:999px;font-size:12px;font-weight:800;padding:1px 8px}
+.act[disabled]{opacity:.55;cursor:not-allowed;transform:none;border-color:var(--line)}
+.crew .act .ic{background:var(--coral-soft);color:var(--coral-ink)}
+.crew-g{margin-top:18px}
+.crew-g h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);margin:0 2px 8px}
+.do{margin-bottom:30px}
+/* agent workflows */
+.wfs{display:grid;gap:14px;margin-bottom:30px}
+.wf .wh{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.wf .wh b{font-size:17px;line-height:1.3}
+.wf .wh small{display:block;color:var(--ink-3);font-size:13px;font-weight:600}
+.wsteps{list-style:none;padding:0;margin:14px 0 0;display:grid}
+.wsteps li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:1px 12px;padding:7px 0}
+.wsteps .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--bg-2);color:var(--ink-3);font-size:11.5px;font-weight:800;grid-row:span 2}
+.wsteps .n .i{width:14px;height:14px;stroke-width:2.6}
+.wsteps li.done .n{background:var(--green-soft);color:var(--green)}
+.wsteps li.needs_you .n{background:var(--amber-soft);color:var(--amber)}
+.wsteps li.working .n{background:var(--blue-soft);color:var(--blue)}
+.wsteps li.skipped{opacity:.5}
+.wsteps .st-t{font-weight:700;font-size:14px}
+.wsteps .st-t small{font-weight:600;color:var(--ink-3);margin-left:6px}
+.wsteps .st-d{font-size:13px;color:var(--ink-2)}
+.finds{margin:12px 0 0;padding:12px 16px 12px 30px;border-radius:var(--r-sm);background:var(--blue-soft);font-size:14px}
+.result-box{margin-top:12px;padding:12px 14px;border-radius:var(--r-sm);font-size:14.5px;font-weight:600}
+.result-box.won{background:var(--green-soft);color:var(--ink)}
+.result-box.lost{background:var(--amber-soft);color:var(--ink)}
+.deadline{font-size:13px;color:var(--ink-2);margin-top:10px}
+.gate{display:grid;gap:10px;margin-top:14px}
+.gate details summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--brand)}
+.call{margin-top:12px;border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 14px;background:var(--surface-2)}
+.call summary{cursor:pointer;font-size:13.5px;font-weight:600;display:flex;gap:8px;align-items:flex-start;color:var(--ink-2)}
+.call summary .i{width:16px;height:16px;margin-top:2px;color:var(--brand)}
+.transcript{display:grid;gap:4px;margin-top:8px;font-size:13.5px}
+.transcript p{color:var(--ink-2)}
+.transcript p.pj{color:var(--ink)}
+.sim-ctl{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center;font-size:13px;color:var(--ink-3)}
+/* support plan */
+.support{display:grid;gap:10px;margin-bottom:30px}
+.sup{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:3px 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px 16px}
+.sup .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--green-soft);color:var(--green);grid-row:span 2}
+.sup b{font-size:15px}
+.sup .d{font-size:13.5px;color:var(--ink-2);grid-column:2}
+.sup .btns{display:flex;gap:6px;grid-row:span 2;grid-column:3}
+.sup.off{opacity:.6}
+@media (max-width:640px){.sup{grid-template-columns:auto minmax(0,1fr)}.sup .btns{grid-column:1/-1;grid-row:auto}}
+/* dialogs */
+dialog.dlg{border:0;border-radius:var(--r);padding:0;width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 40px);background:var(--surface);color:var(--ink);box-shadow:var(--shadow-lg)}
+dialog.dlg::backdrop{background:rgba(10,14,20,.5)}
+.dlg form{padding:22px;display:grid;gap:14px}
+.dlg h2{font-size:21px}
+.dlg p.lead{color:var(--ink-2);font-size:14.5px}
+.dlg label.f{display:grid;gap:6px;font-weight:600;font-size:14px}
+.dlg label.c{display:flex;gap:10px;align-items:center;font-size:14.5px;padding:6px 0}
+.dlg label.c input{width:18px;height:18px;accent-color:var(--brand)}
+.dlg .input,.dlg select{border-radius:12px;border:1px solid var(--line-2);padding:11px 14px;background:var(--surface);font-size:15px;width:100%}
+.dlg .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.dlg .crewline{font-size:13px;color:var(--ink-3)}
 footer.foot{margin-top:34px;padding:22px 0 10px;border-top:1px solid var(--line);font-size:13.5px;color:var(--ink-3);display:flex;gap:10px 22px;flex-wrap:wrap;justify-content:space-between}
 footer.foot b{color:var(--ink-2)}
 
@@ -408,6 +486,9 @@ footer.foot b{color:var(--ink-2)}
       </div>
     </section>
 
+    <nav class="people" id="people" aria-label="Whose care you're managing"></nav>
+    <section class="card consent" id="consentCard" hidden aria-live="polite"></section>
+
     <section id="setup" class="card setup" hidden aria-label="Set up">
       <div class="steps" id="steps"></div>
 
@@ -450,10 +531,26 @@ footer.foot b{color:var(--ink-2)}
       </div>
     </section>
 
+    <section class="do" aria-labelledby="hDo">
+      <div class="sec-head"><h2 id="hDo">What should PJ do?</h2><span class="fine" id="doFor"></span></div>
+      <div class="actions" id="actions"></div>
+      <div class="crew" id="crew"></div>
+    </section>
+
+    <section id="wfSec" hidden aria-labelledby="hWf">
+      <div class="sec-head"><h2 id="hWf">PJ's crew is working on</h2><span class="fine">You sign before anything is sent</span></div>
+      <div class="wfs" id="wfs"></div>
+    </section>
+
+    <section id="supportSec" hidden aria-labelledby="hSup">
+      <div class="sec-head"><h2 id="hSup">Benefits and support PJ found</h2><span class="fine" id="supFor"></span></div>
+      <div class="support" id="support"></div>
+    </section>
+
     <section class="card ask" id="askCard">
       <img src="/pj.webp" alt="">
-      <h2>What do you need?</h2>
-      <p>Say it in your own words. I'll check your coverage, find the options, and do the legwork.</p>
+      <h2>Or just say it</h2>
+      <p>In your own words. PJ checks the coverage, finds the options, and does the legwork.</p>
       <button type="button" class="fake" id="openAsk"><span>"I think I need to see a therapist"</span><span class="send" data-i="send"></span></button>
       <div class="sugg" id="sugg1"></div>
     </section>
@@ -497,6 +594,7 @@ footer.foot b{color:var(--ink-2)}
   <div class="dfoot">PJ doesn't diagnose. In a crisis, call or text 988.</div>
 </aside>
 
+<dialog class="dlg" id="dlg" aria-labelledby="dlgTitle"><form method="dialog" id="dlgForm"></form></dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"><img src="/pj.webp" alt=""><span id="toastText"></span></div>
 
 <script>
@@ -519,7 +617,14 @@ footer.foot b{color:var(--ink-2)}
     check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
     download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
     out: '<path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9"/>',
-    gift: '<path d="M4 10h16v10H4zM2 7h20v3H2zM12 7v13"/><path d="M12 7C10 3 6 4 7.5 6.5 8.3 7.8 12 7 12 7zm0 0c2-4 6-3 4.5-.5C15.7 7.8 12 7 12 7z"/>'
+    gift: '<path d="M4 10h16v10H4zM2 7h20v3H2zM12 7v13"/><path d="M12 7C10 3 6 4 7.5 6.5 8.3 7.8 12 7 12 7zm0 0c2-4 6-3 4.5-.5C15.7 7.8 12 7 12 7z"/>',
+    receipt: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+    scale: '<path d="M12 3v18M7 21h10M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/>',
+    truck: '<path d="M3 6h11v10H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+    wheel: '<circle cx="10" cy="15" r="5"/><path d="M10 10V5h4M14 15h4l2 4"/><circle cx="10" cy="4" r="1"/>',
+    home: '<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-5h4v5"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    pen: '<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/>'
   };
   function icon(name) {
     var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -534,6 +639,7 @@ footer.foot b{color:var(--ink-2)}
   function el(tag, attrs, kids) {
     var e = document.createElement(tag);
     Object.keys(attrs || {}).forEach(function (k) {
+      if (attrs[k] == null) return;
       if (k === 'text') e.textContent = attrs[k]; else if (k === 'class') e.className = attrs[k]; else e.setAttribute(k, attrs[k]);
     });
     (kids || []).forEach(function (c) { if (c) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
@@ -578,9 +684,11 @@ footer.foot b{color:var(--ink-2)}
     $('#welcome').hidden = true; $('#app').hidden = false; $('#menu').hidden = false; $('#fab').hidden = false;
     var h = new Date().getHours();
     $('#hello').textContent = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
-    $('#greetName').textContent = first;
-    $('#avatar').textContent = initials(p.display_name);
-    $('#menuName').textContent = p.display_name;
+    var me = d.account.name, other = d.viewing.relation !== 'you';
+    if (other) $('#hello').textContent += ', ' + me.split(/\s+/)[0];
+    $('#greetName').textContent = other ? first + "'s care" : first;
+    $('#avatar').textContent = initials(me);
+    $('#menuName').textContent = me;
     say(d.pj.say);
 
     var working = d.tasks.filter(function (t) { return t.status === 'working' || t.status === 'waiting_on_them'; }).length;
@@ -612,6 +720,13 @@ footer.foot b{color:var(--ink-2)}
     if (pending) { currentReq = pending.id; $('#letter').textContent = pending.letter; $('#signBox').hidden = false; $('#draftBtn').parentNode.hidden = true; }
     else { $('#signBox').hidden = true; $('#draftBtn').parentNode.hidden = false; }
 
+    renderPeople(d);
+    renderConsent(d);
+    renderActions(d);
+    renderWorkflows(d);
+    renderSupport(d);
+    $('#askCard').hidden = d.limited;
+    document.querySelector('#app .layout').hidden = d.limited;
     renderBuckets(d.buckets);
     renderTasks(d.tasks);
     renderCoverage(d.coverage);
@@ -754,13 +869,14 @@ footer.foot b{color:var(--ink-2)}
 
   /* Ask PJ drawer */
   var lastFocus = null;
-  function openAsk(prefill) {
+  function openAsk(prefill, edit) {
     lastFocus = document.activeElement;
     var dr = $('#drawer'), sc = $('#scrim');
     dr.hidden = false; sc.hidden = false; document.body.classList.add('locked');
     requestAnimationFrame(function () { dr.classList.add('on'); sc.classList.add('on'); });
     if (!$('#thread').children.length) pjMsg('Hi! Tell me what you need, in your own words. I\'ll check your coverage and lay out your options.');
-    if (prefill) { $('#ask').value = prefill; send(); } else setTimeout(function () { $('#ask').focus(); }, 280);
+    if (prefill && !edit) { $('#ask').value = prefill; send(); }
+    else { if (prefill) $('#ask').value = prefill; setTimeout(function () { var a = $('#ask'); a.focus(); a.setSelectionRange(a.value.length, a.value.length); }, 280); }
   }
   function closeAsk() {
     var dr = $('#drawer'), sc = $('#scrim');
@@ -887,6 +1003,297 @@ footer.foot b{color:var(--ink-2)}
       say(m); toast(m);
     }).catch(oops);
   });
+
+
+  /* ---------- whose care, actions, crew jobs, workflows, support plan ---------- */
+  var D = null;
+  var REL = { you: 'You', parent: 'Parent', child: 'Child', spouse: 'Spouse', other: 'Family' };
+  var GROUPS = [['care', 'Get care'], ['fight', 'Fight a wrong bill or a no'], ['owed', 'Get what the plan owes you']];
+  var SUP_ICON = { benefit: 'gift', preventive: 'check', check_in: 'phone', resource: 'people', coverage: 'shield', safety: 'home' };
+
+  function renderPeople(d) {
+    D = d;
+    var box = $('#people'); box.textContent = '';
+    if (d.circle.length < 2 && d.viewing.relation === 'you') { box.hidden = true; return; }
+    box.hidden = false;
+    d.circle.forEach(function (p) {
+      var b = el('button', { type: 'button', class: 'person' + (p.active ? ' on' : ''), 'aria-pressed': p.active ? 'true' : 'false' }, [
+        el('span', { class: 'av', text: initials(p.name) }), el('span', { text: p.relation === 'you' ? 'Me' : p.name.split(/\s+/)[0] }),
+        p.relation === 'you' ? null : el('small', { text: REL[p.relation] + (p.age != null ? ', ' + p.age : '') })
+      ]);
+      b.addEventListener('click', function () { if (!p.active) busy(b, api('POST', '/api/p/active', { person_id: p.id })).then(function (x) { render(x); window.scrollTo({ top: 0, behavior: 'smooth' }); }).catch(oops); });
+      box.appendChild(b);
+    });
+    var add = el('button', { type: 'button', class: 'person add' }, [icon('plus'), 'Add someone']);
+    add.addEventListener('click', dlgAddPerson);
+    box.appendChild(add);
+  }
+
+  function renderConsent(d) {
+    var c = $('#consentCard'), v = d.viewing; c.textContent = '';
+    if (v.relation === 'you') { c.hidden = true; return; }
+    c.hidden = false;
+    var first = v.name.split(/\s+/)[0], btns = el('div', { class: 'btns' });
+    if (!v.permissions.length) {
+      var yes = el('button', { type: 'button', class: 'btn sm' }, [first + ' says yes']);
+      yes.addEventListener('click', function () { dlgConsent(v); });
+      var poa = el('button', { type: 'button', class: 'btn sm quiet' }, ['I have power of attorney']);
+      poa.addEventListener('click', function () { dlgRepresentative(v); });
+      btns.appendChild(yes); btns.appendChild(poa);
+    }
+    var rm = el('button', { type: 'button', class: 'btn sm text' }, ['Remove ' + first]);
+    rm.addEventListener('click', function () { if (confirm('Remove ' + v.name + ' from your care circle?')) api('DELETE', '/api/p/circle/' + v.id).then(render).catch(oops); });
+    btns.appendChild(rm);
+    c.appendChild(el('span', { class: 'ic' }, [icon('people')]));
+    c.appendChild(el('div', {}, [el('p', {}, [el('b', { text: REL[v.relation] + ': ' + v.name + '. ' }), v.consent_note]), btns]));
+  }
+
+  function actTile(a, onClick) {
+    var b = el('button', { type: 'button', class: 'act' }, [
+      el('span', { class: 'ic' }, [icon(a.icon)]), el('b', { text: a.title }), el('span', { class: 'd', text: a.blurb }),
+      a.crew ? el('span', { class: 'who', text: a.crew.join(' · ') }) : null, a.badge ? el('span', { class: 'badge', text: String(a.badge) }) : null
+    ]);
+    if (a.disabled) { b.disabled = true; b.title = a.disabled; }
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  function renderActions(d) {
+    var first = d.viewing.name.split(/\s+/)[0];
+    $('#doFor').textContent = d.viewing.relation === 'you' ? 'Tap one. PJ does the calls, forms and follow-ups.' : 'For ' + first + '. ' + (d.viewing.permissions.indexOf('approve') >= 0 ? 'You can sign for ' + first + '.' : first + ' signs.');
+    var box = $('#actions'); box.textContent = '';
+    d.actions.forEach(function (a) { box.appendChild(actTile(a, function () { runAction(a); })); });
+    var crew = $('#crew'); crew.textContent = '';
+    if (d.limited) return;
+    var acting = d.viewing.permissions.indexOf('act') >= 0;
+    GROUPS.forEach(function (g) {
+      var jobs = d.workflow_catalog.filter(function (w) { return w.group === g[0]; });
+      if (!jobs.length) return;
+      var grid = el('div', { class: 'actions' });
+      jobs.forEach(function (w) {
+        var t = actTile({ title: w.title, blurb: w.blurb, icon: w.icon, crew: w.crew, disabled: acting ? null : first + " hasn't asked PJ to act for you." }, function () { dlgWorkflow(w); });
+        grid.appendChild(t);
+      });
+      if (g[0] === 'care') grid.insertBefore(actTile({ title: 'Hold an appointment: call 15 offices at once', blurb: "PJ's scheduling swarm calls offices in parallel, negotiates honestly, and holds the best time for a yes.", icon: 'phone', crew: ['Scheduling swarm'] }, function () { location.href = '/swarm'; }), grid.firstChild);
+      crew.appendChild(el('div', { class: 'crew-g' }, [el('h3', { text: g[1] }), grid]));
+    });
+  }
+
+  function runAction(a) {
+    if (a.needs === 'coverage' && !D.coverage) { toast('First, the insurance card.'); return dlgCoverage(); }
+    if (a.needs === 'pcp') { toast('First, the regular doctor.'); return dlgPcp(); }
+    if (a.kind === 'workflow') return dlgWorkflow(D.workflow_catalog.filter(function (w) { return w.key === a.target; })[0]);
+    if (a.kind === 'ask') return openAsk(a.prompt, a.edit);
+    if (a.kind === 'link') { location.href = a.target; return; }
+    if (a.kind === 'support') { var s = $('#supportSec'); if (s.hidden) return dlgAbout(); return s.scrollIntoView({ behavior: 'smooth' }); }
+    if (a.kind === 'flow') {
+      if (a.target === 'coverage') return dlgCoverage();
+      if (a.target === 'pcp') return dlgPcp();
+      if (a.target === 'records') return dlgRecords();
+      if (a.target === 'circle') return dlgAddPerson();
+      if (a.target === 'about') return dlgAbout();
+      if (a.target === 'consent') return dlgConsent(D.viewing);
+      if (a.prompt) return openAsk(a.prompt);
+    }
+  }
+
+  function renderWorkflows(d) {
+    var sec = $('#wfSec'), box = $('#wfs'); box.textContent = '';
+    sec.hidden = d.limited || !d.workflows.length;
+    var canSign = d.viewing.permissions.indexOf('approve') >= 0, first = d.viewing.name.split(/\s+/)[0];
+    d.workflows.forEach(function (w) {
+      var badge = { working: ['PJ is on it', 'info'], needs_you: ['Needs a signature', 'watch'], waiting_on_them: ['Waiting on them', 'violet'], won: ['Done: it worked', 'ok'], partly_won: ['Partly won', 'ok'], lost: ['They said no', 'act'], closed: ['Closed', ''] }[w.status] || [w.status, ''];
+      var card = el('article', { class: 'card wf' }, [el('div', { class: 'wh' }, [
+        el('div', {}, [el('b', { text: w.title }), el('small', { text: 'Started ' + w.created_at.slice(0, 10) + (w.signed_by ? ' · signed by ' + w.signed_by : '') })]),
+        el('span', { class: 'chip ' + badge[1], text: badge[0] })])]);
+      var ol = el('ol', { class: 'wsteps' });
+      w.steps.forEach(function (st, i) {
+        ol.appendChild(el('li', { class: st.status }, [
+          el('span', { class: 'n' }, [st.status === 'done' ? icon('check') : String(i + 1)]),
+          el('span', { class: 'st-t' }, [st.title, el('small', { text: st.agent })]),
+          st.detail ? el('span', { class: 'st-d', text: st.detail + (st.due ? '' : '') }) : null
+        ]));
+      });
+      card.appendChild(ol);
+      if (w.findings.length) card.appendChild(el('ul', { class: 'finds' }, w.findings.map(function (f) { return el('li', { text: f }); })));
+      w.calls.forEach(function (c) {
+        card.appendChild(el('details', { class: 'call' }, [
+          el('summary', {}, [icon('phone'), ' Call to ' + c.practice + ': ' + c.menu_path + ' · ' + c.hold_minutes + ' min on hold (PJ waited, not you) · reached ' + c.reached + ' · ref ' + c.reference]),
+          el('p', { class: 'fine', text: 'Shared on the call: ' + c.shared.map(function (k) { return { dob: 'date of birth', member_id: 'member ID' }[k] || k; }).join(', ') + '. Nothing else.' }),
+          el('div', { class: 'transcript' }, c.transcript.map(function (t) { return el('p', { class: t.speaker }, [el('b', { text: t.speaker === 'pj' ? 'PJ: ' : 'Office: ' }), t.text]); }))
+        ]));
+      });
+      if (w.deadline) card.appendChild(el('p', { class: 'deadline' }, [el('b', { text: 'Deadline PJ is watching: ' + w.deadline + '. ' }), w.deadline_note || '']));
+      if (w.outcome) card.appendChild(el('div', { class: 'result-box ' + (w.status === 'lost' ? 'lost' : 'won'), text: w.outcome + (w.saved ? ' Saved: ' + w.saved + '.' : '') }));
+      if (w.status === 'needs_you') {
+        var gate = el('div', { class: 'gate' }, [el('details', { open: '' }, [el('summary', { text: 'Read exactly what PJ will send' }), el('div', { class: 'letter', text: w.letter || '' })])]);
+        if (canSign) {
+          var f = el('form', { class: 'field' }, [el('input', { class: 'input', type: 'text', required: '', 'aria-label': 'Type the full name to sign', placeholder: 'Type ' + d.viewing.signer + ' to sign' }), el('button', { class: 'btn', type: 'submit' }, [icon('pen'), 'Sign and send'])]);
+          f.addEventListener('submit', function (e) {
+            e.preventDefault();
+            busy(e.submitter, api('POST', '/api/p/workflows/' + w.id + '/approve', { typed_name: f.querySelector('input').value })).then(function (x) { render(x); toast('Sent. PJ is tracking the deadline.'); }).catch(oops);
+          });
+          gate.appendChild(f);
+        } else gate.appendChild(el('p', { class: 'fine', text: 'Only ' + first + ' (or someone with healthcare power of attorney) can sign this.' }));
+        card.appendChild(gate);
+      }
+      if (w.status === 'waiting_on_them') {
+        var yes = el('button', { type: 'button', class: 'chip-btn', text: 'They say yes' }), no = el('button', { type: 'button', class: 'chip-btn', text: 'They say no' });
+        [[yes, 'approved'], [no, 'denied']].forEach(function (pair) {
+          pair[0].addEventListener('click', function () { busy(pair[0], api('POST', '/api/p/workflows/' + w.id + '/simulate-response?outcome=' + pair[1])).then(render).catch(oops); });
+        });
+        card.appendChild(el('div', { class: 'sim-ctl' }, ['Demo: skip ahead to their answer', yes, no]));
+      }
+      box.appendChild(card);
+    });
+  }
+
+  function renderSupport(d) {
+    var sec = $('#supportSec'), box = $('#support'); box.textContent = '';
+    sec.hidden = d.limited || !d.support_plan.length;
+    var first = d.viewing.name.split(/\s+/)[0];
+    $('#supFor').textContent = (d.viewing.relation === 'you' ? 'From your' : 'From ' + first + "'s") + ' age, plan and what you told PJ' + (d.about.length ? ': ' + d.about.map(function (f) { return f.label; }).join(', ') : '');
+    d.support_plan.forEach(function (a) {
+      var row = el('div', { class: 'sup' + (a.status === 'dismissed' ? ' off' : '') }, [
+        el('span', { class: 'ic' }, [icon(SUP_ICON[a.kind] || 'gift')]),
+        el('b', { text: a.title + (a.cost ? ' · ' + a.cost : '') }),
+        el('span', { class: 'd', text: a.why + (a.confidence === 'unverified' ? ' (PJ will confirm.)' : '') })
+      ]);
+      var btns = el('div', { class: 'btns' });
+      if (a.status === 'suggested') {
+        var go = el('button', { type: 'button', class: 'btn sm' }, ['Do it, PJ']), no = el('button', { type: 'button', class: 'btn sm text' }, ['Not now']);
+        go.addEventListener('click', function () { busy(go, api('POST', '/api/p/support/' + a.key + '/go')).then(function (x) { render(x); toast('On it: ' + (a.agent_can_do[0] || a.title)); }).catch(oops); });
+        no.addEventListener('click', function () { busy(no, api('POST', '/api/p/support/' + a.key + '/dismiss')).then(render).catch(oops); });
+        btns.appendChild(go); btns.appendChild(no);
+      } else btns.appendChild(el('span', { class: 'chip ' + (a.status === 'started' ? 'info' : ''), text: a.status === 'started' ? 'PJ is on it' : 'Not now' }));
+      row.appendChild(btns);
+      box.appendChild(row);
+    });
+  }
+
+  /* ---------- dialogs ---------- */
+  function dlg(title, lead, body, submitText, onSubmit) {
+    var f = $('#dlgForm'); f.textContent = '';
+    f.appendChild(el('h2', { id: 'dlgTitle', text: title }));
+    if (lead) f.appendChild(el('p', { class: 'lead', text: lead }));
+    body.forEach(function (n) { f.appendChild(n); });
+    var cancel = el('button', { type: 'button', class: 'btn quiet', text: 'Cancel' });
+    cancel.addEventListener('click', function () { $('#dlg').close(); });
+    var ok = el('button', { type: 'submit', class: 'btn', text: submitText });
+    f.appendChild(el('div', { class: 'row' }, [cancel, ok]));
+    f.onsubmit = function (e) {
+      e.preventDefault();
+      busy(ok, Promise.resolve(onSubmit(f))).then(function (x) { if (x !== false) $('#dlg').close(); }).catch(function (err) { toast(err.message); });
+    };
+    $('#dlg').showModal();
+    var firstInput = f.querySelector('input,select'); if (firstInput) firstInput.focus();
+  }
+  function field(label, input) { return el('label', { class: 'f' }, [label, input]); }
+  function input(name, attrs) { return el('input', Object.assign({ class: 'input', name: name, type: 'text' }, attrs || {})); }
+  function select(name, options) { return el('select', { name: name }, options.map(function (o) { return el('option', { value: o[0], text: o[1] }); })); }
+  function val(f, n) { var x = f.elements[n]; return x ? (x.type === 'checkbox' ? x.checked : x.value) : null; }
+
+  function dlgWorkflow(w) {
+    var who = D.viewing.relation === 'you' ? '' : ' for ' + D.viewing.name.split(/\s+/)[0];
+    var body = w.fields.map(function (fd) {
+      if (fd.kind === 'select') return field(fd.label, select(fd.name, fd.options));
+      if (fd.kind === 'bool') return el('label', { class: 'c' }, [el('input', { type: 'checkbox', name: fd.name }), fd.label]);
+      return field(fd.label, input(fd.name, { type: fd.kind === 'number' ? 'number' : fd.kind === 'date' ? 'date' : 'text', placeholder: fd.placeholder || '', min: fd.kind === 'number' ? '0' : null }));
+    });
+    body.push(el('p', { class: 'crewline', text: 'Crew: ' + w.crew.join(', ') + '. Nothing is sent until it is signed.' }));
+    dlg(w.title + who, w.blurb, body, 'Start', function (f) {
+      var inputs = {}; w.fields.forEach(function (fd) { inputs[fd.name] = val(f, fd.name); });
+      return api('POST', '/api/p/workflows', { template: w.key, inputs: inputs }).then(function (x) {
+        render(x); toast('PJ\'s crew started: ' + x.workflows[0].title);
+        setTimeout(function () { $('#wfSec').scrollIntoView({ behavior: 'smooth' }); }, 150);
+      });
+    });
+  }
+  function dlgAddPerson() {
+    dlg('Manage care for someone', 'An older parent, a child, a spouse. A child under 18: you manage their care. An adult: they choose what you can see and do.', [
+      field('Their full name', input('name', { required: '', autocomplete: 'off' })),
+      field('They are your', select('relation', [['parent', 'Parent'], ['child', 'Child'], ['spouse', 'Spouse or partner'], ['other', 'Someone else']])),
+      field('Date of birth', input('dob', { type: 'date' }))
+    ], 'Add', function (f) {
+      return api('POST', '/api/p/circle', { name: val(f, 'name'), relation: val(f, 'relation'), dob: val(f, 'dob') || null }).then(render);
+    });
+  }
+  function dlgConsent(v) {
+    var first = v.name.split(/\s+/)[0];
+    dlg(first + ' says yes', 'Hand your phone to ' + first + '. They type their own name and choose what you may do. They can take it back any time.', [
+      el('label', { class: 'c' }, [el('input', { type: 'checkbox', name: 'view', checked: '' }), 'See my coverage, care team, records and what PJ is doing']),
+      el('label', { class: 'c' }, [el('input', { type: 'checkbox', name: 'act', checked: '' }), 'Ask PJ to make calls and fill in forms for me']),
+      el('p', { class: 'fine', text: first + ' still signs anything that gets sent, and approves any booking.' }),
+      field(first + ', type your full name', input('typed', { required: '', placeholder: v.name }))
+    ], 'Say yes', function (f) {
+      var perms = []; if (val(f, 'view')) perms.push('view'); if (val(f, 'act')) perms.push('act');
+      return api('POST', '/api/p/circle/' + v.id + '/consent', { typed_name: val(f, 'typed'), permissions: perms }).then(render);
+    });
+  }
+  function dlgRepresentative(v) {
+    dlg('Healthcare power of attorney', 'If you hold healthcare power of attorney or guardianship for ' + v.name + ', you can sign for them. PJ notes that you attested to it; this demo doesn\'t check the document.', [
+      field('Document', select('document', [['healthcare power of attorney', 'Healthcare power of attorney'], ['guardianship', 'Guardianship']])),
+      field('Type your full name to attest', input('typed', { required: '', placeholder: D.account.name }))
+    ], 'Attest', function (f) {
+      return api('POST', '/api/p/circle/' + v.id + '/representative', { typed_name: val(f, 'typed'), document: val(f, 'document') }).then(render);
+    });
+  }
+  function dlgAbout() {
+    var you = D.viewing.relation === 'you', first = D.viewing.name.split(/\s+/)[0], told = {};
+    D.about.forEach(function (f) { told[f.key] = true; });
+    var body = [field('Date of birth', input('dob', { type: 'date', value: D.patient.dob || '' }))];
+    if (you) body.push(field('Where you work (finds free benefits through work)', input('employer', { value: D.patient.employer || '' })));
+    body.push(el('p', { class: 'fine', text: 'Check what applies. PJ turns it into covered next steps; it never diagnoses.' }));
+    D.about_catalog.forEach(function (c) { body.push(el('label', { class: 'c' }, [el('input', Object.assign({ type: 'checkbox', name: 'f_' + c.key }, told[c.key] ? { checked: '' } : {})), c.label])); });
+    dlg(you ? 'Tell PJ about yourself' : 'Tell PJ about ' + first, 'The more PJ knows, the more benefits and support it can find.', body, 'Save', function (f) {
+      var keys = D.about_catalog.filter(function (c) { return val(f, 'f_' + c.key); }).map(function (c) { return c.key; });
+      var b = { factors: keys, dob: val(f, 'dob') || '' }; if (you) b.employer = val(f, 'employer') || '';
+      return api('POST', '/api/p/about', b).then(function (x) { render(x); if (x.support_plan.length) setTimeout(function () { $('#supportSec').scrollIntoView({ behavior: 'smooth' }); }, 150); });
+    });
+  }
+  function dlgCoverage() {
+    var demo = el('p', { class: 'fine' }, ['Demo cards: ' + D.demo_cards.join(', ')]);
+    dlg('Add the insurance card', 'The member ID from the card. PJ works out what\'s covered, what it costs, and free benefits through work.', [
+      field('Member ID', input('card', { required: '', placeholder: 'e.g. BWM-77031882' })),
+      field('Where they work (optional)', input('employer')), demo
+    ], 'Check coverage', function (f) {
+      return api('POST', '/api/p/coverage', { card: val(f, 'card'), employer: val(f, 'employer') || null }).then(render);
+    });
+  }
+  function dlgPcp() {
+    var results = el('div', { class: 'results' });
+    dlg('Add the regular doctor', 'Search by name or practice. PJ calls the office to double-check the phone, fax and network.', [
+      field('Doctor or practice', input('q', { required: '', placeholder: 'e.g. Lee, Harbor, Juniper' })), results
+    ], 'Search', function (f) {
+      return api('GET', '/api/p/providers?q=' + encodeURIComponent(val(f, 'q'))).then(function (list) {
+        results.textContent = '';
+        if (!list.length) results.appendChild(el('p', { class: 'empty', text: 'No match. Try a last name or the practice name.' }));
+        list.forEach(function (p) {
+          var b = el('button', { type: 'button', class: 'result' }, [el('span', { class: 'who' }, [el('b', { text: p.name }), el('small', { text: p.practice })]), el('span', { class: 'go' }, [el('span', { text: 'Choose' }), icon('arrow')])]);
+          b.addEventListener('click', function () {
+            busy(b, api('POST', '/api/p/pcp', { sim_id: p.sim_id })).then(function (d) { $('#dlg').close(); render(d); if (d.corrections && d.corrections.length) toast('Fixed ' + d.corrections.length + ' wrong detail(s) from the directory'); }).catch(oops);
+          });
+          results.appendChild(b);
+        });
+        return false;  // keep the dialog open to pick a result
+      });
+    });
+  }
+  function dlgRecords() {
+    var pending = D.records_requests.filter(function (r) { return r.status === 'awaiting_signature'; })[0];
+    var go = function (req) {
+      var canSign = D.viewing.permissions.indexOf('approve') >= 0;
+      dlg('Request the medical records', 'It\'s a legal right. PJ wrote the request; it\'s sent only after it\'s signed.', [
+        el('div', { class: 'letter', text: req.letter }),
+        canSign ? field('Type ' + D.viewing.signer + ' to sign', input('sig', { required: '' })) : el('p', { class: 'fine', text: 'Only ' + D.viewing.name + ' can sign this.' })
+      ], canSign ? 'Sign and send' : 'Close', function (f) {
+        if (!canSign) return true;
+        return api('POST', '/api/p/records/' + req.id + '/sign', { typed_name: val(f, 'sig') }).then(function (x) { render(x); toast('Sent. PJ follows up until the records arrive.'); });
+      });
+    };
+    if (pending) return go(pending);
+    api('POST', '/api/p/records').then(function (x) { render(x); go(x.records_requests[0]); }).catch(oops);
+  }
 
   api('GET', '/api/p/me').then(render).catch(function () { $('#welcome').hidden = false; });
 })();

@@ -214,7 +214,7 @@ class AgentTask(BaseModel):
 
     id: str = Field(default_factory=lambda: _id("task"))
     title: str  # "Ask Dr. Lee's office for your records"
-    agent: Literal["coverage", "care_team", "records", "navigator", "swarm", "guide"]
+    agent: Literal["coverage", "care_team", "records", "navigator", "swarm", "guide", "outreach", "workflow"]
     status: TaskStatus = TaskStatus.todo
     detail: str | None = None
     needs_you: str | None = None  # the one thing the patient must do, if any
@@ -258,6 +258,117 @@ class CareRequest(BaseModel):
     created_at: str = Field(default_factory=_now)
 
 
+# ---------------------------------------------------------------- risk factors and the support plan
+
+class RiskFactor(BaseModel):
+    """Something about a person's life that changes what support they should get.
+
+    Never a diagnosis: either something the person (or their caregiver) told PJ,
+    or something read straight off their record (age, coverage)."""
+
+    key: str  # catalog key in src/agents/outreach.py, e.g. "lives_alone"
+    label: str  # plain words: "Lives alone"
+    source: Source = "you"
+    confidence: Confidence = "likely"
+
+
+SupportKind = Literal["benefit", "preventive", "check_in", "resource", "coverage", "safety"]
+SupportStatus = Literal["suggested", "started", "done", "dismissed"]
+
+
+class SupportAction(BaseModel):
+    """One proactive step PJ suggests from a person's risk factors and coverage.
+
+    The person (or someone they authorized) decides; PJ never starts outreach
+    on its own. Every suggestion says why, from which source, and what it costs."""
+
+    key: str  # stable per person: catalog key, so dismissing sticks across refreshes
+    kind: SupportKind
+    title: str
+    why: str  # cites the risk factor and/or the plan benefit
+    cost: str | None = None
+    agent_can_do: list[str] = Field(default_factory=list)
+    because: list[str] = Field(default_factory=list)  # risk factor keys
+    source: Source = "insurer"
+    confidence: Confidence = "likely"
+    status: SupportStatus = "suggested"
+    priority: int = 50  # lower first
+
+
+# ---------------------------------------------------------------- agent workflows (bills, appeals, requests)
+
+StepKind = Literal["agent", "approve", "send", "wait", "outcome"]
+StepStatus = Literal["pending", "working", "done", "needs_you", "skipped", "failed"]
+
+
+class WorkflowStep(BaseModel):
+    key: str
+    title: str
+    agent: str  # which crew member does it: "Billing agent", "Policy agent", "You"...
+    kind: StepKind = "agent"
+    status: StepStatus = "pending"
+    detail: str | None = None
+    due: str | None = None  # YYYY-MM-DD, for waits and filing windows
+
+
+WorkflowStatus = Literal["working", "needs_you", "waiting_on_them", "won", "partly_won", "lost", "closed"]
+
+
+class Workflow(BaseModel):
+    """A multi-step job PJ's crew runs end to end: contest a bill, appeal a
+    denial, request rides or equipment. Agents do every step they can; the
+    person approves before anything is sent; PJ tracks the clock and escalates."""
+
+    id: str = Field(default_factory=lambda: _id("wf"))
+    template: str  # key in src/agents/workflows.py TEMPLATES
+    title: str
+    inputs: dict = Field(default_factory=dict)
+    steps: list[WorkflowStep] = Field(default_factory=list)
+    status: WorkflowStatus = "working"
+    letter: str | None = None  # what will be sent, shown in full before approval
+    findings: list[str] = Field(default_factory=list)  # what the agents found, in plain words
+    calls: list[dict] = Field(default_factory=list)  # phone calls the caller agent made (src/agents/office_calls.py)
+    outcome: str | None = None
+    saved: str | None = None  # money or hours recovered, when there is a number
+    deadline: str | None = None  # the filing or decision window PJ is watching
+    deadline_note: str | None = None  # where the deadline comes from and how sure PJ is
+    signed_by: str | None = None
+    history: list[dict] = Field(default_factory=list)
+    created_at: str = Field(default_factory=_now)
+
+    def log(self, note: str) -> None:
+        self.history.append({"at": _now(), "note": note})
+
+    def step(self, key: str) -> WorkflowStep:
+        return next(s for s in self.steps if s.key == key)
+
+
+# ---------------------------------------------------------------- the care circle
+
+Relation = Literal["parent", "child", "spouse", "other"]
+# How the account holder is allowed to act for this person. Consent is the
+# product: nothing about another adult is done without their say-so.
+Authority = Literal[
+    "parent_of_minor",  # a parent or guardian of someone under 18 (HIPAA personal representative)
+    "consented_helper",  # an adult invited the account holder and chose what they may do
+    "legal_representative",  # healthcare power of attorney or guardian, attested by the account holder
+    "pending_consent",  # invited but the person hasn't said yes yet: nothing but their name is visible
+]
+Permission = Literal["view", "act", "approve"]
+
+
+class CareRecipient(BaseModel):
+    """Someone the account holder helps: an older parent, a child, a spouse."""
+
+    id: str = Field(default_factory=lambda: _id("cr"))
+    relation: Relation
+    authority: Authority
+    permissions: list[Permission] = Field(default_factory=list)
+    consent_note: str  # plain words, shown on screen: how this access was granted
+    consented_at: str | None = None
+    record: "HealthRecord"
+
+
 # ---------------------------------------------------------------- the whole record
 
 class HealthRecord(BaseModel):
@@ -268,6 +379,11 @@ class HealthRecord(BaseModel):
     records_requests: list[RecordsRequest] = Field(default_factory=list)
     tasks: list[AgentTask] = Field(default_factory=list)
     care_requests: list[CareRequest] = Field(default_factory=list)
+    workflows: list[Workflow] = Field(default_factory=list)
+    risk_factors: list[RiskFactor] = Field(default_factory=list)  # told to PJ; derived ones are computed
+    support_status: dict[str, SupportStatus] = Field(default_factory=dict)  # support action key -> status
+    circle: list[CareRecipient] = Field(default_factory=list)  # people this account helps (account holder's record only)
+    active_id: str | None = None  # which circle member the dashboard shows; None = the account holder
 
     def pcp(self) -> CareTeamMember | None:
         return next((m for m in self.care_team if m.role == "pcp"), None)
@@ -277,6 +393,20 @@ class HealthRecord(BaseModel):
 
     def task(self, task_id: str) -> AgentTask | None:
         return next((t for t in self.tasks if t.id == task_id), None)
+
+
+CareRecipient.model_rebuild()
+
+
+def age_on(dob: str | None, on: date | None = None) -> int | None:
+    if not dob:
+        return None
+    try:
+        b = date.fromisoformat(dob)
+    except ValueError:
+        return None
+    on = on or date.today()
+    return on.year - b.year - ((on.month, on.day) < (b.month, b.day))
 
 
 def today() -> str:

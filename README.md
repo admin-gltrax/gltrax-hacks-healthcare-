@@ -1,8 +1,8 @@
 # PJ Health: healthcare built for the patient, not the doctor
 
-> **Your healthcare, owned by you.** You tell PJ who you are, show it your insurance card, and name your doctor. PJ is a friendly Gila monster. It works out what your plan really covers, double-checks your doctor's office, and requests your medical records for you. Then it turns everything into four plain-language sections you can actually read.
+> **Your healthcare, owned by you.** Healthcare is extremely complicated to navigate for the average person. PJ puts the power back in the patient's hands: it finds every benefit and resource they already have, and PJ's crew of AI agents does the complicated work so it's simple for the person using it. The calls, the forms, the appeals and the follow-ups are handled by the crew; the patient only decides and signs.
 >
-> When you need care, you say it in one sentence, such as "I think I need to see a therapist." PJ's agents handle the confusing parts: coverage, referrals, the employee assistance program, Medicare or Medicaid routes, community options and the phone calls.
+> PJ is a friendly Gila monster. The home screen is a menu of things PJ can do: call the doctor's office and get the right person, find benefits you aren't using, contest a wrong bill, appeal a denial, renew medical equipment, get rides or an aide, appeal cut home care hours, or call 15 offices at once to hold an appointment. It works for you, for an older parent, or for your child.
 
 Built for the Meta Global AI Developer Hackathon (startup track) on the Meta Model API. **"PJ Health" is a working name** (see [Open questions](#16-open-questions)).
 
@@ -35,23 +35,25 @@ Built for the Meta Global AI Developer Hackathon (startup track) on the Meta Mod
 
 Every patient portal today puts the provider first and the patient second. It shows what one health system has about you, in that system's words, and stops at that system's walls. Patients have no real way to run their own care:
 
-- Insurance documents are unreadable.
+- Insurance documents are unreadable, and the benefits people pay for go unused.
 - Provider directories are wrong.
-- Records are scattered across offices that only answer by fax.
-- Questions like "Should I see a specialist, and will it be covered?" take hours of phone calls.
+- Bills are wrong, denials take weeks of calls, and appeals have deadlines nobody explains.
+- Records are scattered across offices that only answer by fax and keep you on hold.
+- Most of this work lands on families: about 53 million Americans are unpaid caregivers.
 
-PJ Health flips that: **the patient comes first and the provider second.**
+### Philosophy
 
-- **One place that belongs to you.** Coverage, care team, results, habits and family history, gathered from every source. Everything is explained in plain language and can be exported at any time.
-- **You ask, and the agents do the work.** The patient's only job is to say what they want. PJ handles the rest:
-  - Checking benefits.
-  - Finding out who is really in network.
-  - Calling to confirm a fax number.
-  - Sending a records request and chasing it when it's late.
-  - Finding the EAP or a sliding-scale clinic.
-- **The swarm is one of PJ's tools, not the product.** The original build in this repo places 15 parallel calls to simulated offices to find and hold an in-network appointment. It is now the Scheduling Swarm agent, which PJ sends out when a patient picks "find me an appointment".
+1. **Put the power in the patient's hands.** Use *all* of the benefits and resources they already have: plan benefits, the employer EAP, Medicare's free preventive care, rides and equipment the plan owes them, cost-help programs, community and state agencies.
+2. **The AI does the complicated work so it's simple for the person.** The patient says what they want (or taps it); PJ's crew makes the calls, waits on hold, gets the right person, reads the bill, files the appeal, tracks the deadline, and escalates when the answer is no.
+3. **Act, don't just inform.** The home screen is a menu of actions, not a dashboard or an empty chat box. Information and chat stay available, lower down.
+4. **Proactive, from the person's own risk factors.** Age, plan and what the person or caregiver tells PJ (lives alone, a recent fall, many medicines, hard to afford...) become a support plan of covered next steps, each with the reason, the source and the cost. Never a diagnosis.
+5. **Built for families.** Manage care for an older parent or a child, with consent rules that match real life and the law.
+6. **The patient decides.** Nothing is sent without a signature from someone allowed to sign. Every fact shows its source.
+7. **Push the frontier.** Incumbents give people a human to call (Wellthy, Cariloop) or a benefits chatbot through an employer (Transcarent/Accolade). PJ is a crew that acts for the person across every plan, office and agency. See [docs/FAMILY-AND-AGING.md](docs/FAMILY-AND-AGING.md).
 
 Messaging: **"Healthcare built for the patient, not built for the doctor."** / **"Your healthcare, owned by you."**
+
+The 3-minute demo-day script lives in [docs/DEMO-PITCH.md](docs/DEMO-PITCH.md) and is kept current with every feature.
 
 ## 2. Quick start
 
@@ -94,15 +96,16 @@ Everything is on one page (`src/api/static/home.html`). From top to bottom:
 
 | Part | What it does |
 |---|---|
-| **Welcome** | Says "Healthcare built for you, not for your doctor's office." The patient enters a name (email optional, no password) or clicks "Explore a demo patient". |
-| **PJ bar** (sticky) | Shows PJ's face, what PJ says to do next, and an **Ask PJ** box. Anything the patient needs can start here. |
-| **Setup cards** | Shown only during onboarding: insurance card → your doctor → records request (letter preview, then type your name to sign). |
-| **PJ's answer** | When the patient asks for care, shows ranked options in plain words. Each option gives the cost, why it fits and the steps, with a **"Do it, PJ"** button. |
-| **Four buckets** | Life & Connection, Clinicals, Routines, Family & Genes ([section 4](#4-the-four-buckets)). Each item says what it means, where it came from, and carries a flag: ok, keep an eye on it, or do something. |
-| **What PJ is doing for you** | Every agent task and its status: in progress, waiting on you, waiting on the office, done, or blocked. If PJ needs something from the patient, it says exactly what. |
-| **My Coverage** | The plan in one paragraph, then a service-by-service list: covered or not, what you pay, whether you need a referral or prior authorization, visit limits, and the EAP. |
-| **My Care Team** | The PCP and others, with phone, fax and in-network status. Each entry shows whether PJ **confirmed** it or it is still **from the directory**. |
-| **Records requests** | Status, due date, and the letter PJ sent. |
+| **Welcome** | The patient enters a name (email optional, no password) or clicks "Explore a demo patient". |
+| **Greeting and PJ** | PJ says what's next, or what needs a signature. |
+| **Whose care** | Chips for you and everyone in your care circle (an older parent, a child), plus "Add someone". A banner shows how access was granted (parent of a minor, the person said yes, or power of attorney). |
+| **What should PJ do?** | The action menu: find a doctor who really takes the plan, have PJ call the doctor's office, find benefits not used yet, what the plan covers, get records, book a checkup or Wellness Visit, tell PJ about yourself, manage care for a parent or child. |
+| **PJ's crew jobs** | "Get care" (the scheduling swarm, finding a counselor), "Fight a wrong bill or a no" (bill dispute, prior-authorization appeal, home care hours appeal), "Get what the plan owes you" (rides, aide, supplies, medical equipment). |
+| **PJ's crew is working on** | Each workflow's steps and agents, findings, call logs (menu, hold time, who PJ reached, reference number, transcript), deadlines, the full letter before signing, the outcome and money saved. |
+| **Benefits and support PJ found** | The support plan from age, plan and risk factors, with "Do it, PJ" and "Not now". |
+| **Or just say it** | The Ask PJ chat (also the floating button). Ranked care options with a "Do it, PJ" button. |
+| **Four buckets** | Life & Connection, Clinicals, Routines, Family & Genes ([section 4](#4-the-four-buckets)). |
+| **Side panels** | What PJ is doing for you, My Coverage, My Care Team, Records requests. |
 | **Footer** | Crisis notice (988 / 911), demo disclaimer, and a link to the swarm. |
 
 Design rules:
@@ -160,6 +163,10 @@ PJ is the only voice the patient hears. PJ hands work to specialist agents. Each
 | **Records** | `src/agents/records.py` | Writes the right-of-access letter, collects the signature, faxes it, tracks the 30-day clock, follows up and files the results. |
 | **Care Navigator** | `src/agents/navigator.py` | Turns "I need X" into ranked pathways with costs. |
 | **Scheduling Swarm** | `src/swarm/`, `src/agents/worker.py` | Calls many offices at once to find and hold a real in-network slot. |
+| **Caller** | `src/agents/office_calls.py` | Calls the patient's doctor's office for anything: works the phone menu, waits on hold, gets transferred to the right person, and logs who it spoke with and the reference number. |
+| **Outreach** | `src/agents/outreach.py` | Turns age, plan and risk factors into a support plan of covered next steps. Never diagnoses. |
+| **Care circle** | `src/agents/circle.py` | Consent and permissions for acting on behalf of an older parent, a child or a spouse. |
+| **Workflow crew** | `src/agents/workflows.py` | Runs multi-agent jobs end to end: bill dispute, prior-authorization appeal (and outside review), rides/aide/supplies, medical equipment, home care hours appeal, counselor request, doctor's-office requests. |
 
 How each agent works today, and what it becomes:
 
@@ -174,9 +181,7 @@ How each agent works today, and what it becomes:
 
 Planned agents (not built yet):
 
-- **Referrals:** asks the PCP for a referral or prior authorization.
-- **Bills:** reads explanations of benefits (EOBs) and bills, and flags errors.
-- **Meds:** tracks refill timing and finds cheaper options on the plan's formulary.
+- **Meds:** tracks refill timing and finds cheaper options on the plan's formulary (refill requests already go through the Caller).
 - **Check-ins:** asks short Life & Connection and Routines questions over time.
 
 ## 7. Worked example: "I think I need to see a therapist"
@@ -286,6 +291,18 @@ All patient routes are under `/api/p`. The session is the `pj_session` cookie (H
 | `POST /records/{id}/simulate-response` | | Demo control: the office answers. |
 | `POST /ask` | `{text}` | Ask PJ. Returns `answer` of type `care_request`, `coverage` or `chat`. |
 | `POST /care/{care_id}/go?kind=` | | The patient picks a pathway, and PJ starts it. |
+| `POST /circle` | `{name, relation, dob?}` | Add someone to the care circle (a minor: parent access; an adult: nothing until they say yes). |
+| `POST /circle/{id}/consent` | `{typed_name, permissions}` | The person says yes, typing their own name, and picks view and/or act. |
+| `POST /circle/{id}/representative` | `{typed_name, document}` | The account holder attests to healthcare power of attorney or guardianship. |
+| `DELETE /circle/{id}` | | Remove someone. |
+| `POST /active` | `{person_id}` | Switch whose care the dashboard shows (`null` = yourself). |
+| `POST /about` | `{factors, dob?, employer?}` | What the person told PJ (risk factors). |
+| `POST /support/{key}/go`, `/dismiss` | | Start or dismiss a support-plan suggestion. |
+| `POST /workflows` | `{template, inputs}` | Start a crew job. Runs every agent step up to the consent gate. |
+| `POST /workflows/{id}/approve` | `{typed_name}` | Sign; then PJ sends and starts the clock. |
+| `POST /workflows/{id}/simulate-response?outcome=` | | Demo control: the other side answers (`approved` or `denied`; a denial escalates). |
+
+Every route works on the person currently being viewed, and checks the account holder's permission for them: `view`, `act` (start work) or `approve` (sign). A failed check returns 403 with a plain explanation.
 
 The swarm keeps its existing routes: `POST /api/swarm/start`, `POST /api/approve`, `POST /api/replay`, `GET /api/events` (SSE), `GET /api/state` and `GET /api/config`. See [docs/swarm-architecture.md](docs/swarm-architecture.md).
 
@@ -331,7 +348,11 @@ These rules apply to code, prompts and copy. Tests enforce the ones marked ✓.
 7. **Only fictional data goes in this repo.** No real names, employers, insurers, providers, or phone or fax numbers. Anything simulated is labeled as simulated.
 8. **No real PHI goes to any model** in this build, and nothing ever goes to contributor models.
 9. **The patient owns the record.** They can export it at any time, and deleting must really delete it (planned).
-10. **The swarm's existing invariants still hold:** immutable `SAFETY_BLOCK` / `SAFETY_SHA`, honest leverage only, and never tuning on the holdout split. See [CLAUDE.md](CLAUDE.md).
+10. **Acting for someone else needs their yes.** A child under 18: the parent manages it, until 18. Another adult: nothing but their name until they say yes, and they choose view and/or act. Only the person, a parent of a minor, or an attested legal representative can sign. ✓
+11. **Every crew workflow stops at a consent gate** and shows the full letter before anything is sent. A "no" escalates instead of stopping. Deadlines name their source; the person's own letter wins. ✓
+12. **The support plan never gives medical advice,** and every suggestion cites the risk factor or benefit behind it. ✓
+13. **The caller always says it's an AI calling with the patient's permission** and shares only name, date of birth, member ID and plan. ✓
+14. **The swarm's existing invariants still hold:** immutable `SAFETY_BLOCK` / `SAFETY_SHA`, honest leverage only, and never tuning on the holdout split. See [CLAUDE.md](CLAUDE.md).
 
 ## 14. Repo layout
 
@@ -359,19 +380,21 @@ These rules apply to code, prompts and copy. Tests enforce the ones marked ✓.
 | `.github/workflows/deploy.yml`, `scripts/deploy_lightsail.py` | Deploy to AWS Lightsail: automatically on merge, or by hand ([DEPLOY.md](DEPLOY.md), [docs/aws-hosting.md](docs/aws-hosting.md)) |
 | `src/safety.py` | Swarm safety block and checks |
 | `src/eval/` | Swarm judge and batch evals |
-| `tests/` | `test_patient.py` (patient flow, navigator, safety) and the swarm tests |
-| `docs/` | `PLAN.md` (original swarm plan), `swarm-architecture.md`, `DATA-SOURCES.md`, `demo-script.md` |
+| `src/agents/circle.py`, `outreach.py`, `workflows.py`, `office_calls.py`, `actions.py` | Care circle, support plan, crew workflows, doctor's-office caller, action menu |
+| `src/sim/counterparties.py`, `src/sim/pcp_office.py` | Fictional billing offices, plan appeal units, suppliers, state agency; a doctor's office phone menu with hold and transfers |
+| `tests/` | `test_patient.py` (patient flow, navigator, safety), `test_family.py` (care circle, support plan, workflows, calls) and the swarm tests |
+| `docs/` | `DEMO-PITCH.md` (3-minute script, kept current), `FAMILY-AND-AGING.md` (aging, families, market, frontier), `PLAN.md` (original swarm plan), `swarm-architecture.md`, `DATA-SOURCES.md`, `demo-script.md` (older swarm-only script) |
 
 Planned additions:
 
 - `src/channels/payer.py`, `directory.py` and `phone.py`: adapter interfaces modeled on `FaxChannel`.
-- `src/agents/referrals.py` and `bills.py`.
+- `src/agents/referrals.py` (referral requests already go through the Caller).
 - `src/patient/db.py` (SQLite).
 - `docs/COMPLIANCE.md`.
 
 ## 15. Build status and next steps
 
-### Done (63 tests pass offline)
+### Done (84 tests pass offline)
 
 | Area | Status | Proof |
 |---|---|---|
@@ -387,6 +410,11 @@ Planned additions:
 | Voice intake | ✅ swarm only | The 🎙 Speak button on `/swarm` records in the browser, and `src/voice.py` transcribes the recording with Muse Voice Transcribe (`POST /v1/asr/transcribe`). Verified on the live API. |
 | Real provider directory | ✅ swarm only | `src/directory/` holds 677 Phoenix-area cardiologists from NPPES, plus the networks UHC, Cigna and Humana list for them in their public Plan-Net FHIR directories. This is step 1 of the swarm. See `docs/provider-data.md`. |
 | Hosting | ✅ | Live on AWS Lightsail ([DEPLOY.md](DEPLOY.md)). Every merge to `main` redeploys automatically once the AWS secrets are added. |
+| Action-menu home screen | ✅ | `test_home_leads_with_actions_and_the_demo_family`; checked in a headless browser at desktop and phone widths |
+| Care circle: parent of a minor (ends at 18), consented helper, legal representative, pending consent | ✅ | `test_parent_manages_a_minor_and_access_ends_at_18`, `test_adult_sees_nothing_until_they_say_yes`, `test_a_helper_can_start_work_but_never_sign_for_an_adult` |
+| Support plan from risk factors (older adult, child, teen), never advice | ✅ rules | `test_support_plan_*` |
+| Crew workflows: bill dispute, prior-auth appeal → outside review, rides/aide/supplies, medical equipment, home care hours appeal, counselor request | ✅ simulated counterparties | `test_every_workflow_stops_for_consent_before_sending`, `test_a_denied_appeal_escalates_to_outside_review`, `test_bill_dispute_reports_the_money_saved` |
+| Doctor's-office caller: phone menu, hold, transfer to the right person, reference number | ✅ simulated office | `test_office_call_works_the_menu_holds_and_gets_the_right_person` |
 | Any Meta model call in the patient layer | ❌ | Everything in the patient layer is deterministic |
 
 ### Next, in priority order
@@ -405,19 +433,14 @@ Submission is due Nov 4, 9:00 PM ET. Aim to submit on Nov 3.
 | 8 | **Build the Referrals agent** for `pcp_first`: draft the referral request to the PCP and track it. | The HMO dermatology flow ends with a referral task. |
 | 9 | **Add a SQLite store** (`PATIENT_STORE_DIR` → a real database) and delete-my-data. | Data survives a restart, and delete removes everything. |
 | 10 | **Reuse the swarm's voice intake for Ask PJ.** Call `src/voice.py` and reuse the browser WAV conversion from `index.html`. | The patient can speak the Ask PJ question. |
-| 11 | **Record the demo video and rewrite `docs/demo-script.md`** around the patient story (the therapist example), with the swarm as the climax. | A 3-minute video is recorded. |
+| 11 | **Record the demo video from `docs/DEMO-PITCH.md`** (keep that script current with every user-visible feature), with the swarm as the climax. | A 3-minute video is recorded. |
 | 12 | **Write `docs/COMPLIANCE.md` and the pilot path.** | An honest posture, with no compliance claims. |
 
 If behind schedule, cut in this order: 10, 9, 7, 5. Protect 2, 3 and 11.
 
-### Suggested demo story (3 minutes)
+### Demo story
 
-1. "Healthcare is built for the doctor's office. This is built for you." Type a name.
-2. Enter the PPO card. Coverage is explained in one paragraph, and PJ finds the EAP.
-3. Search "Harbor". PJ calls and catches the stale fax and network status ("directory vs reality").
-4. Type your name to sign. The records request is faxed. Click "the office answers", and the buckets fill with plain-language results: an LDL to keep an eye on, and a father who had colon cancer at 52, so screening comes up early.
-5. Type "I think I need to see a therapist." PJ offers the EAP first (free), then in-network therapists who are really taking patients, then a video visit and community options.
-6. Click "Do it, PJ". The Scheduling Swarm calls 15 offices at once and holds a slot. The patient says yes.
+See [docs/DEMO-PITCH.md](docs/DEMO-PITCH.md): the 3-minute script, Q&A answers, and a checklist tying each beat to the feature it shows. Update it with every user-visible change.
 
 ## 16. Open questions
 

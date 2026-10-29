@@ -75,14 +75,20 @@ def _task(record: HealthRecord, req: RecordsRequest) -> AgentTask | None:
     return next((t for t in record.tasks if t.title == title), None)
 
 
-def sign(record: HealthRecord, req_id: str, typed_name: str) -> RecordsRequest:
+def sign(record: HealthRecord, req_id: str, typed_name: str,
+         signer: str | None = None, capacity: str | None = None) -> RecordsRequest:
+    """The patient signs, or (`signer`, `capacity`) a parent of a minor or a legal
+    representative signs as their personal representative. Helpers never sign."""
     req = _req(record, req_id)
-    if typed_name.strip().lower() != record.patient.display_name.strip().lower():
-        raise NotSigned("Type your name exactly as it appears on your account to sign.")
+    who = signer or record.patient.display_name
+    if " ".join(typed_name.split()).lower() != " ".join(who.split()).lower():
+        raise NotSigned(f"Type your name exactly as it appears on the account to sign"
+                        + (f" ({who})." if signer else "."))
     req.signed_at = _now()
+    as_ = f", {capacity}" if capacity else ""
     req.letter = (req.letter or "").replace("Signature: ______________________   Date: __________",
-                                            f"Signature: /{record.patient.display_name}/   Date: {req.signed_at[:10]}")
-    req.mark(RecordsRequestStatus.draft, "Signed by you.")
+                                            f"Signature: /{who}/{as_}   Date: {req.signed_at[:10]}")
+    req.mark(RecordsRequestStatus.draft, f"Signed by {who}{as_}." if capacity else "Signed by you.")
     return req
 
 
