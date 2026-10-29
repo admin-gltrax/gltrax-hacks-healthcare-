@@ -46,7 +46,7 @@ from typing import Any, Awaitable, Callable
 from ..config import mock_enabled
 from ..patient.models import AgentTask, HealthRecord, TaskStatus, Workflow, WorkflowStep, _now
 from ..sim import counterparties as cp
-from . import ai, appeals, office_calls, reader, reviewer
+from . import ai, appeals, claims, office_calls, reader, reviewer
 
 # ---------------------------------------------------------------- templates
 
@@ -224,23 +224,53 @@ def _read_doc(wf: Workflow, kind: str) -> dict | None:
 
 
 def _write(wf: Workflow, kind: str, facts: dict, header: str, rules: Callable[[], str]):
-    """The writer agent drafts; check_letter() decides whether its draft reaches the consent gate."""
+    """The writer agent drafts; check_letter() and the claim checker decide whether it reaches the consent gate."""
     if not _live(wf):
         return rules()
 
-    def done(body: str) -> str:
-        body = appeals.strip_signoff(body)
-        checks = appeals.check_letter(body, facts)
+    async def work() -> dict:
+        body = appeals.strip_signoff(await appeals.draft_letter(kind, facts, _account(wf)))
+        return await _claims_pass(kind, facts, body, _account(wf))
+
+    def done(r: dict) -> str:
+        body, checks = r["body"], appeals.check_letter(r["body"], facts)
+        if r.get("claims"):
+            checks.append(claims.as_check(r["claims"]))
         ok = all(c["ok"] for c in checks)
-        wf.checks.append({"what": f"{kind.capitalize()} letter by {ai.engine_label('writer')}", "passed": ok, "items": checks})
+        wf.checks.append({"what": f"{kind.capitalize()} letter by {ai.engine_label('writer')}"
+                          + (f", claims checked by {ai.engine_label('verifier')}" if r.get("claims") else ""), "passed": ok, "items": checks})
+        if r.get("note"):
+            wf.findings.append(r["note"])
         if not ok:
             failed = "; ".join(c["check"].lower() for c in checks if not c["ok"])
             return rules() + f" (Spark's draft failed a check: {failed}; PJ used the standard letter.)"
-        wf.letter = f"{header}\n\n{body}\n\nPrepared with my assistant, PJ, at my direction.\n\n{SIGNATURE}\n"
-        return f"Drafted by the writer agent from the facts on file only, and checked: {len(checks)} of {len(checks)} checks passed."
+        wf.letter = f"{header}\n\n{body}\n\n{FOOTER}\n\n{SIGNATURE}\n"
+        return (f"Drafted by the writer agent from the facts on file only, and checked: {len(checks)} of {len(checks)} checks passed"
+                + (" (one unsupported claim fixed on the second try)." if r.get("repaired") else "."))
 
-    return Pending(f"Writing the {kind} letter", "writer", lambda: appeals.draft_letter(kind, facts, _account(wf)), done,
-                   lambda why: rules() + f" (writer unavailable: {why})")
+    return Pending(f"Writing the {kind} letter", "writer", work, done, lambda why: rules() + f" (writer unavailable: {why})")
+
+
+async def _claims_pass(kind: str, facts: dict, body: str, account: str | None) -> dict:
+    """Check every claim; if any isn't backed by the facts, the writer gets one repair try."""
+    if not ai.role_ready("verifier") or not all(c["ok"] for c in appeals.check_letter(body, facts)):
+        return {"body": body, "note": None if ai.role_ready("verifier") else
+                "Claims in the letter weren't checked: the claim checker isn't switched on here."}
+    try:
+        res = await claims.check(body, facts, account)
+    except ai.AIUnavailable as e:
+        return {"body": body, "note": f"Claims in the letter weren't checked ({e})."}
+    if not res["unsupported"]:
+        return {"body": body, "claims": res}
+    failed = {"body": body, "claims": res}  # from here on, anything short of a clean re-check keeps the failing result
+    try:
+        fixed = appeals.strip_signoff(await appeals.repair_letter(kind, facts, body, res["unsupported"], account))
+        if not all(c["ok"] for c in appeals.check_letter(fixed, facts)):
+            return failed
+        res2 = await claims.check(fixed, facts, account)
+    except ai.AIUnavailable:
+        return failed
+    return {"body": fixed, "claims": res2, "repaired": True} if not res2["unsupported"] else failed
 
 
 # --- bill dispute -------------------------------------------------------------

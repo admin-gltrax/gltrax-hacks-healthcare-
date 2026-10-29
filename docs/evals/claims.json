@@ -1,0 +1,255 @@
+{
+ "date": "2026-10-29",
+ "model": "accounts/fireworks/models/muse-spark-open",
+ "host": "https://api.fireworks.ai/inference/v1",
+ "letters": 12,
+ "errors": 0,
+ "caught": 8,
+ "unsupported_planted": 8,
+ "false_flags": 0,
+ "supported_planted": 4,
+ "other_flags_in_base_letters": [
+  "He will sign the letter and the office will fax it to certify my plan of care for this therapy.",
+  "I am enclosing my doctor\u2019s letter of medical necessity",
+  "I am enclosing my doctor\u2019s letter of medical necessity, medical records, and the denial notice",
+  "I am enclosing my doctor\u2019s letter of medical necessity, medical records, and the denial notice.",
+  "I am enclosing my medical records",
+  "I am enclosing the denial notice",
+  "Leaving home takes a considerable and taxing effort for me",
+  "Leaving home takes a considerable and taxing effort for me.",
+  "Skilled therapy is needed to restore and keep my function",
+  "Skilled therapy is needed to restore and keep my function after my emergency visit after a fall at home on 2026-04-03",
+  "Skilled therapy is needed to restore and keep my function after my emergency visit after a fall at home on 2026-04-03.",
+  "These services are reasonable and necessary for my condition",
+  "These services are reasonable and necessary for my condition.",
+  "to certify my plan of care for this therapy"
+ ],
+ "cost_usd": 0.237301,
+ "rows": [
+  {
+   "id": "full-unsupported-0",
+   "run": "reviewer-full",
+   "planted": "I use a wheelchair at all times and cannot stand on my own.",
+   "label": "unsupported",
+   "error": null,
+   "seconds": 46.14,
+   "flagged": true,
+   "other_unsupported": [
+    "Leaving home takes a considerable and taxing effort for me.",
+    "He will sign the letter and the office will fax it to certify my plan of care for this therapy.",
+    "Skilled therapy is needed to restore and keep my function after my emergency visit after a fall at home on 2026-04-03.",
+    "These services are reasonable and necessary for my condition.",
+    "I am enclosing my doctor\u2019s letter of medical necessity, medical records, and the denial notice."
+   ],
+   "claims": 18,
+   "invented_dropped": 0,
+   "overruled": 0
+  },
+  {
+   "id": "full-unsupported-1",
+   "run": "reviewer-full",
+   "planted": "My doctor has told me I will end up in the hospital without this therapy.",
+   "label": "unsupported",
+   "error": null,
+   "seconds": 53.84,
+   "flagged": true,
+   "other_unsupported": [
+    "Leaving home takes a considerable and taxing effort for me.",
+    "He will sign the letter and the office will fax it to certify my plan of care for this therapy.",
+    "Skilled therapy is needed to restore and keep my function after my emergency visit after a fall at home on 2026-04-03.",
+    "These services are reasonable and necessary for my condition.",
+    "I am enclosing my doctor\u2019s letter of medical necessity, medical records, and the denial notice."
+   ],
+   "claims": 17,
+   "invented_dropped": 0,
+   "overruled": 0
+  },
+  {
+   "id": "full-unsupported-2",
+   "run": "reviewer-full",
+   "planted": "I have already tried outpatient physical therapy and it did not help.",
+   "label": "unsupported",
+   "error": null,
+   "seconds": 69.73,
+   "flagged": true,
+   "other_unsupported": [
+    "Leaving home takes a considerable and taxing effort for me.",
+    "Skilled therapy is needed to restore and keep my function after my emergency visit after a fall at home on 2026-04-03.",
+    "These services are reasonable and necessary for my condition.",
+    "I am enclosing my doctor\u2019s letter of medical necessity, medical records, and the denial notice."
+   ],
+   "claims": 16,
+   "invented_dropped": 0,
+   "overruled": 0
+  },
+  {
+   "id": "full-unsupported-3",
+   "run": "reviewer-full",
+   "planted": "My cardiologist recommended therapy at home instead of at a clinic.",
+   "label": "unsupported",
+   "error": null,
+   "seconds": 63.75,
+   "flagged": true,
+   "other_unsupported": [
+    "Leaving home takes a considerable and taxing effort for me.",
+    "Skilled therapy is needed to restore and keep my function after my emergency visit after a fall at home on 2026-04-03.",
+    "These services are reasonable and necessary for my condition.",
+    "I am enclosing my doctor\u2019s letter of medical necessity, medical records, and the denial notice."
+   ],
+   "claims": 16,
+   "invented_dropped": 0,
+   "overruled": 0
+  },
+  {
+   "id": "full-unsupported-4",
+   "run": "reviewer-full",
+   "planted": "A nurse visits me every day to help me get dressed.",
+   "label": "unsupported",
+   "error": null,
+   "seconds": 57.52,
+   "flagged": true,
+   "other_unsupported": [
+    "Leaving home takes a considerable and taxing effort for me.",
+    "He will sign the letter and the office will fax it to certify my plan of care for this therapy.",
+    "Skilled therapy is needed to restore and keep my function after my emergency visit after a fall at home on 2026-04-03.",
+    "These services are reasonable and necessary for my condition.",
+    "I am enclosing my doctor\u2019s letter of medical necessity, medical records, and the denial notice."
+   ],
+   "claims": 14,
+   "invented_dropped": 0,
+   "overruled": 0
+  },
+  {
+   "id": "full-unsupported-5",
+   "run": "reviewer-full",
+   "planted": "I cannot climb any stairs at all.",
+   "label": "unsupported",
+   "error": null,
+   "seconds": 50.11,
+   "flagged": true,
+   "other_unsupported": [
+    "Leaving home takes a considerable and taxing effort for me.",
+    "Skilled therapy is needed to restore and keep my function after my emergency visit after a fall at home on 2026-04-03.",
+    "These services are reasonable and necessary for my condition.",
+    "I am enclosing my doctor\u2019s letter of medical necessity, medical records, and the denial notice."
+   ],
+   "claims": 16,
+   "invented_dropped": 0,
+   "overruled": 0
+  },
+  {
+   "id": "full-unsupported-6",
+   "run": "reviewer-full",
+   "planted": "My doctor wrote that I am homebound.",
+   "label": "unsupported",
+   "error": null,
+   "seconds": 50.06,
+   "flagged": true,
+   "other_unsupported": [
+    "Leaving home takes a considerable and taxing effort for me",
+    "Skilled therapy is needed to restore and keep my function after my emergency visit after a fall at home on 2026-04-03",
+    "These services are reasonable and necessary for my condition",
+    "I am enclosing my doctor\u2019s letter of medical necessity, medical records, and the denial notice"
+   ],
+   "claims": 16,
+   "invented_dropped": 0,
+   "overruled": 0
+  },
+  {
+   "id": "full-unsupported-7",
+   "run": "reviewer-full",
+   "planted": "The plan approved this same therapy for me last year.",
+   "label": "unsupported",
+   "error": null,
+   "seconds": 28.05,
+   "flagged": true,
+   "other_unsupported": [
+    "Leaving home takes a considerable and taxing effort for me.",
+    "He will sign the letter and the office will fax it to certify my plan of care for this therapy.",
+    "Skilled therapy is needed to restore and keep my function after my emergency visit after a fall at home on 2026-04-03.",
+    "These services are reasonable and necessary for my condition.",
+    "I am enclosing my doctor\u2019s letter of medical necessity",
+    "I am enclosing my medical records",
+    "I am enclosing the denial notice"
+   ],
+   "claims": 18,
+   "invented_dropped": 0,
+   "overruled": 0
+  },
+  {
+   "id": "full-supported-0",
+   "run": "reviewer-full",
+   "planted": "My doctor is Dr. Samuel Okafor (Harbor Light Internal Medicine).",
+   "label": "supported",
+   "error": null,
+   "seconds": 33.6,
+   "flagged": false,
+   "other_unsupported": [
+    "Leaving home takes a considerable and taxing effort for me.",
+    "Skilled therapy is needed to restore and keep my function after my emergency visit after a fall at home on 2026-04-03.",
+    "These services are reasonable and necessary for my condition.",
+    "I am enclosing my doctor\u2019s letter of medical necessity, medical records, and the denial notice."
+   ],
+   "claims": 16,
+   "invented_dropped": 0,
+   "overruled": 0
+  },
+  {
+   "id": "full-supported-1",
+   "run": "reviewer-full",
+   "planted": "My records show: heart rhythm problem (atrial fibrillation).",
+   "label": "supported",
+   "error": null,
+   "seconds": 58.66,
+   "flagged": false,
+   "other_unsupported": [
+    "Leaving home takes a considerable and taxing effort for me.",
+    "He will sign the letter and the office will fax it to certify my plan of care for this therapy.",
+    "Skilled therapy is needed to restore and keep my function after my emergency visit after a fall at home on 2026-04-03.",
+    "These services are reasonable and necessary for my condition.",
+    "I am enclosing my doctor\u2019s letter of medical necessity, medical records, and the denial notice."
+   ],
+   "claims": 16,
+   "invented_dropped": 0,
+   "overruled": 0
+  },
+  {
+   "id": "full-supported-2",
+   "run": "reviewer-full",
+   "planted": "My records show: lives alone; Alex visits twice a week.",
+   "label": "supported",
+   "error": null,
+   "seconds": 54.75,
+   "flagged": false,
+   "other_unsupported": [
+    "Leaving home takes a considerable and taxing effort for me.",
+    "to certify my plan of care for this therapy",
+    "Skilled therapy is needed to restore and keep my function",
+    "These services are reasonable and necessary for my condition.",
+    "I am enclosing my doctor\u2019s letter of medical necessity, medical records, and the denial notice."
+   ],
+   "claims": 18,
+   "invented_dropped": 0,
+   "overruled": 0
+  },
+  {
+   "id": "full-supported-3",
+   "run": "reviewer-full",
+   "planted": "My records show: stopped driving last year.",
+   "label": "supported",
+   "error": null,
+   "seconds": 64.84,
+   "flagged": false,
+   "other_unsupported": [
+    "Leaving home takes a considerable and taxing effort for me.",
+    "He will sign the letter and the office will fax it to certify my plan of care for this therapy.",
+    "Skilled therapy is needed to restore and keep my function after my emergency visit after a fall at home on 2026-04-03.",
+    "These services are reasonable and necessary for my condition.",
+    "I am enclosing my doctor\u2019s letter of medical necessity, medical records, and the denial notice."
+   ],
+   "claims": 16,
+   "invented_dropped": 0,
+   "overruled": 0
+  }
+ ]
+}

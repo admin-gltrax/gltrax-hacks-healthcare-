@@ -418,7 +418,7 @@ Planned additions:
 
 ## 15. Build status and next steps
 
-### Done (152 tests pass offline)
+### Done (161 tests pass offline)
 
 | Area | Status | Proof |
 |---|---|---|
@@ -451,6 +451,7 @@ Planned additions:
 | **Adversarial plan reviewer**: Muse Spark Open plays the insurer and tries to deny each appeal; the Spark writer revises | ✅ live | Strong file + generic letter: 4 objections → 1 revision → no reason to deny. Thin file: 3–4 evidence gaps → plain to-dos. `scripts/stress_test_appeal.py` |
 | **Cross-family judges** (Meta Spark vs Muse Spark Open) | ✅ live | 100 items, 500 decisions: Cohen's kappa 0.84 and 0.87 on two independent runs, about 99% agreement; the 5–6 disagreements per run are listed for a person. They caught an ambiguous "Yes, I'm an AI" (fixed) and a template claiming the doctor's letter was enclosed (fixed). |
 | **Reader eval**: 33 fictional documents × 4 photo qualities | ✅ live | Field accuracy: clean 99.6%, phone 99.6%, messy 99.3%, harsh 90.9% (`scripts/eval_reader.py`) |
+| **Claim checker**: a second model family (Qwen3.6-35B-A3B on a Modal dedicated endpoint) checks every claim in a letter against the facts; unsupported → one repair → else the standard letter | ✅ built; Modal endpoint pending | `scripts/eval_claims.py`, live on a stand-in host: 8/8 planted unsupported claims caught, 0/4 supported ones flagged |
 | **Voice loop**: the caller hears the office only through Muse Voice Transcribe; player with waveform and captions | ✅ built, TTS off by default | ASR on 60 synthetic lines: dates of birth 100%, reference numbers 100%, names 35% exact (why the caller spells names back) |
 
 ### Next, in priority order
@@ -471,7 +472,7 @@ Submission is due Nov 4, 9:00 PM ET. Aim to submit on Nov 3.
 | 10 | **Reuse the swarm's voice intake for Ask PJ.** Call `src/voice.py` and reuse the browser WAV conversion from `index.html`. | The patient can speak the Ask PJ question. |
 | 11 | **Record the demo video from `docs/DEMO-PITCH.md`** (keep that script current with every user-visible feature), with the swarm as the climax. | A 3-minute video is recorded. |
 | 12 | ✅ **Done Oct 29:** [docs/COMPLIANCE.md](docs/COMPLIANCE.md). | |
-| 13 | ✅ **Done Oct 29:** adversarial plan reviewer, call gym (600 calls, 100% safe), cross-family judges, reader eval (33 docs × 4 qualities), voice loop. Next: confirm the rules on non-Meta TTS; a claim-level check on letters (the judges caught an unsupported "taxing effort" claim that `check_letter` can't see). | |
+| 13 | ✅ **Done Oct 29:** adversarial plan reviewer, call gym (600 calls, 100% safe), cross-family judges, reader eval (33 docs × 4 qualities), voice loop. Next: confirm the rules on non-Meta TTS; switch the claim checker onto its Modal endpoint and tune its enclosure false alarms. | |
 
 If behind schedule, cut in this order: 10, 9, 7, 5. Protect 2, 3 and 11.
 

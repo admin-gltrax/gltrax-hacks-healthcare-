@@ -18,6 +18,9 @@ PROVIDERS: dict[str, tuple[str, str, str]] = {  # name -> (base URL, key env var
     "baseten": ("https://inference.baseten.co/v1", "BASETEN_API_KEY", "meta-models/muse-spark-open-1026"),  # the hackathon key is scoped to this dated build
     "fireworks": ("https://api.fireworks.ai/inference/v1", "FIREWORKS_API_KEY", "accounts/fireworks/models/muse-spark-open"),
 }
+# Modal: a dedicated endpoint (`modal endpoint create --model ...`), OpenAI-compatible, reached at
+# MODAL_ENDPOINT_URL with a workspace proxy token "<id>.<secret>" in MODAL_PROXY_TOKEN.
+MODAL_MODEL = "Qwen/Qwen3.6-35B-A3B"
 PATIENT_FACING = ("worker", "caller", "reader", "strategist", "writer", "pj")
 
 # role -> (default model, default reasoning effort)
@@ -36,10 +39,11 @@ ROLE_DEFAULTS: dict[str, tuple[str, str | None]] = {
     # partner credits (Muse Spark Open): adversaries and judges, never patient-facing
     "reviewer": (PROVIDERS["baseten"][2], "low"),  # plays the insurer's medical reviewer
     "judge_open": (PROVIDERS["fireworks"][2], "medium"),  # the cross-family judge (same effort as "judge")
+    "verifier": (MODAL_MODEL, None),  # checks every claim in a letter against the facts (a guard, not patient-facing)
 }
 # Roles whose default provider isn't Meta. Override per role with <ROLE>_PROVIDER
 # (meta | baseten | fireworks), or fully with <ROLE>_BASE_URL / _API_KEY_ENV / _MODEL.
-ROLE_PROVIDER: dict[str, str] = {"reviewer": "baseten", "judge_open": "fireworks"}
+ROLE_PROVIDER: dict[str, str] = {"reviewer": "baseten", "judge_open": "fireworks", "verifier": "modal"}
 
 
 @dataclass(frozen=True)
@@ -59,6 +63,11 @@ def role_cfg(role: str) -> RoleCfg:
     model, effort = ROLE_DEFAULTS[role]
     p = role.upper()
     prov = provider_for(role)
+    if prov == "modal":
+        return RoleCfg(role=role, model=os.getenv(f"{p}_MODEL", MODAL_MODEL),
+                       base_url=os.getenv(f"{p}_BASE_URL", os.getenv("MODAL_ENDPOINT_URL", "").rstrip("/") + "/v1"),
+                       api_key_env=os.getenv(f"{p}_API_KEY_ENV", "MODAL_PROXY_TOKEN"),
+                       reasoning_effort=_effort(os.getenv(f"{p}_REASONING", effort or "")))
     if prov != "meta" and prov in PROVIDERS:
         base, key_env, open_model = PROVIDERS[prov]
         return RoleCfg(role=role, model=os.getenv(f"{p}_MODEL", open_model), base_url=os.getenv(f"{p}_BASE_URL", base),

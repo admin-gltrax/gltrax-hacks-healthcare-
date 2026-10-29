@@ -27,6 +27,9 @@ def _fresh_budget(monkeypatch):
 
 def _by_role(monkeypatch, **scripts):
     fakes = {r: ScriptedLLM(s) for r, s in scripts.items()}
+    if "verifier" not in scripts:  # these tests script the other roles; leave the claim checker out of them
+        real_ready = ai.role_ready
+        monkeypatch.setattr(ai, "role_ready", lambda role: role != "verifier" and real_ready(role))
 
     def llm(role, account=None):
         if role not in fakes:
@@ -363,3 +366,101 @@ def test_a_reference_recorded_as_heard_without_the_dash_is_the_same_reference():
     asyncio.run(call._tool(ToolCall("r", "record_result", {"reference": line.reference.replace("-", ""), "handled_by": "x",
                                                             "business_days": 1, "next": "x"})))
     assert call.result["reference"] == line.reference
+
+
+# ---------------------------------------------------------------- the claim checker (Modal)
+
+from src.agents import claims  # noqa: E402
+
+CFACTS = {**FACTS, "evidence_on_file": ["Emergency visit after a fall at home (2026-04-03)", "Stopped driving last year"]}
+CLAIM_BODY = BODY + "\n\nI had an emergency visit after a fall at home. I stopped driving last year."
+
+
+def test_the_verifier_runs_on_modal_by_default_and_is_not_patient_facing(monkeypatch):
+    monkeypatch.setenv("MODAL_ENDPOINT_URL", "https://admin-27571--qwen.modal.run/")
+    cfg = config.role_cfg("verifier")
+    assert cfg.base_url == "https://admin-27571--qwen.modal.run/v1" and cfg.api_key_env == "MODAL_PROXY_TOKEN"
+    assert cfg.model == "Qwen/Qwen3.6-35B-A3B" and "verifier" not in config.PATIENT_FACING
+    assert ai.model_for("verifier") == "Qwen/Qwen3.6-35B-A3B"
+
+
+def test_claims_must_be_in_the_letter_and_support_must_be_in_the_facts():
+    raw = {"claims": [
+        {"claim": "I had an emergency visit after a fall at home.", "status": "supported", "fact": "Emergency visit after a fall at home"},
+        {"claim": "I stopped driving last year.", "status": "supported", "fact": "She can no longer leave home alone"},  # quote not in FACTS
+        {"claim": "I use a wheelchair at all times.", "status": "supported", "fact": "x"},  # not in the letter at all
+        "junk"]}
+    out = claims.clean(raw, CLAIM_BODY, CFACTS)
+    assert [c["supported"] for c in out["claims"]] == [True, False]
+    assert out["invented_claims_dropped"] == 1 and out["support_overruled"] == 1
+    assert out["unsupported"] == ["I stopped driving last year."]
+    assert not claims.as_check(out)["ok"] and "stopped driving" in claims.as_check(out)["detail"]
+
+
+def test_a_verifier_that_finds_no_claims_in_a_full_letter_did_not_check(monkeypatch):
+    _by_role(monkeypatch, verifier=[_j({"claims": []})])
+    with pytest.raises(ai.AIUnavailable):
+        asyncio.run(claims.check(CLAIM_BODY * 3, CFACTS))
+
+
+def test_an_unsupported_claim_gets_one_repair_try_then_the_standard_letter(monkeypatch):
+    planted = "\n\nI use a wheelchair at all times and cannot stand."
+
+    async def writer_with_a_made_up_claim(kind, facts, account):
+        return "To whom it may concern,\n\n" + BODY.replace("BWM-77031882", facts["member_id"]) + planted
+
+    monkeypatch.setattr(appeals, "draft_letter", writer_with_a_made_up_claim)
+    repairs = []
+
+    async def repair_keeps_it(kind, facts, body, unsupported, account):
+        repairs.append(unsupported)
+        return body  # a writer that won't let go of the claim
+    monkeypatch.setattr(appeals, "repair_letter", repair_keeps_it)
+    wf = workflows.start(_rosa(), "pa_appeal", {"document": {"sample": "denial_letter"}}, account="t")
+    letter_check = next(c for c in wf.checks if c["what"].startswith("Appeal letter"))
+    item = next(i for i in letter_check["items"] if i["check"] == "Every claim is backed by the facts")
+    assert repairs and "wheelchair" in repairs[0][0] and not item["ok"] and "wheelchair" in item["detail"]
+    assert "wheelchair" not in wf.letter and "PJ used the standard letter" in wf.step("draft").detail
+
+
+def test_a_repaired_letter_reaches_the_signature(monkeypatch):
+    planted = "\n\nI use a wheelchair at all times and cannot stand."
+
+    async def writer(kind, facts, account):
+        return "To whom it may concern,\n\n" + BODY.replace("BWM-77031882", facts["member_id"]) + planted
+
+    async def repair(kind, facts, body, unsupported, account):
+        return body.replace(planted, "")
+
+    async def verifier(body, facts, account=None):
+        bad = ["I use a wheelchair at all times and cannot stand."] if "wheelchair" in body else []
+        return {"claims": [{"claim": c, "supported": False, "fact": ""} for c in bad], "unsupported": bad,
+                "invented_claims_dropped": 0, "support_overruled": 0}
+    monkeypatch.setattr(appeals, "draft_letter", writer)
+    monkeypatch.setattr(appeals, "repair_letter", repair)
+    monkeypatch.setattr(claims, "check", verifier)
+    wf = workflows.start(_rosa(), "pa_appeal", {"document": {"sample": "denial_letter"}}, account="t")
+    assert "second try" in wf.step("draft").detail and "wheelchair" not in wf.letter
+
+
+def test_a_flagged_claim_never_slips_through_when_the_recheck_fails(monkeypatch):
+    calls = []
+
+    async def verifier(body, facts, account=None):
+        calls.append(1)
+        if len(calls) > 1:
+            raise ai.AIUnavailable("verifier down on the re-check")
+        return {"claims": [{"claim": "x", "supported": False, "fact": ""}], "unsupported": ["x"], "invented_claims_dropped": 0, "support_overruled": 0}
+
+    async def repair(kind, facts, body, unsupported, account):
+        return body
+    monkeypatch.setattr(claims, "check", verifier)
+    monkeypatch.setattr(appeals, "repair_letter", repair)
+    r = asyncio.run(workflows._claims_pass("appeal", FACTS, BODY, None))
+    assert r["claims"]["unsupported"] == ["x"] and r["body"] == BODY  # still failing: the letter can't reach the signature
+
+
+def test_with_no_claim_checker_the_letter_says_claims_were_not_checked(monkeypatch):
+    monkeypatch.setattr(ai, "role_ready", lambda role: role != "verifier" and ai.enabled())
+    wf = workflows.start(_rosa(), "pa_appeal", {"document": {"sample": "denial_letter"}}, account="t")
+    assert any("weren't checked" in f for f in wf.findings) and wf.status == "needs_you"

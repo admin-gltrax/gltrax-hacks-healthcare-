@@ -53,7 +53,7 @@ Meta Global AI Developer Hackathon (Meta + Cerebral Valley).
 
 ## Status (honest)
 
-`MOCK_LLM=1 HOLD_SCALE=0 pytest -q` passes **152 tests**.
+`MOCK_LLM=1 HOLD_SCALE=0 pytest -q` passes **161 tests**.
 
 **Partner credits: scale and adversaries (Oct 29, late).** THE RULE: the patient-facing crew stays on Meta's Model API (enforced in `ai.model_for`); Muse Spark Open on partner credits runs simulators, adversaries, judges. Results and the running spend log: `docs/evals.md` (rebuilt by every eval script from `docs/evals/*.json` + `spend.jsonl`); the page is `/gym`.
 
@@ -71,7 +71,7 @@ Meta Global AI Developer Hackathon (Meta + Cerebral Valley).
 - **Meta realtime ASR** (`wss://…/asr/realtime`) answered HTTP 400 from the sandbox; `transcribe_pcm24k` falls back to file transcription (same model) and records which route ran.
 - Every eval script logs spend; the gate is $25 per run and 70% of a partner credit (`evals_md.over_limit`, `--per-call-usd`).
 - Tests: `tests/test_partner_credits.py`.
-- Known gap: `check_letter` checks numbers, IDs and dosing, not claims. The judges caught a writer claim ("leaving home takes a taxing effort") with no evidence behind it. A claim-level check is the next step.
+- **Claim checker** (`src/agents/claims.py`, role `verifier`, default provider `modal`: Qwen3.6-35B-A3B on a Modal *dedicated* endpoint at `MODAL_ENDPOINT_URL` with `MODAL_PROXY_TOKEN` = `<id>.<secret>`). Lists every factual claim in a letter with the FACTS words that back it; code drops claims not in the letter and overrules "supported" without a real quote. Any unsupported claim → one writer repair (`appeals.repair_letter`) → else the standard letter. Reviewer revisions get the same check. Not configured → the letter is marked "claims weren't checked". Eval: `scripts/eval_claims.py` (planted claims); live on Fireworks as a stand-in: 8/8 caught, 0/4 false flags. **Never use a Modal Shared endpoint: plan credits don't cover shared-endpoint tokens.**
 - Keep the gym's caller-prompt SHA (`caller_prompt_sha` in the report) in mind: any edit to `prompts/office_caller_v0.txt` means re-running the gym on a fresh seed before quoting numbers.
 
 **Family care and agent workflows (Oct 29). Offline, deterministic, simulated counterparties.**
@@ -281,7 +281,7 @@ See the layout table in README section 14. Key files:
 14. **Models are checked, never trusted:** a reference must appear in what the office said; letter numbers must come from the facts; citations must exist; money math is code; uploaded images are never stored.
 15. **Crisis words and medical questions never reach a model** in PJ's chat. PJ only proposes work; a person taps to start it.
 16. **Partner credits never face the patient.** The caller, reader, strategist, writer and PJ's chat run only on Meta's API (`ai.model_for` refuses other endpoints). Muse Spark Open runs simulators, the reviewer and judges.
-17. **The reviewer is an adversary, not an author.** Its objections must cite rules that exist; it never writes letter text; revisions must pass `check_letter` against the original facts. If it's unavailable, the step is skipped with a note.
+17. **Every claim in a letter needs a fact behind it** (claim checker), and **the reviewer is an adversary, not an author.** Its objections must cite rules that exist; it never writes letter text; revisions must pass `check_letter` against the original facts. If it's unavailable, the step is skipped with a note.
 18. **Caller safety is 100% in the call gym.** If a gym safety check fails, fix `prompts/office_caller_v0.txt` (never `SAFETY_BLOCK`) and re-run on a fresh seed.
 19. **No real phone numbers or voices, ever.** Voice calls are labeled "simulated call, synthetic voices"; TTS stays off unless the rules allow it.
 

@@ -22,3 +22,4 @@
 {"date": "2026-10-29 12:13", "run": "voice call", "detail": "1 call (mishears), 130 s of audio", "usd": {"meta": 0.0315, "fireworks": 0.0118}}
 {"date": "2026-10-29 12:23", "run": "pre-deploy smoke", "detail": "estimate: PJ red team 20 cases + smoke_meta.py", "usd": {"meta": 0.08}}
 {"date": "2026-10-29 12:47", "run": "reviewer live", "detail": "stress test, scenario strong-standard", "usd": {"meta": 0.0859, "baseten": 0.008}}
+{"date": "2026-10-29 13:10", "run": "claim checker eval", "detail": "12 letters on accounts/fireworks/models/muse-spark-open", "usd": {"fireworks": 0.2373}}

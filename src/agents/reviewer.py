@@ -20,7 +20,9 @@ Code guards (the model is checked, never trusted):
   - the reviewer's output has no letter field, and anything letter-like it
     returns is ignored: only short reasons reach the writer, never text to paste;
   - every revision must pass appeals.check_letter against the ORIGINAL facts
-    (numbers in an objection don't become allowed), or the previous letter stays.
+    (numbers in an objection don't become allowed), and the claim checker
+    (claims.py): a revision can't answer an objection by claiming what the
+    record doesn't say. Otherwise the previous letter stays.
 """
 from __future__ import annotations
 
@@ -28,7 +30,7 @@ import json
 import re
 from typing import Callable
 
-from . import ai, appeals
+from . import ai, appeals, claims
 
 MARKER = "PJ REVIEWER"
 MAX_ROUNDS = 3
@@ -148,6 +150,11 @@ async def stress_test(kind: str, facts: dict, body: str, rules: list[str], evide
             note = f"The writer couldn't revise ({e}); PJ kept the last checked letter."
             break
         checks = appeals.check_letter(new, facts)  # the original facts: an objection's numbers aren't facts
+        if all(c["ok"] for c in checks) and ai.role_ready("verifier"):
+            try:  # a revision may not answer an objection by claiming what the record doesn't say
+                checks.append(claims.as_check(await claims.check(new, facts, account)))
+            except ai.AIUnavailable as e:
+                note = f"Claims in the revision weren't checked ({e})."
         ok = all(c["ok"] for c in checks)
         entry["revision"] = {"body": new, "checks": checks, "accepted": ok}
         if not ok:

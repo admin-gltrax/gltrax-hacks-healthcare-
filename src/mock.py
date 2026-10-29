@@ -49,6 +49,8 @@ class MockLLM:
             return self._writer(first)
         if "[PJ REVIEWER]" in first:
             return self._reviewer(first)
+        if "[PJ CLAIMS]" in first:
+            return self._claims(first)
         if "[PJ JUDGE]" in first:
             return self._judge(first)
         if "[PJ CHAT]" in first:
@@ -343,6 +345,22 @@ class MockLLM:
                 + "\n\nPlease send me your decision in writing, and a copy of anything you relied on. "
                   "Thank you for your prompt attention to this request.")
         return ChatResult(content=json.dumps({"subject": f"Request for review: {what}", "body": body}))
+
+    def _claims(self, prompt: str) -> ChatResult:
+        """Claims = the letter's bullet lines and 'On the plan's rule' lines; backed when FACTS hold the same words.
+        Anything about a wheelchair is a planted unsupported claim (the tests use it)."""
+        facts = prompt[prompt.index("FACTS:") + 6:prompt.rindex("LETTER:")]
+        letter = prompt[prompt.rindex("LETTER:") + 7:]
+        out = []
+        for line in letter.splitlines():
+            t = line.strip().lstrip("- ").strip()
+            if not t or not (line.strip().startswith("- ") or t.startswith("On the plan's rule") or "wheelchair" in t.lower()):
+                continue
+            rule = t.split(":")[0].replace("On the plan's rule that ", "") if t.startswith("On the plan's rule") else t
+            backed = "wheelchair" not in t.lower() and rule.rstrip(".").lower()[:40] in facts.lower()
+            out.append({"claim": t, "status": "supported" if backed else "unsupported",
+                        "fact": rule.rstrip(".")[:40] if backed else ""})
+        return ChatResult(content=json.dumps({"claims": out}))
 
     def _judge(self, prompt: str) -> ChatResult:
         """Both judges pass everything, except the open judge is stricter on courtesy for long calls (a planted disagreement)."""

@@ -115,6 +115,17 @@ async def draft_letter(kind: str, facts: dict, account: str | None) -> str:
     return str(raw.get("body", "")).strip()  # the To/Re header comes from code, not the model
 
 
+async def repair_letter(kind: str, facts: dict, body: str, unsupported: list[str], account: str | None) -> str:
+    """One try at fixing claims the checker couldn't back: cut them or say only what FACTS say."""
+    prompt = (f"[{MARKER_WRITER}] Fix this {kind} letter. These sentences make claims that FACTS don't support:\n"
+              + "\n".join(f"- {c}" for c in unsupported)
+              + "\nRemove each one, or rewrite it to say only what FACTS say. Change nothing else. Do not add any date, amount, ID, "
+                "diagnosis, medicine or clinical detail that isn't in FACTS. No signature block. Never give medical advice.\n\n"
+              f"LETTER:\n{body}\n\nFACTS:\n" + json.dumps(facts, indent=1))
+    raw = await ai.chat_json("writer", [{"role": "user", "content": prompt}], LETTER, account=account, max_tokens=5000)
+    return str(raw.get("body", "")).strip()
+
+
 _ADVICE = re.compile(r"\b(\d+\s?mg|milligram|dosage|take \d|stop taking|start taking|increase (?:the|your) dose)\b", re.I)
 _LIST_NUMBER = re.compile(r"^[ \t]*\d{1,2}[.)][ \t]", re.M)
 _SIGN = re.compile(r"^\s*(signature|signed|sincerely|respectfully|regards)\b.*$", re.I | re.M)
