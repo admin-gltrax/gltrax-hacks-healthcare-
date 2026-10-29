@@ -11,10 +11,10 @@
 {"date": "2026-10-29 04:23", "run": "reviewer live", "detail": "stress test, scenario full", "usd": {"meta": 0.0895, "fireworks": 0.0045}}
 {"date": "2026-10-29 04:29", "run": "call gym", "detail": "600 calls, seed 8", "usd": {"meta": 14.6443, "fireworks": 4.0937}}
 {"date": "2026-10-29 04:31", "run": "judges (stopped)", "detail": "estimate: a run stopped after ~2 min to match the judges' reasoning effort", "usd": {"meta": 0.3, "fireworks": 0.1}}
-{"date": "2026-10-29 04:33", "run": "judges (lost)", "detail": "estimate: a run whose process died with its shell before saving", "usd": {"meta": 0.4, "fireworks": 0.1}}
 {"date": "2026-10-29 04:34", "run": "ASR eval", "detail": "60 synthesized lines, 201 s of audio", "usd": {"meta": 0.01}}
 {"date": "2026-10-29 04:35", "run": "judges", "detail": "100 items x 2 judges", "usd": {"meta": 0.7101, "fireworks": 0.5457}}
 {"date": "2026-10-29 04:38", "run": "judges", "detail": "100 items x 2 judges", "usd": {"meta": 0.7233, "fireworks": 0.5648}}
 {"date": "2026-10-29 04:39", "run": "call gym check", "detail": "76 calls, seed 8, kinds asks_if_human,hostile_skeptic", "usd": {"meta": 2.0278, "fireworks": 0.5829}}
 {"date": "2026-10-29 04:41", "run": "reviewer live", "detail": "stress test, scenario strong-standard", "usd": {"meta": 0.0929, "fireworks": 0.0083}}
 {"date": "2026-10-29 04:48", "run": "call gym", "detail": "600 calls, seed 9", "usd": {"meta": 14.9481, "fireworks": 4.1483}}
+{"date": "2026-10-29 12:02", "run": "voice call (lost)", "detail": "estimate: 1 call; the audio writer crashed before saving", "usd": {"meta": 0.03, "fireworks": 0.01}}

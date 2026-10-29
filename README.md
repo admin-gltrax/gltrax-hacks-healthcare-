@@ -418,7 +418,7 @@ Planned additions:
 
 ## 15. Build status and next steps
 
-### Done (125 tests pass offline)
+### Done (152 tests pass offline)
 
 | Area | Status | Proof |
 |---|---|---|
@@ -447,6 +447,11 @@ Planned additions:
 | Fallbacks, budget caps, background jobs, live streaming | ✅ | `test_every_model_step_falls_back_to_the_rules`, `test_background_mode_streams_then_finishes_and_saves`, `test_budget_caps…` |
 | SQLite store and delete-my-data | ✅ | `test_sqlite_store_survives_a_restart_and_delete_means_delete` |
 | Compliance posture | ✅ | [docs/COMPLIANCE.md](docs/COMPLIANCE.md) |
+| **Call gym** (partner credits): 16 kinds of hard fictional offices vs. the real caller; receptionists on Muse Spark Open (Fireworks), caller on Meta's Spark | ✅ live | **600 calls (fresh seed 9): 100% safe on all six checks, 100% right outcome**, p50 20 s, p95 38 s, 12 requests and $0.032 per call. `scripts/call_gym.py`; `/gym`; [docs/evals.md](docs/evals.md) |
+| **Adversarial plan reviewer**: Muse Spark Open plays the insurer and tries to deny each appeal; the Spark writer revises | ✅ live | Strong file + generic letter: 4 objections → 1 revision → no reason to deny. Thin file: 3–4 evidence gaps → plain to-dos. `scripts/stress_test_appeal.py` |
+| **Cross-family judges** (Meta Spark vs Muse Spark Open) | ✅ live | 100 items, 500 decisions: Cohen's kappa 0.84 and 0.87 on two independent runs, about 99% agreement; the 5–6 disagreements per run are listed for a person. They caught an ambiguous "Yes, I'm an AI" (fixed) and a template claiming the doctor's letter was enclosed (fixed). |
+| **Reader eval**: 33 fictional documents × 4 photo qualities | ✅ live | Field accuracy: clean 99.6%, phone 99.6%, messy 99.3%, harsh 90.9% (`scripts/eval_reader.py`) |
+| **Voice loop**: the caller hears the office only through Muse Voice Transcribe; player with waveform and captions | ✅ built, TTS off by default | ASR on 60 synthetic lines: dates of birth 100%, reference numbers 100%, names 35% exact (why the caller spells names back) |
 
 ### Next, in priority order
 
@@ -466,7 +471,7 @@ Submission is due Nov 4, 9:00 PM ET. Aim to submit on Nov 3.
 | 10 | **Reuse the swarm's voice intake for Ask PJ.** Call `src/voice.py` and reuse the browser WAV conversion from `index.html`. | The patient can speak the Ask PJ question. |
 | 11 | **Record the demo video from `docs/DEMO-PITCH.md`** (keep that script current with every user-visible feature), with the swarm as the climax. | A 3-minute video is recorded. |
 | 12 | ✅ **Done Oct 29:** [docs/COMPLIANCE.md](docs/COMPLIANCE.md). | |
-| 13 | **Adversarial plan reviewer and call gym on the partner credits** (Muse Spark Open on Baseten and Fireworks): a reviewer agent tries to deny each appeal before it's sent; hundreds of simulated receptionist personas stress-test the caller. | A pass-rate report over 500+ simulated calls, and appeals revised until the reviewer finds nothing. |
+| 13 | ✅ **Done Oct 29:** adversarial plan reviewer, call gym (600 calls, 100% safe), cross-family judges, reader eval (33 docs × 4 qualities), voice loop. Next: fix the Baseten key and move the reviewer there; confirm the rules on non-Meta TTS; a claim-level check on letters (the judges caught an unsupported "taxing effort" claim that `check_letter` can't see). | |
 
 If behind schedule, cut in this order: 10, 9, 7, 5. Protect 2, 3 and 11.
 

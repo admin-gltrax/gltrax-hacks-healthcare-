@@ -53,15 +53,15 @@ Meta Global AI Developer Hackathon (Meta + Cerebral Valley).
 
 ## Status (honest)
 
-`MOCK_LLM=1 HOLD_SCALE=0 pytest -q` passes **125 tests**.
+`MOCK_LLM=1 HOLD_SCALE=0 pytest -q` passes **152 tests**.
 
 **Partner credits: scale and adversaries (Oct 29, late).** THE RULE: the patient-facing crew stays on Meta's Model API (enforced in `ai.model_for`); Muse Spark Open on partner credits runs simulators, adversaries, judges. Results and the running spend log: `docs/evals.md` (rebuilt by every eval script from `docs/evals/*.json` + `spend.jsonl`); the page is `/gym`.
 
 | Piece | Files | Live result |
 |---|---|---|
 | Adversarial plan reviewer: Muse Spark Open plays the insurer's reviewer, tries to deny the draft appeal against the plan's own rules; Spark writer revises (≤3 rounds); leftover objections become to-dos. Step "Stress-test the appeal" between draft and approve | `src/agents/reviewer.py`, `workflows._pa_review`, `scripts/stress_test_appeal.py` | strong file + generic letter: 4 objections → 1 revision → no reason to deny; thin file: 4 evidence gaps → to-dos |
-| Call gym: 16 kinds of hard fictional offices (data fishers, fake HIPAA verification, AI refusers, transfer loops, menu maze, voicemail, hold drop, Spanish-first, mishearing, hostile…), deterministic from a seed; scored in code | `src/sim/gym.py`, `src/eval/gym.py`, `scripts/call_gym.py` | 600 calls (seed 8): **100% safe**, 99.8% right outcome, p50 18 s, $0.031/call |
-| Cross-family judges (Meta Spark vs Muse Spark Open), fixed rubric, Cohen's kappa | `src/eval/judges.py`, `scripts/judge_evals.py` | see `docs/evals.md` |
+| Call gym: 16 kinds of hard fictional offices (data fishers, fake HIPAA verification, AI refusers, transfer loops, menu maze, voicemail, hold drop, Spanish-first, mishearing, hostile…), deterministic from a seed; scored in code | `src/sim/gym.py`, `src/eval/gym.py`, `scripts/call_gym.py` | 600 calls (fresh seed 9, after prompt fixes): **100% safe**, 100% right outcome, p50 20 s, p95 38 s, $0.032/call. History: seed 7 found 3 failures (Spanish "IA", a spelled-out reference, refusers ended without handing back); the judges then caught 45 ambiguous "Yes, I'm an AI" answers in seed 8 |
+| Cross-family judges (Meta Spark vs Muse Spark Open), fixed rubric, Cohen's kappa | `src/eval/judges.py`, `scripts/judge_evals.py` | 100 items, run twice: kappa 0.87 and 0.84, ~99% agreement, 5–6 disagreements per run listed |
 | Reader eval: 33 fictional docs × 4 photo qualities (clean, phone, messy, harsh) | `src/sim/documents.py` (`eval_documents`), `src/eval/messy.py`, `scripts/eval_reader.py` | 99.6 / 99.6 / 99.3 / 90.9% fields |
 | Voice loop: office lines synthesized, transcribed by Muse Voice Transcribe, caller hears only the transcript; browser player with waveform + captions on `/gym` | `src/voice_loop.py`, `src/voice_tts.py`, `src/voice.py` (`transcribe_pcm24k`), `scripts/voice_call.py`, `scripts/eval_asr.py` | ASR: DOB 100%, reference 100%, names 35% exact |
 
@@ -71,6 +71,8 @@ Meta Global AI Developer Hackathon (Meta + Cerebral Valley).
 - **Meta realtime ASR** (`wss://…/asr/realtime`) answered HTTP 400 from the sandbox; `transcribe_pcm24k` falls back to file transcription (same model) and records which route ran.
 - Every eval script logs spend; the gate is $25 per run and 70% of a partner credit (`evals_md.over_limit`, `--per-call-usd`).
 - Tests: `tests/test_partner_credits.py`.
+- Known gap: `check_letter` checks numbers, IDs and dosing, not claims. The judges caught a writer claim ("leaving home takes a taxing effort") with no evidence behind it. A claim-level check is the next step.
+- Keep the gym's caller-prompt SHA (`caller_prompt_sha` in the report) in mind: any edit to `prompts/office_caller_v0.txt` means re-running the gym on a fresh seed before quoting numbers.
 
 **Family care and agent workflows (Oct 29). Offline, deterministic, simulated counterparties.**
 

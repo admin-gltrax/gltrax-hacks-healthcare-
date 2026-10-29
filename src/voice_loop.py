@@ -64,7 +64,9 @@ class Recording:
         """Writes <base>.ogg (small) and <base>.wav (16 kHz, plays everywhere). Returns the file names."""
         import soundfile as sf
         pcm = self.track()
-        sf.write(f"{path_base}.ogg", pcm, voice_tts.RATE, format="OGG", subtype="VORBIS")
+        with sf.SoundFile(f"{path_base}.ogg", "w", voice_tts.RATE, 1, format="OGG", subtype="VORBIS") as f:
+            for i in range(0, len(pcm), voice_tts.RATE):  # one-second blocks: one big Vorbis write segfaults libsndfile
+                f.write(pcm[i:i + voice_tts.RATE])
         idx = np.linspace(0, len(pcm) - 1, int(len(pcm) * 16000 / voice_tts.RATE))
         sf.write(f"{path_base}.wav", np.interp(idx, np.arange(len(pcm)), pcm.astype(np.float32)).astype(np.int16), 16000, subtype="PCM_16")
         return [f"{path_base}.ogg", f"{path_base}.wav"]
