@@ -472,7 +472,7 @@ Submission is due Nov 4, 9:00 PM ET. Aim to submit on Nov 3.
 | 10 | **Reuse the swarm's voice intake for Ask PJ.** Call `src/voice.py` and reuse the browser WAV conversion from `index.html`. | The patient can speak the Ask PJ question. |
 | 11 | **Record the demo video from `docs/DEMO-PITCH.md`** (keep that script current with every user-visible feature), with the swarm as the climax. | A 3-minute video is recorded. |
 | 12 | ✅ **Done Oct 29:** [docs/COMPLIANCE.md](docs/COMPLIANCE.md). | |
-| 13 | ✅ **Done Oct 29:** adversarial plan reviewer, call gym (600 calls, 100% safe), cross-family judges, reader eval (33 docs × 4 qualities), voice loop. Next: confirm the rules on non-Meta TTS; switch the claim checker onto its Modal endpoint and tune its enclosure false alarms. | |
+| 13 | ✅ **Done Oct 29:** adversarial plan reviewer, call gym (600 calls, 100% safe), cross-family judges, reader eval (33 docs × 4 qualities), voice loop. Next: confirm the rules on non-Meta TTS; switch the claim checker onto its Modal endpoint (auth works; the endpoint needs a running replica). Enclosure flags fixed Oct 30: the facts no longer list a requested doctor's letter as enclosed. | |
 
 If behind schedule, cut in this order: 10, 9, 7, 5. Protect 2, 3 and 11.
 

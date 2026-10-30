@@ -53,10 +53,11 @@ def model_for(role: str) -> str:
 
 
 def role_ready(role: str) -> bool:
-    """This role can be called: the API is on and the role's own provider key is set."""
+    """This role can be called: the API is on, and the role's own provider key and endpoint are set."""
     if not enabled():
         return False
-    return mock_enabled() or bool(os.getenv(role_cfg(role).api_key_env))
+    cfg = role_cfg(role)
+    return mock_enabled() or (bool(os.getenv(cfg.api_key_env)) and cfg.base_url.startswith("http"))  # Modal needs MODAL_ENDPOINT_URL too
 
 
 def engine_label(role: str) -> str:

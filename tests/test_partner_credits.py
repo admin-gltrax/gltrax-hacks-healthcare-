@@ -384,6 +384,24 @@ def test_the_verifier_runs_on_modal_by_default_and_is_not_patient_facing(monkeyp
     assert ai.model_for("verifier") == "Qwen/Qwen3.6-35B-A3B"
 
 
+def test_the_verifier_is_not_ready_without_its_modal_endpoint(monkeypatch):
+    monkeypatch.setenv("MOCK_LLM", "0")
+    monkeypatch.setenv("MODAL_PROXY_TOKEN", "wk-x.ws-y")
+    monkeypatch.delenv("MODAL_ENDPOINT_URL", raising=False)
+    monkeypatch.delenv("VERIFIER_BASE_URL", raising=False)
+    monkeypatch.delenv("VERIFIER_PROVIDER", raising=False)
+    assert not ai.role_ready("verifier")
+    monkeypatch.setenv("MODAL_ENDPOINT_URL", "https://admin-27571--ep-claim-checker-server.us-west.modal.direct")
+    assert ai.role_ready("verifier")
+
+
+def test_a_requested_doctors_letter_is_never_listed_as_enclosed():
+    from src.agents.workflows import pa_enclosures
+    assert not any("doctor" in e and "not enclosed" not in e for e in pa_enclosures(True))
+    assert not any("doctor" in e for e in pa_enclosures(False))
+    assert "(not enclosed)" in claims.prompt("body", {"enclosures": pa_enclosures(True)})
+
+
 def test_claims_must_be_in_the_letter_and_support_must_be_in_the_facts():
     raw = {"claims": [
         {"claim": "I had an emergency visit after a fall at home.", "status": "supported", "fact": "Emergency visit after a fall at home"},

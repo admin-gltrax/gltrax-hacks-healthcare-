@@ -53,6 +53,11 @@ def supported_for(facts: dict, evidence: list[str]) -> list[str]:
     return out[:4]
 
 
+def pa_enclosures(letter_requested: bool) -> list[str]:
+    from src.agents.workflows import pa_enclosures as f
+    return f(letter_requested)
+
+
 def body_of(letter: str) -> str:
     from src.agents.workflows import _letter_body
     return _letter_body(letter)
@@ -65,6 +70,8 @@ def items(limit: int) -> list[dict]:
         if "facts" not in r:
             continue
         facts = {**r["facts"], "evidence_on_file": r["evidence"]}
+        if "doctor_letter" in facts:  # the recorded runs predate pa_enclosures: give them the envelope the workflow builds now
+            facts["enclosures"] = pa_enclosures(bool(facts["doctor_letter"]))
         base = body_of(r["letter"])
         paras = base.split("\n\n")
         at = max(1, len(paras) // 2)
@@ -139,10 +146,11 @@ def main() -> int:
     (EVALS / "claims.json").write_text(json.dumps(out, indent=1))
     prov = role_cfg("verifier").base_url
     costs = USAGE.by_provider()
-    if "modal.run" in prov:  # Modal dedicated endpoints bill GPU time, not tokens: see the Modal dashboard for the real figure
+    on_modal = "modal.run" in prov or "modal.direct" in prov
+    if on_modal:  # Modal dedicated endpoints bill GPU time, not tokens: see the Modal dashboard for the real figure
         costs = {"meta": 0.0}
     evals_md.log_spend("claim checker eval", f"{len(rows)} letters on {role_cfg('verifier').model}" +
-                       (" (Modal: GPU time, see dashboard)" if "modal.run" in prov else ""), by_provider=costs)
+                       (" (Modal: GPU time, see dashboard)" if on_modal else ""), by_provider=costs)
     evals_md.write()
     return 0
 

@@ -457,6 +457,13 @@ def _pa_criteria(wf: Workflow, rec: HealthRecord):
                    lambda why: rules() + f" (strategist unavailable: {why})")
 
 
+def pa_enclosures(letter_requested: bool) -> list[str]:
+    """Only what really goes in the envelope. A doctor's letter that was requested is sent by the office, not enclosed:
+    listing it here made the writer say "I am enclosing my doctor's letter" and the claim checker rightly flag it."""
+    return ["medical records", "the denial notice"] + (
+        ["(not enclosed) the doctor's letter of medical necessity: the doctor's office sends it to the plan directly"] if letter_requested else [])
+
+
 def _pa_facts(wf: Workflow, rec: HealthRecord) -> tuple[dict, str]:
     """What the writer may use (and check_letter enforces), and the To/Re header code adds."""
     call = next((c for c in reversed(wf.calls) if c.get("purpose") == "letter" and c.get("ok", True)), None)
@@ -470,7 +477,7 @@ def _pa_facts(wf: Workflow, rec: HealthRecord) -> tuple[dict, str]:
              "coverage_rules_and_evidence": [{"rule": r["criterion"], "evidence": r["evidence"]} for r in wf.criteria],
              "core_argument": wf.inputs.get("argument", ""),
              "urgent": bool(wf.inputs.get("urgent")), **({"fast_decision_hours": 72} if wf.inputs.get("urgent") else {}),
-             "enclosures": ["doctor's letter of medical necessity", "medical records", "the denial notice"]}
+             "enclosures": pa_enclosures(bool(call))}
     header = (f"To: Appeals Unit, {_payer(rec)}\nFax: {fax or 'on the denial letter'}\n"
               f"Re: Appeal of prior authorization denial{' (case ' + wf.inputs['case_number'] + ')' if wf.inputs.get('case_number') else ''}. "
               f"Member: {_who(rec)}, plan {_plan(rec)}")
@@ -560,7 +567,7 @@ def _pa_draft_rules(wf: Workflow, rec: HealthRecord) -> str:
         "Please send me the plan's decision in writing, and a copy of the criteria used.\n\n"
         f"Prepared with my assistant, PJ, at my direction.\n\n{SIGNATURE}\n"
     )
-    return "Appeal letter drafted, with the doctor's letter, records and a criteria table attached."
+    return "Appeal letter drafted, with the records and a table of the plan's criteria attached; the doctor's office sends its letter directly."
 
 
 def _doctor_letter(wf: Workflow, rec: HealthRecord) -> str:

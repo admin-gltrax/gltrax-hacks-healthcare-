@@ -68,7 +68,9 @@ def prompt(body: str, facts: dict) -> str:
             "legal arguments, politeness and the patient's own wishes.\n"
             "For each claim, find the words in FACTS that back it and copy them exactly into `fact`. If nothing in FACTS says it, "
             "status is unsupported and `fact` is empty. Being on a list of the plan's coverage rules is NOT evidence that the "
-            "rule is met. A doctor's letter that was only requested is not a letter that was written.\n\n"
+            "rule is met. A doctor's letter that was only requested is not a letter that was written.\n"
+            "Saying a document in FACTS `enclosures` is enclosed is supported (quote its entry); saying an entry marked "
+            "\"(not enclosed)\" is enclosed is unsupported.\n\n"
             f"FACTS:\n{json.dumps(facts, indent=1)}\n\nLETTER:\n{body}")
 
 
