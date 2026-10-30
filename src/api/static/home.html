@@ -1150,7 +1150,7 @@ footer.foot b{color:var(--ink-2)}
     }
   }
 
-  function engName(e) { return !e || e === 'rules' ? null : (e.indexOf('wonder') >= 0 ? 'Muse Wonder' : e.indexOf('spark-open') >= 0 ? 'Muse Spark Open' : 'Muse Spark'); }
+  function engName(e) { return !e || e === 'rules' ? null : (e.indexOf('wonder') >= 0 ? 'Muse Wonder' : e.indexOf('spark-open') >= 0 ? 'Muse Spark Open' : /claim-checker|qwen/i.test(e) ? 'Qwen on Modal' : 'Muse Spark'); }
   function engChip(e) { var n = engName(e); return n ? el('span', { class: 'eng', title: e, text: n }) : null; }
   function keepOpen(node, key, dflt) {
     if (expanded[key] === undefined ? dflt : expanded[key]) node.setAttribute('open', '');

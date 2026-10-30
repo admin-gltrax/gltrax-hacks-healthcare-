@@ -21,6 +21,7 @@ PROVIDERS: dict[str, tuple[str, str, str]] = {  # name -> (base URL, key env var
 # Modal: a dedicated endpoint (`modal endpoint create --model ...`), OpenAI-compatible, reached at
 # MODAL_ENDPOINT_URL with a workspace proxy token "<id>.<secret>" in MODAL_PROXY_TOKEN.
 MODAL_MODEL = "Qwen/Qwen3.6-35B-A3B"
+MODAL_SERVED_NAME = "claim-checker"  # a dedicated endpoint serves its model under the endpoint's name (MODAL_MODEL_NAME to change)
 PATIENT_FACING = ("worker", "caller", "reader", "strategist", "writer", "pj")
 
 # role -> (default model, default reasoning effort)
@@ -64,7 +65,7 @@ def role_cfg(role: str) -> RoleCfg:
     p = role.upper()
     prov = provider_for(role)
     if prov == "modal":
-        return RoleCfg(role=role, model=os.getenv(f"{p}_MODEL", MODAL_MODEL),
+        return RoleCfg(role=role, model=os.getenv(f"{p}_MODEL", os.getenv("MODAL_MODEL_NAME", MODAL_SERVED_NAME)),
                        base_url=os.getenv(f"{p}_BASE_URL", os.getenv("MODAL_ENDPOINT_URL", "").rstrip("/") + "/v1"),
                        api_key_env=os.getenv(f"{p}_API_KEY_ENV", "MODAL_PROXY_TOKEN"),
                        reasoning_effort=_effort(os.getenv(f"{p}_REASONING", effort or "")))
