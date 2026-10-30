@@ -380,8 +380,8 @@ def test_the_verifier_runs_on_modal_by_default_and_is_not_patient_facing(monkeyp
     monkeypatch.setenv("MODAL_ENDPOINT_URL", "https://admin-27571--qwen.modal.run/")
     cfg = config.role_cfg("verifier")
     assert cfg.base_url == "https://admin-27571--qwen.modal.run/v1" and cfg.api_key_env == "MODAL_PROXY_TOKEN"
-    assert cfg.model == "Qwen/Qwen3.6-35B-A3B" and "verifier" not in config.PATIENT_FACING
-    assert ai.model_for("verifier") == "Qwen/Qwen3.6-35B-A3B"
+    assert cfg.model == "claim-checker" and "verifier" not in config.PATIENT_FACING  # the endpoint's served name
+    assert ai.model_for("verifier") == "claim-checker"
 
 
 def test_the_verifier_is_not_ready_without_its_modal_endpoint(monkeypatch):

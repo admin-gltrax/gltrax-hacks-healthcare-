@@ -20,7 +20,7 @@ PROVIDERS: dict[str, tuple[str, str, str]] = {  # name -> (base URL, key env var
 }
 # Modal: a dedicated endpoint (`modal endpoint create --model ...`), OpenAI-compatible, reached at
 # MODAL_ENDPOINT_URL with a workspace proxy token "<id>.<secret>" in MODAL_PROXY_TOKEN.
-MODAL_MODEL = "Qwen/Qwen3.6-35B-A3B"
+MODAL_MODEL = "claim-checker"  # the name the endpoint serves; the weights are Qwen/Qwen3.6-35B-A3B (VERIFIER_MODEL to override)
 PATIENT_FACING = ("worker", "caller", "reader", "strategist", "writer", "pj")
 
 # role -> (default model, default reasoning effort)
