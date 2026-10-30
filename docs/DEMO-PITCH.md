@@ -1,6 +1,6 @@
 # Demo day: 3-minute pitch and app overview
 
-> **Keep this current.** Update this file in the same pull request as any user-visible feature, and re-time it out loud before submission (due **Nov 4, 9:00 PM ET**). The checklist at the bottom says what each beat depends on. Last updated: Oct 29, 2026 (adversarial reviewer, call gym, judges, reader eval on partner credits).
+> **Keep this current.** Update this file in the same pull request as any user-visible feature, and re-time it out loud before submission (due **Nov 4, 9:00 PM ET**). The checklist at the bottom says what each beat depends on. Last updated: Oct 30, 2026 (rewritten around the proving ground: call gym, judges, reader eval, stress test, claim checker).
 
 **Live app:** https://swarm-scheduler.72q91gp7bkhmc.us-west-2.cs.amazonlightsail.com/ (click "Or explore a demo patient"). All people, plans, offices and agencies on screen are fictional.
 
@@ -12,55 +12,43 @@
 
 ### 0:00 – 0:20 · The problem
 **Say:**
-"Healthcare is built for the doctor's office, not for you. The benefits you already pay for are buried. Bills are wrong. Denials take weeks of calls. And most of that work lands on families: 53 million Americans are unpaid caregivers, many of them adult kids on hold for a parent."
+"Healthcare is built for the doctor's office, not for you. Benefits are buried, bills are wrong, denials take weeks of calls, and the work lands on families: 53 million Americans are unpaid caregivers, many of them adult kids on hold for a parent."
 
 **Screen:** the welcome page, PJ the Gila monster.
 
-### 0:20 – 0:40 · The product
+### 0:20 – 0:35 · The product
 **Say:**
-"This is PJ Health. It puts the power back in the patient's hands. You tell PJ what you need, and PJ's crew of AI agents does the complicated part: the calls, the forms, the appeals and the follow-ups. You just decide and sign."
+"This is PJ Health. You tell PJ what you need, and PJ's crew of AI agents does the calls, the forms, the appeals and the follow-ups. You just decide and sign."
 
 **Click:** "Or explore a demo patient". The home screen opens on **What should PJ do?**, a menu of actions, not a chat box.
 
-### 0:40 – 1:05 · Caring for Mom
+### 0:35 – 0:55 · Caring for Mom
 **Say:**
-"Alex is caring for their mom, Rosa. She's 78, on Medicare Advantage, lives alone, and fell this spring. Rosa gave Alex power of attorney, so Alex can act and sign for her. For Alex's son Leo, a parent manages it automatically until he turns 18. And another adult sees nothing until they say yes."
+"Alex cares for their mom, Rosa: 78, Medicare Advantage, lives alone, fell this spring. Rosa gave Alex power of attorney, so Alex can sign for her. PJ found nine benefits she isn't using, like rides her plan already covers. One tap: 'Do it, PJ.'"
 
-**Click:** the **Rosa** chip. Point at the consent banner.
+**Click:** the **Rosa** chip (point at the consent banner), then **Find benefits Rosa isn't using** → **Do it, PJ** on the rides.
 
-### 1:05 – 1:25 · Benefits she's not using
+### 0:55 – 1:40 · The crew fights back
 **Say:**
-"From her age, her plan and what Alex told it, PJ found nine benefits Rosa isn't using: the free Wellness Visit, a fall-risk check, a free medication review, rides her plan already covers, and help paying for Medicare. One tap each: 'Do it, PJ.'"
+"Her plan denied home physical therapy. Alex snaps a photo of the letter. Muse Spark reads the reason, the plan's four rules and the real deadline, then phones her doctor's office for a letter: works the menu, waits on hold, says it's an AI, refuses to give out her address. Muse Wonder maps her records to each rule; Spark writes the appeal. Then the insurer goes first: open-weights Muse Spark plays the plan's reviewer and tries to deny it. Spark answers every objection, and a second model checks every claim against her records. What can't be fixed becomes a plain to-do. Nothing leaves until Alex signs, and if the plan still says no, PJ files the outside review."
 
-**Click:** "Find benefits Rosa isn't using", then **Do it, PJ** on the rides.
+**Click:** **Appeal a prior-authorization denial** → **Use the sample (fictional)** → **Start**. Steps light up with **Muse Spark** / **Muse Wonder** / **Muse Spark Open** badges. Open the call (it streams live), **The plan's rules, answered one by one**, **Stress test** (objections and the revision), then **Guardrails**. Type "Alex Rivera", **Sign and send**. About 60 s live; cut the wait in the edit. (The claim check shows under Guardrails only once the Modal endpoint is set; until then, drop "and a second model checks every claim against her records".)
 
-### 1:25 – 1:55 · The crew fights back, live on Meta's models
+### 1:40 – 2:15 · How we know it works
 **Say:**
-"Her plan denied home physical therapy after the fall. Alex just snaps a photo of the letter. Muse Spark reads it: the reason, word for word, the plan's four rules, and the real deadline. Spark calls her doctor's office for a letter. Muse Wonder lines up her records against each rule. Spark writes the appeal. Then open-weights Muse Spark plays the insurer and tries to deny it; Spark revises, or PJ lists what's missing. Nothing leaves until Alex signs."
+"Healthcare can't run on vibes, so we built a proving ground. Six hundred simulated hostile offices: data fishers, fake 'HIPAA verification', AI refusers, Spanish-first lines, voicemail. The caller stayed 100% safe and reached the right outcome every time. Two judges from different deployments agree at a kappa of about 0.85. The reader gets 99% of fields right from clean photos and 91% from bad ones. And every failure the gym or the judges found, we fixed and re-ran on fresh offices."
 
-**Click:** **Appeal a prior-authorization denial** → **Use the sample (fictional)** → **Start**. Steps light up with **Muse Spark** / **Muse Wonder** / **Muse Spark Open** badges; open **The plan's rules, answered one by one**, then **Stress test** (the reviewer's objections and the revision), then **Guardrails**. Type "Alex Rivera", **Sign and send**. (Takes about 45 s live; cut the wait in the edit.)
+**Click:** `/gym`: the call-gym tiles, then **Listen in** on the *fake verification* persona.
 
-### 1:55 – 2:15 · A no is not the end
+### 2:15 – 2:35 · The swarm
 **Say:**
-"If the plan says no again, PJ doesn't stop. It prepares the independent outside review, and watches every deadline."
-
-**Click:** **They say no** (demo control). The outside-review workflow appears, waiting for a signature.
-
-### 2:15 – 2:25 · PJ calls the doctor's office
-**Say:**
-"That letter? Spark phoned the office: worked the menu, waited on hold, got transferred to the medical assistant, said up front it's an AI, refused when the front desk asked for her home address, and came back with a reference number that code checks was really said on the call. We tested it on 600 hostile simulated offices: 100% safe."
-
-**Click:** expand the call on the appeal (it streams live while it happens). Optional cut: `/gym`, the proving ground, one call per persona.
-
-### 2:25 – 2:40 · The swarm
-**Say:**
-"Need an appointment? PJ checks the real public directories first: UnitedHealthcare's lists 251 Phoenix cardiologists in network. Then it calls 15 offices at once and holds the best slot for a yes. That run is live on Meta's Muse Spark: 15 calls in about 25 seconds."
+"Need an appointment? PJ checks the real public directories, then calls 15 offices at once and holds the best slot for a yes: 15 live Muse Spark calls in about 25 seconds."
 
 **Click:** **Hold an appointment: call 15 offices at once**, then **Replay recorded run**.
 
-### 2:40 – 3:00 · Why us, why now
+### 2:35 – 3:00 · Why us, why now
 **Say:**
-"Same crew for a wrong bill (Spark reads the bill and the EOB, code does the math: $493 overcharge), rides, oxygen, cut home care hours, and a counselor who can actually see you. Ask PJ anything; crisis words get 988 before any model sees them. Muse Spark and Muse Wonder, real provider directories, consent gates, a 20-case red team at 100% live, a 600-call gym at 100% safe, and 152 tests. PJ Health: your healthcare, owned by you."
+"Same crew for wrong bills, rides, equipment and cut home care hours. Crisis words get 988 before any model sees them. Everything that faces the patient runs on Meta's models; open weights play the adversary. Consent gates, a red team at 100%, 160 tests. PJ Health: your healthcare, owned by you."
 
 **Screen:** the action menu, then PJ.
 
@@ -71,7 +59,7 @@
 | Question | Answer |
 |---|---|
 | Does it call real offices? | Not in the demo: the offices, plans and agencies are simulated and labeled, and there's no phone line attached on purpose. The swarm's caller is a real Muse Spark agent with phone tools (keypad, hold, transfer); a telephony channel plugs in behind the same interface the fax uses. The provider directory data is real public data, and nobody is ever called with it. |
-| What's AI vs rules today? | Live on Meta: the swarm's calls and the doctor's-office caller (Spark), reading letters, bills and EOBs (Spark vision, 25/25 fields on our eval), the appeal strategy (Wonder), the letters and PJ's chat (Spark). Rules are the guardrails and the fallback: deadlines, money math, consent, crisis routing. The screen badges every step with the engine that did it. |
+| What's AI vs rules today? | Live on Meta: the swarm's calls and the doctor's-office caller (Spark), reading letters, bills and EOBs (Spark vision: 99.6% of fields on clean photos, 90.9% on harsh ones, across 33 fictional documents), the appeal strategy (Wonder), the letters and PJ's chat (Spark). Rules are the guardrails and the fallback: deadlines, money math, consent, crisis routing. The screen badges every step with the engine that did it. |
 | Does it call real phones? | No: live Spark agents talk to simulated offices on purpose (TCPA, recording consent, and Meta has no text-to-speech). A phone channel plugs in behind the same interface as the fax. See `docs/COMPLIANCE.md`. |
 | Safety? | PJ never diagnoses or doses. Crisis words get 988/911 first. Nothing is sent without a signature from someone allowed to sign. Every fact shows its source. Tests enforce all of these. |
 | Who pays? | Families first (the caregiver pays, the parent uses it), then Medicare Advantage plans and employers, who want members using preventive benefits and fewer wasted appeals. |
@@ -85,20 +73,20 @@
 | Beat | Feature it shows | Where it lives | Status |
 |---|---|---|---|
 | 0:20 | Action-menu home screen | `src/agents/actions.py`, `home.html` | ✅ |
-| 0:40 | Care circle with consent levels | `src/agents/circle.py` | ✅ |
-| 1:05 | Support plan from risk factors | `src/agents/outreach.py` | ✅ |
-| 1:25 | Appeal from a photo: Spark reader → Spark caller → Wonder evidence map → Spark writer → checks → signature | `reader.py`, `office_caller.py`, `appeals.py`, `workflows.py` | ✅ live on Meta models |
-| 1:55 | Escalation to outside review | `workflows._escalate` | ✅ |
-| 2:15 | Doctor's-office call on Spark: menu, hold, transfer, data-fishing refused, reference verified | `src/agents/office_caller.py`, `src/sim/pcp_office.py` | ✅ live agents, simulated office |
-| 2:25 | Real directory step, then the 15-call swarm on Muse Spark | `src/swarm/candidates.py`, `/swarm` | ✅ (the replay predates the directory step; re-record before demo day) |
-| 2:40 | Other crew jobs: equipment, rides and aide, home care hours, counselor | `src/agents/workflows.py` | ✅ |
-| 2:40 | Bill + EOB photos, code math, $493 overcharge | `reader.match_bill` | ✅ live |
-| 1:25 | Stress test: Muse Spark Open tries to deny the appeal; Spark revises; leftover gaps become to-dos | `src/agents/reviewer.py`, `workflows._pa_review` | ✅ live (reviewer on Baseten, `muse-spark-open-1026`) |
-| 1:25 | Claim checker: every claim in the letter needs a fact behind it (Qwen on Modal checks Spark's writing) | `src/agents/claims.py` | ✅ built; shows under Guardrails once the Modal endpoint is set |
-| 2:15 | Call gym, judges, reader eval, voice loop at `/gym` | `src/sim/gym.py`, `src/eval/`, `gym.html` | ✅ live runs committed; voice audio plays only with `VOICE_TTS` on |
+| 0:35 | Care circle with consent levels | `src/agents/circle.py` | ✅ |
+| 0:35 | Support plan from risk factors | `src/agents/outreach.py` | ✅ |
+| 0:55 | Appeal from a photo: Spark reader → Spark caller → Wonder evidence map → Spark writer → checks → signature | `reader.py`, `office_caller.py`, `appeals.py`, `workflows.py` | ✅ live on Meta models |
+| 0:55 | Escalation to outside review (said, not clicked) | `workflows._escalate` | ✅ |
+| 0:55 | Doctor's-office call on Spark: menu, hold, transfer, data-fishing refused, reference verified | `src/agents/office_caller.py`, `src/sim/pcp_office.py` | ✅ live agents, simulated office |
+| 0:55 | Stress test: Muse Spark Open tries to deny the appeal; Spark revises; leftover gaps become to-dos | `src/agents/reviewer.py`, `workflows._pa_review` | ✅ live (reviewer on Baseten, `muse-spark-open-1026`) |
+| 0:55 | Claim checker: every claim in the letter needs a fact behind it (Qwen on Modal checks Spark's writing) | `src/agents/claims.py` | ✅ built; shows under Guardrails once the Modal endpoint is set |
+| 1:40 | Call gym, judges, reader eval, voice loop at `/gym` | `src/sim/gym.py`, `src/eval/`, `gym.html` | ✅ live runs committed; voice audio plays only with `VOICE_TTS` on |
+| 2:15 | Real directory step, then the 15-call swarm on Muse Spark | `src/swarm/candidates.py`, `/swarm` | ✅ (the replay predates the directory step; re-record before demo day) |
+| 2:35 | Other crew jobs: equipment, rides and aide, home care hours, counselor | `src/agents/workflows.py` | ✅ |
+| 2:35 | Bill + EOB photos, code math, $493 overcharge | `reader.match_bill` | ✅ live |
 | any | Ask PJ on Spark (proposes jobs as cards) and voice intake | `guide.ask_live`, `src/voice.py` | ✅ chat live (red team 20/20); voice on `/swarm` only |
 
 **Before recording:**
 1. Re-record the public replay (`scripts/make_recording.py`) so it includes the directory step and the UHC plan.
 2. Deploy `main` and run through the clicks on a phone.
-3. Re-time the script: it's about 475 spoken words, over the 420 target. Cut the 1:55 beat first, then the 2:15 call beat.
+3. Re-time the script out loud (about 400 spoken words). If over 3:00, cut the swarm beat to one sentence first.
