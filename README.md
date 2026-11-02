@@ -430,7 +430,7 @@ Planned additions:
 | PJ won't answer medical questions | ✅ | `test_pj_never_answers_medical_questions` |
 | Patient dashboard (mobile and desktop) | ✅ | Checked in a headless browser at iPhone and desktop widths |
 | Scheduling Swarm at `/swarm` | ✅ simulated offices | Swarm tests |
-| Live Meta Model API | ✅ swarm only | `scripts/smoke_meta.py` passed every check on Oct 27. A full 15-call swarm ran live on `muse-spark-1.3` (15/15 calls, 15/15 safety, about 25 s), and that run is the public replay (`recordings/demo.jsonl`). |
+| Live Meta Model API | ✅ swarm only | `scripts/smoke_meta.py` passed every check on Oct 27. A full 15-call swarm ran live on `muse-spark-1.3` (15/15 calls, 15/15 safety, about 25 s). The public replay (`recordings/demo.jsonl`) was re-recorded live on Nov 2 with the real directory step and the UHC plan (15/15 calls, 15/15 safety, about 50 s). |
 | Voice intake | ✅ swarm only | The 🎙 Speak button on `/swarm` records in the browser, and `src/voice.py` transcribes the recording with Muse Voice Transcribe (`POST /v1/asr/transcribe`). Verified on the live API. |
 | Real provider directory | ✅ swarm only | `src/directory/` holds 677 Phoenix-area cardiologists from NPPES, plus the networks UHC, Cigna and Humana list for them in their public Plan-Net FHIR directories. This is step 1 of the swarm. See `docs/provider-data.md`. |
 | Hosting | ✅ | Live on AWS Lightsail ([DEPLOY.md](DEPLOY.md)). Every merge to `main` redeploys automatically once the AWS secrets are added. |
