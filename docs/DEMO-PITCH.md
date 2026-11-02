@@ -1,6 +1,6 @@
 # Demo day: 3-minute pitch and app overview
 
-> **Keep this current.** Update this file in the same pull request as any user-visible feature, and re-time it out loud before submission (due **Nov 4, 9:00 PM ET**). The checklist at the bottom says what each beat depends on. Last updated: Nov 2, 2026 (swarm replay re-recorded with the directory step; swarm beat timing corrected).
+> **Keep this current.** Update this file in the same pull request as any user-visible feature, and re-time it out loud before submission (due **Nov 4, 9:00 PM ET**). The checklist at the bottom says what each beat depends on. Last updated: Nov 2, 2026 (swarm replay re-recorded with the directory step; claim-check line dropped; screen clips via `scripts/record_demo.js`, voice lines in `docs/VOICEOVER.md`).
 
 **Live app:** https://swarm-scheduler.72q91gp7bkhmc.us-west-2.cs.amazonlightsail.com/ (click "Or explore a demo patient"). All people, plans, offices and agencies on screen are fictional.
 
@@ -30,9 +30,9 @@
 
 ### 0:55 – 1:40 · The crew fights back
 **Say:**
-"Her plan denied home physical therapy. Alex snaps a photo of the letter. Muse Spark reads the reason, the plan's four rules and the real deadline, then phones her doctor's office for a letter: works the menu, waits on hold, says it's an AI, refuses to give out her address. Muse Wonder maps her records to each rule; Spark writes the appeal. Then the insurer goes first: open-weights Muse Spark plays the plan's reviewer and tries to deny it. Spark answers every objection, and a second model checks every claim against her records. What can't be fixed becomes a plain to-do. Nothing leaves until Alex signs, and if the plan still says no, PJ files the outside review."
+"Her plan denied home physical therapy. Alex snaps a photo of the letter. Muse Spark reads the reason, the plan's four rules and the real deadline, then phones her doctor's office for a letter: works the menu, waits on hold, says it's an AI, refuses to give out her address. Muse Wonder maps her records to each rule; Spark writes the appeal. Then the insurer goes first: open-weights Muse Spark plays the plan's reviewer and tries to deny it. Spark answers every objection. What can't be fixed becomes a plain to-do. Nothing leaves until Alex signs, and if the plan still says no, PJ files the outside review."
 
-**Click:** **Appeal a prior-authorization denial** → **Use the sample (fictional)** → **Start**. Steps light up with **Muse Spark** / **Muse Wonder** / **Muse Spark Open** badges. Open the call (it streams live), **The plan's rules, answered one by one**, **Stress test** (objections and the revision), then **Guardrails**. Type "Alex Rivera", **Sign and send**. About 60 s live; cut the wait in the edit. (The claim check shows under Guardrails only once the Modal endpoint is set; until then, drop "and a second model checks every claim against her records".)
+**Click:** **Appeal a prior-authorization denial** → **Use the sample (fictional)** → **Start**. Steps light up with **Muse Spark** / **Muse Wonder** / **Muse Spark Open** badges. Open the call (it streams live), **The plan's rules, answered one by one**, **Stress test** (objections and the revision), then **Guardrails**. Type "Alex Rivera", **Sign and send**. About 60 s live; cut the wait in the edit. The claim checker (Modal) is not running, so the script doesn't mention it.
 
 ### 1:40 – 2:15 · How we know it works
 **Say:**
@@ -79,7 +79,7 @@
 | 0:55 | Escalation to outside review (said, not clicked) | `workflows._escalate` | ✅ |
 | 0:55 | Doctor's-office call on Spark: menu, hold, transfer, data-fishing refused, reference verified | `src/agents/office_caller.py`, `src/sim/pcp_office.py` | ✅ live agents, simulated office |
 | 0:55 | Stress test: Muse Spark Open tries to deny the appeal; Spark revises; leftover gaps become to-dos | `src/agents/reviewer.py`, `workflows._pa_review` | ✅ live (reviewer on Baseten, `muse-spark-open-1026`) |
-| 0:55 | Claim checker: every claim in the letter needs a fact behind it (Qwen on Modal checks Spark's writing) | `src/agents/claims.py` | ✅ built; shows under Guardrails once the Modal endpoint is set |
+| 0:55 | Claim checker: every claim in the letter needs a fact behind it (Qwen on Modal checks Spark's writing) | `src/agents/claims.py` | ⏸ built, not in the video: the Modal endpoint never came up (503) |
 | 1:40 | Call gym, judges, reader eval, voice loop at `/gym` | `src/sim/gym.py`, `src/eval/`, `gym.html` | ✅ live runs committed; voice audio plays only with `VOICE_TTS` on |
 | 2:15 | Real directory step, then the 15-call swarm on Muse Spark | `src/swarm/candidates.py`, `/swarm` | ✅ (replay re-recorded Nov 2 with the directory step and the UHC plan: 15/15 calls, 15/15 safe, about 50 s) |
 | 2:35 | Other crew jobs: equipment, rides and aide, home care hours, counselor | `src/agents/workflows.py` | ✅ |
@@ -89,4 +89,5 @@
 **Before recording:**
 1. ~~Re-record the public replay~~ Done Nov 2 (`scripts/make_recording.py`): directory step + UHC plan.
 2. Deploy `main` and run through the clicks on a phone.
+   Screen clips: `BASE_URL=<server> node scripts/record_demo.js <out_dir>` records every beat (clip04 runs a live appeal, about 2 minutes of Meta calls). Voice lines, one file per clip: `docs/VOICEOVER.md`.
 3. Re-time the script out loud (about 400 spoken words). If over 3:00, cut the swarm beat to one sentence first.

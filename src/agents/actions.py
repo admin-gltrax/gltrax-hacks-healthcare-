@@ -40,7 +40,7 @@ def menu(account: HealthRecord, record: HealthRecord, cr: CareRecipient | None) 
         _a("call_office", "workflow", "office_request", f"Have PJ call {whose} doctor's office", "phone",
            "Referral, refill, a letter, a nurse question... PJ works the phone menu, waits on hold and gets the right person.",
            needs=None if pcp else "pcp"),
-        _a("benefits", "support", "", f"Find benefits {'you' if you else first} aren't using", "gift",
+        _a("benefits", "support", "", f"Find benefits {'you aren' if you else first + ' isn'}'t using", "gift",
            f"{len(suggested)} things PJ found from {whose} age, plan and situation." if suggested
            else "Tell PJ a little more and it will look for free benefits and programs.",
            badge=len(suggested) or None),
