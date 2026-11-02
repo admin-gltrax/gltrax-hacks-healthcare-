@@ -142,7 +142,8 @@ What exists:
 **Verified on the live Meta API (Oct 27):**
 
 - `scripts/smoke_meta.py` passes every check.
-- A full 15-call swarm ran on `muse-spark-1.3`: 15/15 calls, 15/15 safety, about 25 s. That run is the public replay (`recordings/demo.jsonl`). The best slot was won by honest leverage: the worker cited a real held slot, and an office released a hidden cancellation.
+- A full 15-call swarm ran on `muse-spark-1.3` on Oct 27: 15/15 calls, 15/15 safety, about 25 s; the best slot was won by honest leverage (the worker cited a real held slot, and an office released a hidden cancellation).
+- **Public replay re-recorded Nov 2** (`recordings/demo.jsonl`) with the real directory step and the UHC plan: 15/15 calls, 15/15 safety, about 50 s, best slot held at Cedar Point Heart & Vascular (simulated).
 - Voice intake: the 🎙 button on `/swarm`, transcribed by Muse Voice Transcribe file transcription (`src/voice.py`).
 
 **Real provider data (`src/directory/`):**

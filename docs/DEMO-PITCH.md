@@ -1,6 +1,6 @@
 # Demo day: 3-minute pitch and app overview
 
-> **Keep this current.** Update this file in the same pull request as any user-visible feature, and re-time it out loud before submission (due **Nov 4, 9:00 PM ET**). The checklist at the bottom says what each beat depends on. Last updated: Oct 30, 2026 (rewritten around the proving ground: call gym, judges, reader eval, stress test, claim checker).
+> **Keep this current.** Update this file in the same pull request as any user-visible feature, and re-time it out loud before submission (due **Nov 4, 9:00 PM ET**). The checklist at the bottom says what each beat depends on. Last updated: Nov 2, 2026 (swarm replay re-recorded with the directory step; swarm beat timing corrected).
 
 **Live app:** https://swarm-scheduler.72q91gp7bkhmc.us-west-2.cs.amazonlightsail.com/ (click "Or explore a demo patient"). All people, plans, offices and agencies on screen are fictional.
 
@@ -42,7 +42,7 @@
 
 ### 2:15 – 2:35 · The swarm
 **Say:**
-"Need an appointment? PJ checks the real public directories, then calls 15 offices at once and holds the best slot for a yes: 15 live Muse Spark calls in about 25 seconds."
+"Need an appointment? PJ checks the real public directories, then calls 15 offices at once and holds the best slot for a yes: 15 live Muse Spark calls in under a minute."
 
 **Click:** **Hold an appointment: call 15 offices at once**, then **Replay recorded run**.
 
@@ -81,12 +81,12 @@
 | 0:55 | Stress test: Muse Spark Open tries to deny the appeal; Spark revises; leftover gaps become to-dos | `src/agents/reviewer.py`, `workflows._pa_review` | ✅ live (reviewer on Baseten, `muse-spark-open-1026`) |
 | 0:55 | Claim checker: every claim in the letter needs a fact behind it (Qwen on Modal checks Spark's writing) | `src/agents/claims.py` | ✅ built; shows under Guardrails once the Modal endpoint is set |
 | 1:40 | Call gym, judges, reader eval, voice loop at `/gym` | `src/sim/gym.py`, `src/eval/`, `gym.html` | ✅ live runs committed; voice audio plays only with `VOICE_TTS` on |
-| 2:15 | Real directory step, then the 15-call swarm on Muse Spark | `src/swarm/candidates.py`, `/swarm` | ✅ (the replay predates the directory step; re-record before demo day) |
+| 2:15 | Real directory step, then the 15-call swarm on Muse Spark | `src/swarm/candidates.py`, `/swarm` | ✅ (replay re-recorded Nov 2 with the directory step and the UHC plan: 15/15 calls, 15/15 safe, about 50 s) |
 | 2:35 | Other crew jobs: equipment, rides and aide, home care hours, counselor | `src/agents/workflows.py` | ✅ |
 | 2:35 | Bill + EOB photos, code math, $493 overcharge | `reader.match_bill` | ✅ live |
 | any | Ask PJ on Spark (proposes jobs as cards) and voice intake | `guide.ask_live`, `src/voice.py` | ✅ chat live (red team 20/20); voice on `/swarm` only |
 
 **Before recording:**
-1. Re-record the public replay (`scripts/make_recording.py`) so it includes the directory step and the UHC plan.
+1. ~~Re-record the public replay~~ Done Nov 2 (`scripts/make_recording.py`): directory step + UHC plan.
 2. Deploy `main` and run through the clicks on a phone.
 3. Re-time the script out loud (about 400 spoken words). If over 3:00, cut the swarm beat to one sentence first.
