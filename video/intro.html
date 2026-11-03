@@ -1,0 +1,304 @@
+<!doctype html>
+<!--
+  Opening motion graphic for the demo video (the first ~19 s of narration, vo01_problem).
+  Every frame is a pure function of time: window.render(t). scripts/render_intro.js steps t
+  at 30 fps and screenshots each frame. Open it in a browser to preview (it plays itself).
+  ?dur=<seconds> stretches the cues to match the real length of vo01 (default 18.6 s of speech).
+  All numbers and names on screen are fictional, except the cited caregiver statistic.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PJ Health intro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#F7F4EE; --bg-2:#EFEAE1; --surface:#FFFFFF; --line:#E8E2D8; --line-2:#DCD3C5;
+    --ink:#1A2230; --ink-2:#4B5566; --ink-3:#7F8896;
+    --brand:#0F766E; --brand-soft:#E2F2EF; --coral:#EF6A43; --coral-ink:#B5441F; --coral-soft:#FDEBE4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1280px; height: 800px; overflow: hidden; background: var(--bg); }
+  body { font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  #stage { position: relative; width: 1280px; height: 800px; overflow: hidden; background: var(--bg); }
+  .abs { position: absolute; will-change: transform, opacity; }
+  .eyebrow { font-size: 15px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--brand); display: flex; align-items: center; gap: 12px; }
+  .eyebrow::before { content: ''; width: 28px; height: 3px; border-radius: 2px; background: var(--coral); }
+
+  /* Scene A: headline */
+  #a { left: 0; right: 0; top: 230px; text-align: center; }
+  #a h1 { font-size: 76px; font-weight: 800; letter-spacing: -.035em; line-height: 1.08; }
+  #a .office { position: relative; display: inline-block; }
+  #a .strike { position: absolute; left: -4px; top: 54%; height: 7px; border-radius: 4px; background: var(--coral); width: 0; }
+  #a .notyou { color: var(--coral); }
+
+  /* Scene B: three cards */
+  .card { width: 356px; height: 500px; top: 168px; background: var(--surface); border: 1px solid var(--line); border-radius: 24px;
+          box-shadow: 0 1px 2px rgba(26,34,48,.04), 0 18px 40px -18px rgba(26,34,48,.22); padding: 26px; overflow: hidden; }
+  .card h2 { font-size: 27px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 4px; }
+  .card .sub { font-size: 14px; color: var(--ink-3); font-weight: 500; margin-bottom: 18px; }
+  .ic { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; margin-bottom: 16px; }
+  .ic svg { width: 22px; height: 22px; }
+  #c1 { left: 64px; } #c2 { left: 462px; } #c3 { left: 860px; }
+
+  .doc { position: relative; height: 250px; overflow: hidden; border-radius: 12px; background: #FBF9F5; border: 1px solid var(--line); }
+  .doc .list { position: absolute; left: 16px; right: 16px; top: 0; }
+  .doc .row { height: 22px; display: flex; align-items: center; }
+  .doc .bar { height: 7px; border-radius: 4px; background: var(--line-2); }
+  .doc .hl { position: absolute; left: 10px; right: 10px; height: 34px; border-radius: 9px; background: var(--brand-soft); border: 1.5px solid var(--brand);
+             color: var(--brand); font-weight: 700; font-size: 14px; display: flex; align-items: center; padding: 0 12px; gap: 8px; }
+  .doc .fade { position: absolute; left: 0; right: 0; bottom: 0; height: 140px; background: linear-gradient(to bottom, rgba(251,249,245,0), #FBF9F5 70%); }
+  .tag { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 15px; font-weight: 700; padding: 8px 14px; border-radius: 999px; }
+  .tag.coral { background: var(--coral-soft); color: var(--coral-ink); }
+
+  .bill { border-top: 1px dashed var(--line-2); }
+  .bill .li { display: flex; justify-content: space-between; font-size: 16px; padding: 12px 4px; border-bottom: 1px dashed var(--line-2); position: relative; }
+  .bill .li span:first-child { color: var(--ink-2); font-weight: 500; }
+  .bill .li span:last-child { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .bill .total { display: flex; justify-content: space-between; padding: 14px 4px 0; font-size: 18px; font-weight: 800; }
+  .bill svg.ring { position: absolute; left: -12px; top: -9px; width: calc(100% + 24px); height: calc(100% + 18px); overflow: visible; }
+
+  .stamp { position: absolute; right: 26px; top: 166px; border: 5px solid var(--coral); color: var(--coral); font-size: 40px; font-weight: 800;
+           letter-spacing: .08em; padding: 2px 16px; border-radius: 10px; background: rgba(255,255,255,.85); }
+  .hold { margin-top: 92px; background: var(--ink); color: #fff; border-radius: 16px; padding: 16px 18px; }
+  .hold .k { font-size: 13px; color: #AEB6C4; font-weight: 600; letter-spacing: .04em; }
+  .hold .v { font-size: 38px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .weeks { display: flex; gap: 6px; margin-top: 16px; }
+  .weeks i { flex: 1; height: 10px; border-radius: 5px; background: var(--line); }
+  .weeks-l { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-3); font-weight: 600; margin-top: 8px; }
+
+  #today { left: 64px; top: 110px; }
+  #fam { left: 0; right: 0; top: 96px; text-align: center; font-size: 56px; font-weight: 800; letter-spacing: -.03em; }
+  #fam em { font-style: normal; color: var(--coral); }
+
+  /* Scene C: 53 million */
+  #dots { left: 90px; top: 110px; width: 1100px; height: 580px; }
+  #stat { left: 0; right: 0; top: 248px; text-align: center; }
+  #stat .num { font-size: 168px; font-weight: 800; letter-spacing: -.05em; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+  #stat .num small { font-size: 84px; letter-spacing: -.03em; }
+  #stat .lbl { font-size: 40px; font-weight: 700; letter-spacing: -.02em; margin-top: 18px; color: var(--ink); }
+  #stat .lbl b { color: var(--brand); }
+  #src { left: 0; right: 0; bottom: 40px; text-align: center; font-size: 14px; color: var(--ink-3); font-weight: 500; }
+
+  /* Scene D: on hold for a parent */
+  #dtext { left: 96px; top: 250px; width: 600px; }
+  #dtext .s { font-size: 30px; font-weight: 600; color: var(--ink-2); margin-bottom: 10px; }
+  #dtext .b { font-size: 68px; font-weight: 800; letter-spacing: -.035em; line-height: 1.06; }
+  #dtext .b em { font-style: normal; color: var(--coral); }
+  #phone { left: 790px; top: 90px; width: 330px; height: 640px; border-radius: 52px; background: var(--ink); padding: 14px;
+           box-shadow: 0 30px 60px -25px rgba(26,34,48,.55); }
+  #phone .scr { width: 100%; height: 100%; border-radius: 40px; background: linear-gradient(170deg, #26324A, #141B28); color: #fff;
+                padding: 26px 24px; display: flex; flex-direction: column; align-items: center; position: relative; overflow: hidden; }
+  #phone .clock { align-self: stretch; display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; color: #DDE3EE; }
+  #phone .av { width: 92px; height: 92px; border-radius: 50%; background: #3A4762; display: grid; place-items: center; font-size: 30px; font-weight: 800; margin-top: 54px; }
+  #phone .who { font-size: 22px; font-weight: 700; margin-top: 18px; text-align: center; }
+  #phone .what { font-size: 14px; color: #AEB6C4; margin-top: 4px; text-align: center; }
+  #phone .t { font-size: 46px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 28px; letter-spacing: -.01em; }
+  #phone .onhold { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--coral); font-weight: 800; margin-top: 4px; }
+  #phone .eq { display: flex; gap: 6px; align-items: flex-end; height: 46px; margin-top: 26px; }
+  #phone .eq i { width: 7px; border-radius: 4px; background: #5B6A88; }
+  #phone .msg { font-size: 13px; color: #AEB6C4; font-style: italic; margin-top: 18px; text-align: center; }
+  #phone .end { position: absolute; bottom: 34px; width: 64px; height: 64px; border-radius: 50%; background: #E5484D; display: grid; place-items: center; }
+  #phone .end svg { width: 28px; height: 28px; }
+  #veil { inset: 0; background: var(--bg); }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <div id="a" class="abs">
+    <h1>Healthcare is built for<br><span class="office">the doctor's office.<span class="strike"></span></span></h1>
+    <h1 class="notyou abs" id="notyou" style="left:0;right:0;top:170px">Not for you.</h1>
+  </div>
+
+  <div id="c1" class="abs card">
+    <div class="ic" style="background:var(--brand-soft);color:var(--brand)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9"/><path d="M2 7h20v5H2z"/><path d="M12 21V7"/><path d="M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z"/></svg></div>
+    <h2>Benefits are buried</h2>
+    <div class="sub">Evidence of Coverage · 212 pages</div>
+    <div class="doc"><div class="list" id="c1list"></div>
+      <div class="hl abs" id="c1hl">Free rides to appointments · $0</div>
+      <div class="fade"></div></div>
+    <div class="tag coral" id="c1tag">Buried on page 87</div>
+  </div>
+
+  <div id="c2" class="abs card">
+    <div class="ic" style="background:var(--coral-soft);color:var(--coral)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l3-2 3 2 2-2 2 2 3-2 3 2V2l-3 2-3-2-2 2-2-2-3 2z"/><path d="M8 9h8M8 13h6"/></svg></div>
+    <h2>Bills are wrong</h2>
+    <div class="sub">Itemized bill · statement 3 of 3</div>
+    <div class="bill">
+      <div class="li"><span>Office visit</span><span>$180.00</span></div>
+      <div class="li"><span>Physical therapy evaluation</span><span>$246.50</span></div>
+      <div class="li" id="dup"><span>Physical therapy evaluation</span><span>$246.50</span>
+        <svg class="ring" viewBox="0 0 100 40" preserveAspectRatio="none"><path id="ring" d="M6 22 C 4 6, 60 2, 94 10 C 102 16, 98 34, 50 37 C 16 39, 2 32, 8 16" fill="none" stroke="#EF6A43" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linecap="round"/></svg></div>
+      <div class="li"><span>Lab panel</span><span>$92.00</span></div>
+      <div class="total"><span>You owe</span><span>$765.00</span></div>
+    </div>
+    <div class="tag coral" id="c2tag">Charged twice: $246.50</div>
+  </div>
+
+  <div id="c3" class="abs card">
+    <div class="ic" style="background:var(--bg-2);color:var(--ink-2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></div>
+    <h2>Denials take weeks</h2>
+    <div class="sub">Prior authorization · home therapy</div>
+    <div class="stamp abs" id="stamp">DENIED</div>
+    <div class="hold"><div class="k" id="callno">CALL 1 · ON HOLD</div><div class="v" id="holdt">00:00:00</div></div>
+    <div class="weeks" id="weeks"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="weeks-l"><span>Week 1</span><span id="wk">Week 1</span></div>
+  </div>
+
+  <div id="today" class="abs eyebrow">Healthcare today</div>
+  <div id="fam" class="abs">…and the work lands on <em>families.</em></div>
+
+  <svg id="dots" class="abs" viewBox="0 0 1100 580"></svg>
+  <div id="stat" class="abs">
+    <div class="num" id="num">0<small> million</small></div>
+    <div class="lbl">Americans are <b>unpaid caregivers.</b></div>
+  </div>
+  <div id="src" class="abs">53 million: AARP and the National Alliance for Caregiving, <i>Caregiving in the U.S.</i> 2020</div>
+
+  <div id="dtext" class="abs">
+    <div class="s">Many of them are</div>
+    <div class="b">adult kids,<br>on hold<br><em>for a parent.</em></div>
+  </div>
+  <div id="phone" class="abs"><div class="scr">
+    <div class="clock"><span>11:42 PM</span><span>5G ▮▮▮</span></div>
+    <div class="av">BH</div>
+    <div class="who">Bluewater Health</div>
+    <div class="what">Member services · Mom's plan</div>
+    <div class="t" id="pt">1:12:04</div>
+    <div class="onhold">On hold</div>
+    <div class="eq" id="eq"></div>
+    <div class="msg">"Your call is important to us."</div>
+    <div class="end"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 9c-1.6 0-3.2.3-4.6.8v3.1c0 .4-.2.7-.6.9-1 .5-1.9 1.1-2.7 1.8-.2.2-.4.3-.7.3s-.5-.1-.7-.3L.3 13.2c-.2-.2-.3-.4-.3-.7s.1-.5.3-.7C3.4 8.9 7.5 7 12 7s8.6 1.9 11.7 4.8c.2.2.3.4.3.7s-.1.5-.3.7l-2.4 2.4c-.2.2-.4.3-.7.3s-.5-.1-.7-.3c-.8-.7-1.7-1.3-2.7-1.8-.3-.2-.6-.5-.6-.9V9.8C15.2 9.3 13.6 9 12 9z"/></svg></div>
+  </div></div>
+
+  <div id="veil" class="abs"></div>
+</div>
+
+<script>
+  // Cue times in seconds, for narration starting at 0.3 s at about 150 words a minute.
+  const BASE = 18.6;
+  const DUR = +(new URLSearchParams(location.search).get('dur') || BASE);
+  const k = DUR / BASE;
+  const C = Object.fromEntries(Object.entries({
+    title: 0.3, notYou: 2.4, benefits: 4.0, bills: 5.4, denials: 6.7, families: 8.7,
+    stat: 10.6, kids: 13.5, out: 20.2,
+  }).map(([n, v]) => [n, n === 'out' ? Math.max(v, 13.5 * k + 6) : v * k]));
+  window.CUES = C;
+  window.LENGTH = C.out + 0.8;
+
+  const $ = id => document.getElementById(id);
+  const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+  const p = (t, s, d) => clamp((t - s) / d);
+  const eo = x => 1 - Math.pow(1 - x, 3);
+  const eio = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const back = x => { const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+  const set = (el, { o = 1, x = 0, y = 0, s = 1, r = 0 } = {}) => {
+    el.style.opacity = o; el.style.transform = `translate(${x}px,${y}px) scale(${s}) rotate(${r}deg)`;
+    el.style.visibility = o <= 0.001 ? 'hidden' : 'visible';
+  };
+  // Seeded random so every render is identical.
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+  // Build the static pieces once.
+  const list = $('c1list');
+  for (let i = 0; i < 44; i++) {
+    const row = document.createElement('div'); row.className = 'row';
+    const bar = document.createElement('div'); bar.className = 'bar';
+    bar.style.width = (i % 6 === 5 ? 30 + rnd() * 25 : 62 + rnd() * 36) + '%';
+    row.appendChild(bar); list.appendChild(row);
+  }
+  const dots = $('dots'), COLS = 30, ROWS = 14, DOTS = [];
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+    const d = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    d.setAttribute('cx', 18 + c * 36.5); d.setAttribute('cy', 18 + r * 39.5); d.setAttribute('r', 7);
+    dots.appendChild(d);
+    DOTS.push({ el: d, delay: (c / COLS) * 0.9 + rnd() * 0.35 });
+  }
+  const eq = $('eq'), BARS = [];
+  for (let i = 0; i < 14; i++) { const b = document.createElement('i'); eq.appendChild(b); BARS.push(b); }
+  const ring = $('ring'), RING = ring.getTotalLength();
+  ring.style.strokeDasharray = RING;
+  const fmt = s => { s = Math.floor(s); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, x = s % 60;
+                     return (h < 10 ? '0' + h : h) + ':' + String(m).padStart(2, '0') + ':' + String(x).padStart(2, '0'); };
+
+  window.render = function (t) {
+    // Opening fade from the app's background.
+    set($('veil'), { o: 1 - eo(p(t, 0, 0.5)) + eo(p(t, C.out, 0.8)) });
+
+    // Scene A: "Healthcare is built for the doctor's office. Not for you."
+    const aIn = eo(p(t, 0.05, 0.7)), aOut = eio(p(t, C.benefits - 0.45, 0.45));
+    set($('a'), { o: aIn * (1 - aOut), y: 24 * (1 - aIn) - 50 * aOut });
+    $('a').querySelector('.strike').style.width = (eio(p(t, C.notYou - 0.15, 0.45)) * 104) + '%';
+    const ny = back(p(t, C.notYou + 0.15, 0.55));
+    set($('notyou'), { o: clamp(ny * 1.4), y: 30 * (1 - ny), s: 0.92 + 0.08 * ny });
+
+    // Scene B: three cards, one per problem.
+    const toFam = eio(p(t, C.families, 0.9)), bOut = eio(p(t, C.stat - 0.4, 0.45));
+    [['c1', C.benefits, -9, -8], ['c2', C.bills, 3, 0], ['c3', C.denials, 10, 8]].forEach(([id, at, rot, dx], i) => {
+      const e = back(p(t, at, 0.6)), fade = clamp(p(t, at, 0.3) * 1.2);
+      const cardX = [64, 462, 860][i];
+      const pileX = 462 + dx * 6 - cardX, pileY = 150 + i * 10;
+      set($(id), {
+        o: fade * (1 - bOut),
+        x: pileX * toFam, y: 60 * (1 - e) + pileY * toFam + 30 * bOut,
+        s: 1 - 0.28 * toFam, r: rot * toFam,
+      });
+    });
+    // Card 1: the good benefit sinks under fine print.
+    const sink = eio(p(t, C.benefits + 0.35, 2.4));
+    list.style.transform = `translateY(${-(44 * 22 - 250) + sink * 160 + (t - C.benefits) * 6}px)`;
+    const hl = $('c1hl'); hl.style.top = (28 + sink * 185) + 'px'; hl.style.opacity = 1 - 0.55 * sink;
+    set($('c1tag'), { o: eo(p(t, C.benefits + 1.0, 0.4)), y: 10 * (1 - eo(p(t, C.benefits + 1.0, 0.4))) });
+    // Card 2: the duplicate line gets circled.
+    ring.style.strokeDashoffset = RING * (1 - eio(p(t, C.bills + 0.45, 0.6)));
+    $('dup').style.background = `rgba(253,235,228,${eo(p(t, C.bills + 0.4, 0.4))})`;
+    set($('c2tag'), { o: eo(p(t, C.bills + 0.9, 0.4)), y: 10 * (1 - eo(p(t, C.bills + 0.9, 0.4))) });
+    // Card 3: denied, then the phone hours and the weeks pile up.
+    const st = p(t, C.denials + 0.35, 0.35);
+    set($('stamp'), { o: st > 0 ? 1 : 0, s: 1.9 - 0.9 * eo(st), r: -10 });
+    const hold = Math.max(0, t - C.denials) * 1350;
+    $('holdt').textContent = fmt(hold % 4200 + 37);
+    $('callno').textContent = 'CALL ' + (1 + Math.floor(hold / 4200)) + ' · ON HOLD';
+    const wk = clamp(Math.floor(p(t, C.denials + 0.3, 1.8) * 6 + 1), 1, 6);
+    [...$('weeks').children].forEach((w, i) => { w.style.background = i < wk ? '#EF6A43' : '#E8E2D8'; });
+    $('wk').textContent = 'Week ' + wk;
+
+    const td = eo(p(t, C.benefits, 0.5));
+    set($('today'), { o: td * (1 - eio(p(t, C.families, 0.4))), y: 10 * (1 - td) });
+
+    // "...and the work lands on families."
+    const fm = eo(p(t, C.families + 0.2, 0.6));
+    set($('fam'), { o: fm * (1 - bOut), y: 20 * (1 - fm) });
+
+    // Scene C: 53 million.
+    const sIn = eo(p(t, C.stat, 0.5)), sOut = eio(p(t, C.kids - 0.45, 0.45));
+    const n = 53 * eo(p(t, C.stat + 0.1, 1.4));
+    $('num').innerHTML = Math.round(n) + '<small> million</small>';
+    set($('stat'), { o: sIn * (1 - sOut), y: 24 * (1 - sIn) - 40 * sOut, s: 0.96 + 0.04 * sIn });
+    set($('src'), { o: eo(p(t, C.stat + 0.8, 0.5)) * (1 - sOut) });
+    set(dots, { o: 1 - sOut });
+    DOTS.forEach(d => {
+      const v = eo(p(t, C.stat + d.delay, 0.5));
+      d.el.setAttribute('fill', v > 0.01 ? 'rgba(15,118,110,' + (0.10 + 0.12 * v) + ')' : 'rgba(0,0,0,0)');
+      d.el.setAttribute('r', 7 * (0.4 + 0.6 * v));
+    });
+
+    // Scene D: adult kids on hold for a parent.
+    const dIn = eo(p(t, C.kids, 0.6)), phIn = back(p(t, C.kids + 0.25, 0.7));
+    set($('dtext'), { o: dIn, x: -30 * (1 - dIn) });
+    set($('phone'), { o: clamp(phIn * 1.3), y: 80 * (1 - phIn) });
+    $('pt').textContent = fmt(4324 + Math.max(0, t - C.kids)).replace(/^0/, '');
+    BARS.forEach((b, i) => { b.style.height = (8 + 34 * Math.abs(Math.sin(t * 3.1 + i * 0.7) * Math.cos(t * 1.7 + i * 0.3))) + 'px'; });
+  };
+
+  // Preview: play in real time when opened directly (the renderer sets ?render=1).
+  if (!/render=1/.test(location.search)) {
+    const t0 = performance.now();
+    const loop = () => { const t = ((performance.now() - t0) / 1000) % (window.LENGTH + 1); window.render(t); requestAnimationFrame(loop); };
+    document.fonts.ready.then(() => requestAnimationFrame(loop));
+  } else window.render(0);
+</script>
+</body>
+</html>

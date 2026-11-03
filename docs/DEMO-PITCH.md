@@ -14,7 +14,7 @@
 **Say:**
 "Healthcare is built for the doctor's office, not for you. Benefits are buried, bills are wrong, denials take weeks of calls, and the work lands on families: 53 million Americans are unpaid caregivers, many of them adult kids on hold for a parent."
 
-**Screen:** the welcome page, PJ the Gila monster.
+**Screen:** the opening motion graphic (`video/intro.html`, rendered by `node scripts/render_intro.js clip01_problem.mp4 [vo01_seconds]`): "built for the doctor's office" struck out → "Not for you."; three cards (a benefit buried on page 87, a bill charged twice, a DENIED stamp with the hold timer running); the cards pile up on "families"; "53 million unpaid caregivers" (cited on screen: AARP and NAC, *Caregiving in the U.S.* 2020); a phone on hold with Mom's plan at 11:42 PM.
 
 ### 0:20 – 0:35 · The product
 **Say:**
