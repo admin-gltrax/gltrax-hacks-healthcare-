@@ -165,6 +165,7 @@ async def test_voice_intake_reports_api_errors(monkeypatch):
 
     monkeypatch.setenv("MOCK_LLM", "0")
     monkeypatch.setenv("APP_ACCESS_TOKEN", "s3cret")
+    monkeypatch.setenv("MODEL_API_KEY", "test-key")  # live mode; the HTTP call is mocked below
 
     def fake(request: httpx.Request) -> httpx.Response:
         assert request.url.path == "/v1/asr/transcribe" and b'"audioEncoding": "WAV"' in request.content
