@@ -18,7 +18,7 @@ import base64
 import io
 import os
 
-import numpy as np
+# numpy is imported where audio is made, so the server (which only asks mode()) runs without it.
 
 RATE = 24000
 VOICES = {"pj": "af_heart", "office": "am_michael", "office_2": "bf_emma", "office_3": "am_eric"}
@@ -42,6 +42,7 @@ _LOCAL = None
 
 def synthesize(text: str, voice: str, speed: float = 1.0) -> np.ndarray:
     """Returns int16 mono PCM at 24 kHz."""
+    import numpy as np
     m = mode()
     if m == "mock":
         n = max(1, len(text.split()))
@@ -70,5 +71,6 @@ def synthesize(text: str, voice: str, speed: float = 1.0) -> np.ndarray:
 def _resample(pcm: np.ndarray, sr: int) -> np.ndarray:
     if sr == RATE:
         return pcm
+    import numpy as np
     idx = np.linspace(0, len(pcm) - 1, int(len(pcm) * RATE / sr))
     return np.interp(idx, np.arange(len(pcm)), pcm.astype(np.float32)).astype(np.int16)

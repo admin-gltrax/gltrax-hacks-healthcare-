@@ -210,3 +210,16 @@ async def test_unavailable_payer_says_why_and_falls_back():
     d = next(e for e in server.STATE["bus"].history if e["type"] == "directory_search")
     assert d["payer"] == "uhc" and d["available"]
     assert d["requested"]["payer"] == "aetna" and not d["requested"]["available"] and "credentials" in d["requested"]["reason"]
+
+
+async def test_evals_api_works_without_numpy(monkeypatch):
+    """The image installs requirements.txt only (no numpy); /gym's data must not need it."""
+    import importlib
+    import sys
+
+    monkeypatch.setitem(sys.modules, "numpy", None)  # import numpy now raises ImportError
+    monkeypatch.delitem(sys.modules, "src.voice_tts", raising=False)
+    importlib.import_module("src.voice_tts")
+    async with client() as c:
+        r = await c.get("/api/evals")
+    assert r.status_code == 200 and r.json().get("gym_report")
